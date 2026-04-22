@@ -40,16 +40,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         String username = jwtUtils.extractUsername(token);
 
-        if (SecurityContextHolder.getContext().getAuthentication() == null && tokenService.isValid(token, username)) {
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null, List.of());
-
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            filterChain.doFilter(request, response);
+        if (!tokenService.isValid(token, username)) {
+            outputUnauthorized(response);
             return;
         }
-        outputUnauthorized(response);
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null, List.of());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        filterChain.doFilter(request, response);
     }
 
     void outputUnauthorized(HttpServletResponse response) throws IOException {
