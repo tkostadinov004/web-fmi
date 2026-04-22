@@ -2,9 +2,9 @@ package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
@@ -42,11 +42,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(UserRegisterDTO user) {
         if (userRepository.existsById(user.username())) {
-            throw new UserAlreadyExistsException(ExceptionMessages.Auth.userAlreadyExists(user.username()));
+            throw new UserAlreadyExistsException(ExceptionMessages.User.userAlreadyExists(user.username()));
         }
 
         User newUser = new User(user.firstName(), user.lastName(), user.username(), passwordEncoder.encode(user.password()));
-        newUser = userRepository.save(newUser);
+        userRepository.save(newUser);
 
         return new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER, null);
     }

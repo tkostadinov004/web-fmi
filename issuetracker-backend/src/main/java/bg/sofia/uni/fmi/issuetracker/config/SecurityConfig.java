@@ -1,7 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.config;
 
 import bg.sofia.uni.fmi.issuetracker.filter.JwtAuthenticationFilter;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -40,8 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/projects/{projectId}/**").access((authentication, context) -> {
                             String projectId = context.getVariables().get("projectId");
-                            if (authentication.get().getPrincipal() instanceof User) {
-                                return new AuthorizationDecision(projectService.isMemberOf((User) authentication.get().getPrincipal(), projectId));
+                            if (authentication.get().getPrincipal() instanceof String) {
+                                return new AuthorizationDecision(projectService.isMemberOf((String) authentication.get().getPrincipal(), projectId));
                             }
 
                             return new AuthorizationDecision(false);
