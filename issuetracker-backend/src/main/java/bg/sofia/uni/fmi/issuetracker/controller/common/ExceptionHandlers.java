@@ -6,11 +6,13 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,6 +39,12 @@ public class ExceptionHandlers {
     public ResponseEntity<String> handleDeniedAccess(AuthorizationDeniedException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler({ValidationException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<String> handleValidationFailure(Exception ex) {
+        LOGGER.error(ex.getMessage());
+        return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
