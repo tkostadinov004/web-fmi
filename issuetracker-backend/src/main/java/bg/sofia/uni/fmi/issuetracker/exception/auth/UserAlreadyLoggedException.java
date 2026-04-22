@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.exception.auth;
 
-public class UserAlreadyLoggedException extends RuntimeException {
+public class UserAlreadyLoggedException extends AuthException {
     public UserAlreadyLoggedException(String message) {
         super(message);
     }

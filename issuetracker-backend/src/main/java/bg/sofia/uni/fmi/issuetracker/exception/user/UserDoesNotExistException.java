@@ -1,6 +1,8 @@
-package bg.sofia.uni.fmi.issuetracker.exception.auth;
+package bg.sofia.uni.fmi.issuetracker.exception.user;
 
-public class UserDoesNotExistException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
+
+public class UserDoesNotExistException extends NotFoundException {
     public UserDoesNotExistException(String message) {
         super(message);
     }

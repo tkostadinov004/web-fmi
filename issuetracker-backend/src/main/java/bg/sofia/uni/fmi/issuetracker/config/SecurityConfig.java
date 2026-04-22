@@ -2,7 +2,6 @@ package bg.sofia.uni.fmi.issuetracker.config;
 
 import bg.sofia.uni.fmi.issuetracker.filter.JwtAuthenticationFilter;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
-import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -48,16 +47,15 @@ public class SecurityConfig {
                             return new AuthorizationDecision(false);
                         })
                         .anyRequest().authenticated()
-                ).sessionManagement(session->session
+                ).sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(
-                        e->e.accessDeniedHandler(
-                                        (request, response, accessDeniedException)->response.setStatus(403)
+                        e -> e.accessDeniedHandler(
+                                        (request, response, accessDeniedException) -> response.setStatus(403)
                                 )
                                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .build();
-
     }
 
     @Bean

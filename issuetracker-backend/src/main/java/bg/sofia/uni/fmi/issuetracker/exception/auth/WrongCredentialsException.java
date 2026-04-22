@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.exception.auth;
 
-public class WrongCredentialsException extends RuntimeException {
+public class WrongCredentialsException extends AuthException {
     public WrongCredentialsException(String message) {
         super(message);
     }

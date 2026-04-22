@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.project;
 
-public class ProjectDoesNotExistException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
+
+public class ProjectDoesNotExistException extends NotFoundException {
     public ProjectDoesNotExistException(String message) {
         super(message);
     }

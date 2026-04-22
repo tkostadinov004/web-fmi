@@ -2,7 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
-import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;

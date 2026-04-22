@@ -2,13 +2,9 @@ package bg.sofia.uni.fmi.issuetracker.service.contract;
 
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
-import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 
-import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyExistsException;
-import org.springframework.security.core.Authentication;
-
-import java.util.UUID;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 
 public interface AuthService {
     /**

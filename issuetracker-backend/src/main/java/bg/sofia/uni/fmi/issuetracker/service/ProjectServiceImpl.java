@@ -1,7 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.exception.auth.UserDoesNotExistException;
-import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Project;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;

@@ -5,7 +5,6 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

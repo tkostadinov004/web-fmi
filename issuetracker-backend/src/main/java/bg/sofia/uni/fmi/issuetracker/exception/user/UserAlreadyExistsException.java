@@ -1,6 +1,8 @@
-package bg.sofia.uni.fmi.issuetracker.exception.auth;
+package bg.sofia.uni.fmi.issuetracker.exception.user;
 
-public class UserAlreadyExistsException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
+
+public class UserAlreadyExistsException extends AuthException {
     public UserAlreadyExistsException(String message) {
         super(message);
     }

@@ -21,7 +21,6 @@ import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     @Autowired
     private JwtUtils jwtUtils;
 
@@ -35,8 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request,response);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -44,8 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = jwtUtils.extractUsername(token);
         Optional<User> user = userRepository.findById(username);
 
-        if(user.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if(tokenService.isValid(token, user.get())) {
+        if (user.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (tokenService.isValid(token, user.get())) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         user.get(), null, List.of()
                 );
