@@ -21,4 +21,14 @@ public interface ProjectService {
      * @return {@code true} if the user has the given role in the project, {@code false} otherwise
      */
     boolean hasRole(Authentication authentication, String projectId, String roleString);
+
+    /**
+     * Checks whether the given user has the given role in the project
+     *
+     * @param username   the username of the user
+     * @param projectId  the ID of the project
+     * @param roleString the name of the desired role
+     * @return {@code true} if the user has the given role in the project, {@code false} otherwise
+     */
+    boolean hasRole(String username, String projectId, String roleString);
 }

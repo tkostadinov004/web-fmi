@@ -41,13 +41,22 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public boolean hasRole(Authentication authentication, String projectId, String roleString) {
-        User user = (User) authentication.getPrincipal();
+        return hasRole((String) authentication.getPrincipal(), projectId, roleString);
+    }
+
+    @Override
+    public boolean hasRole(String username, String projectId, String roleString) {
+        Optional<User> user = userRepository.findById(username);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
+        }
+
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
             throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectDoesNotExist(projectId));
         }
 
         Role role = Role.valueOf(roleString);
-        return projectRepository.hasRole(user, project.get(), role);
+        return projectRepository.hasRole(user.get(), project.get(), role);
     }
 }
