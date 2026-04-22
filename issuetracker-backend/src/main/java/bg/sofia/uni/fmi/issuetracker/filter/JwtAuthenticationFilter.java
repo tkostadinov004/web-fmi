@@ -4,6 +4,7 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,13 +15,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Autowired
     private JwtUtils jwtUtils;
 
@@ -35,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            outputUnauthorized(response);
             return;
         }
 
@@ -54,8 +60,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                filterChain.doFilter(request, response);
+                return;
             }
         }
-        filterChain.doFilter(request, response);
+        outputUnauthorized(response);
+    }
+
+    void outputUnauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(buildErrorResponse(OutputMessages.System.UNAUTHORIZED));
     }
 }

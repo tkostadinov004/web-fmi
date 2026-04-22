@@ -10,17 +10,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
-import tools.jackson.databind.ObjectMapper;
 
-import java.util.Map;
+import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse;
 
 @RestControllerAdvice
 public class ExceptionHandlers {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlers.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @ExceptionHandler({UserAlreadyExistsException.class, UserAlreadyLoggedException.class, WrongCredentialsException.class})
     public ResponseEntity<String> handleUserLogicError(AuthException ex) {
@@ -34,15 +33,17 @@ public class ExceptionHandlers {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, buildErrorResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<String> handleDeniedAccess(AuthorizationDeniedException ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleOtherExceptions(Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         return ResponseEntity
                 .internalServerError()
                 .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
-    }
-
-    private String buildErrorResponse(String message) {
-        return OBJECT_MAPPER.writeValueAsString(Map.of("message", message));
     }
 }

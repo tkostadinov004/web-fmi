@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.controller.common;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,5 +11,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RequireRole {
+@PreAuthorize("@projectService.hasRole(authentication, #projectId, 'ADMIN')")
+public @interface RequireAdmin {
 }
