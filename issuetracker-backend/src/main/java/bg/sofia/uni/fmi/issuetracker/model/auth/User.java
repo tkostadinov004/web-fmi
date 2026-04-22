@@ -1,6 +1,10 @@
 package bg.sofia.uni.fmi.issuetracker.model.auth;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.util.HashSet;
 import java.util.Set;
