@@ -94,7 +94,7 @@ public class ProjectServiceImplTests {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
         when(projectRepository.hasRolesStrict(any(), any(), any())).thenReturn(true);
 
-        List<Role> roles = List.of(Role.ADMIN);
+        List<Role> roles = List.of(Role.TEAM_LEAD);
         assertTrue(projectService.hasRoles(TEST_USER.getUsername(), TEST_PROJECT.getUuid(), roles, true));
         verify(projectRepository, times(1)).hasRolesStrict(TEST_USER, TEST_PROJECT, roles);
         verify(projectRepository, never()).hasRoles(TEST_USER, TEST_PROJECT, roles);
@@ -106,7 +106,7 @@ public class ProjectServiceImplTests {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
         when(projectRepository.hasRoles(any(), any(), any())).thenReturn(true);
 
-        List<Role> roles = List.of(Role.ADMIN);
+        List<Role> roles = List.of(Role.TEAM_LEAD);
         assertTrue(projectService.hasRoles(TEST_USER.getUsername(), TEST_PROJECT.getUuid(), roles, false));
         verify(projectRepository, times(1)).hasRoles(TEST_USER, TEST_PROJECT, roles);
         verify(projectRepository, never()).hasRolesStrict(TEST_USER, TEST_PROJECT, roles);

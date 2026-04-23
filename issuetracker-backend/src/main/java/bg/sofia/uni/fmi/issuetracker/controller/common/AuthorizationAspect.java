@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.controller.common;
 
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
@@ -22,13 +23,15 @@ import java.util.Map;
 @Component
 public class AuthorizationAspect {
     private final ProjectService projectService;
+    private final UserService userService;
 
-    public AuthorizationAspect(ProjectService projectService) {
+    public AuthorizationAspect(ProjectService projectService, UserService userService) {
         this.projectService = projectService;
+        this.userService = userService;
     }
 
     @Before("@annotation(bg.sofia.uni.fmi.issuetracker.controller.common.RequireRoles)")
-    public void authorize(JoinPoint joinPoint) {
+    public void authorizeInProject(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
@@ -42,6 +45,15 @@ public class AuthorizationAspect {
                 roleRequirements.strict());
 
         if (!hasRoles) {
+            throw new AuthorizationDeniedException(OutputMessages.System.ACCESS_DENIED);
+        }
+    }
+
+    @Before("@annotation(bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin)")
+    public void authorizeAdmin() {
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!userService.isAdmin(username)) {
             throw new AuthorizationDeniedException(OutputMessages.System.ACCESS_DENIED);
         }
     }

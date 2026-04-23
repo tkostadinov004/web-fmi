@@ -17,6 +17,14 @@ object that has the following form:
     },
     "auth": {
       "jwt_private_key": "..."
+    },
+    "app": {
+      "system_admin": {
+        "first_name": "...",
+        "last_name": "...",
+        "username": "...",
+        "password": "..."
+      }
     }
   }
 }

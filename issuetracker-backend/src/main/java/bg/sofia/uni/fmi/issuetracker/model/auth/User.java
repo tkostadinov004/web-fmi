@@ -25,6 +25,9 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "admin")
+    private boolean isAdmin;
+
     @OneToMany(mappedBy = "user")
     private Set<ProjectUser> projects = new HashSet<>();
 
@@ -36,6 +39,11 @@ public class User {
         this.lastName = lastName;
         this.username = username;
         this.password = password;
+    }
+
+    public User(String firstName, String lastName, String username, String password, boolean isAdmin) {
+        this(firstName, lastName, username, password);
+        this.isAdmin = isAdmin;
     }
 
     public String getFirstName() {
@@ -68,6 +76,10 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
     }
 
     public Set<ProjectUser> getProjects() {
