@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
-import org.springframework.security.core.Authentication;
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
+
+import java.util.Collection;
 
 public interface ProjectService {
     /**
@@ -13,22 +15,16 @@ public interface ProjectService {
     boolean isMemberOf(String username, String projectId);
 
     /**
-     * Checks whether the given user has the given role in the project
+     * Checks whether the given user has given roles in a given project.
+     * The main logic is driven by the {@code strict} parameter as follows: </br>
+     * If {@code strict is true}, all roles in the collection would be required for the given user.
+     * In other words, the method will return true if the user has each of the provided roles in the project.
+     * </br>
+     * Otherwise, the method will return true if the user has at least 1 of the provided roles.
      *
-     * @param authentication the current authentication principal
-     * @param projectId      the ID of the project
-     * @param roleString     the name of the desired role
-     * @return {@code true} if the user has the given role in the project, {@code false} otherwise
+     * @param username  the username of the user
+     * @param projectId the ID of the project
+     * @param roles     a collection of roles to be checked
      */
-    boolean hasRole(Authentication authentication, String projectId, String roleString);
-
-    /**
-     * Checks whether the given user has the given role in the project
-     *
-     * @param username   the username of the user
-     * @param projectId  the ID of the project
-     * @param roleString the name of the desired role
-     * @return {@code true} if the user has the given role in the project, {@code false} otherwise
-     */
-    boolean hasRole(String username, String projectId, String roleString);
+    boolean hasRoles(String username, String projectId, Collection<Role> roles, boolean strict);
 }

@@ -9,9 +9,9 @@ import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Service("projectService")
@@ -40,12 +40,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public boolean hasRole(Authentication authentication, String projectId, String roleString) {
-        return hasRole((String) authentication.getPrincipal(), projectId, roleString);
-    }
-
-    @Override
-    public boolean hasRole(String username, String projectId, String roleString) {
+    public boolean hasRoles(String username, String projectId, Collection<Role> roles, boolean strict) {
         Optional<User> user = userRepository.findById(username);
         if (user.isEmpty()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
@@ -56,7 +51,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectDoesNotExist(projectId));
         }
 
-        Role role = Role.valueOf(roleString);
-        return projectRepository.hasRole(user.get(), project.get(), role);
+        return strict ? projectRepository.hasRolesStrict(user.get(), project.get(), roles) :
+                projectRepository.hasRoles(user.get(), project.get(), roles);
     }
 }
