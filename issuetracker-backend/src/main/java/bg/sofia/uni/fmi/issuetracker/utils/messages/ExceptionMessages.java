@@ -16,10 +16,10 @@ public class ExceptionMessages {
     }
 
     public static class Project {
-        private static final String PROJECT_DOES_NOT_EXIST = "Project with UUID %s does not exist!";
+        private static final String PROJECT_NOT_FOUND = "Project with UUID %s is not found!";
 
-        public static String projectDoesNotExist(String projectId) {
-            return PROJECT_DOES_NOT_EXIST.formatted(projectId);
+        public static String projectNotFound(String projectId) {
+            return PROJECT_NOT_FOUND.formatted(projectId);
         }
     }
 

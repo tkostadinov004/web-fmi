@@ -9,6 +9,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "tokens")
 public class Token {
@@ -46,5 +48,17 @@ public class Token {
 
     public User getUser() {
         return user;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Token token = (Token) o;
+        return Objects.equals(uuid, token.uuid) && Objects.equals(tokenValue, token.tokenValue) && Objects.equals(user, token.user);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uuid, tokenValue, user);
     }
 }

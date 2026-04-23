@@ -33,7 +33,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectDoesNotExist(projectId));
+            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectId));
         }
 
         return projectRepository.isUserInProject(user.get(), project.get());
@@ -48,7 +48,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectDoesNotExist(projectId));
+            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectId));
         }
 
         return strict ? projectRepository.hasRolesStrict(user.get(), project.get(), roles) :
