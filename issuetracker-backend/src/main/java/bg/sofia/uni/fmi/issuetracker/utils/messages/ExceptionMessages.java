@@ -13,12 +13,6 @@ public class ExceptionMessages {
         public static String userAlreadyLoggedIn(String username) {
             return USER_ALREADY_LOGGED_IN.formatted(username);
         }
-
-        private static final String EXPIRED_TOKEN = "Token expired.";
-
-        public static String expiredToken() {
-            return EXPIRED_TOKEN;
-        }
     }
 
     public static class Project {

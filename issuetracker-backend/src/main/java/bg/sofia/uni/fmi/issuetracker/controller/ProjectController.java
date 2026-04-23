@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/projects/{projectId}")
 public class ProjectController {
     @GetMapping("/onlyForTeamLeads")
-    @RequireRoles(roles = {Role.TEAM_LEAD, Role.ADMIN}, strict = true)
+    @RequireRoles(roles = {Role.TEAM_LEAD, Role.ADMIN})
     public ResponseEntity<String> onlyForTeamLeads() {
         return ResponseEntity.ok("test");
     }
