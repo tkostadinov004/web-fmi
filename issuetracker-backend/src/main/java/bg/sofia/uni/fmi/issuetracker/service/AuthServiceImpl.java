@@ -11,7 +11,6 @@ import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
-import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
@@ -27,15 +26,13 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final JwtUtils jwtUtils;
-    private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
- 
+
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, JwtUtils jwtUtils, TokenService tokenService, PasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, JwtUtils jwtUtils, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.jwtUtils = jwtUtils;
-        this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         List<Token> tokens = tokenRepository.findAllByUser(foundUser.get());
-        if (tokens.stream().anyMatch(token -> tokenService.isValid(token.getTokenValue(), foundUser.get()))) {
+        if (tokens.stream().anyMatch(token -> !jwtUtils.isTokenExpired(token.getTokenValue()))) {
             throw new UserAlreadyLoggedException(ExceptionMessages.Auth.userAlreadyLoggedIn(user.username()));
         }
         tokenRepository.deleteAll(tokens);

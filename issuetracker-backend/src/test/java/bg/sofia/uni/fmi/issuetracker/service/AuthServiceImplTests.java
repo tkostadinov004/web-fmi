@@ -10,7 +10,6 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
-import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
@@ -31,10 +30,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,8 +49,6 @@ public class AuthServiceImplTests {
     private TokenRepository tokenRepository;
     @Mock
     private JwtUtils jwtUtils;
-    @Mock
-    private TokenService tokenService;
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -117,13 +112,13 @@ public class AuthServiceImplTests {
 
         Token token = new Token("testToken", TEST_USER);
         when(tokenRepository.findAllByUser(TEST_USER)).thenReturn(List.of(token));
-        when(tokenService.isValid(token.getTokenValue(), TEST_USER)).thenReturn(true);
+        when(jwtUtils.isTokenExpired(token.getTokenValue())).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(LOGIN_USER))
                 .hasMessage(ExceptionMessages.Auth.userAlreadyLoggedIn(TEST_USER.getUsername()))
                 .isExactlyInstanceOf(UserAlreadyLoggedException.class);
 
-        verify(tokenService, times(1)).isValid(token.getTokenValue(), TEST_USER);
+        verify(jwtUtils, times(1)).isTokenExpired(token.getTokenValue());
     }
 
     @Test
@@ -131,7 +126,9 @@ public class AuthServiceImplTests {
         when(userRepository.findById(LOGIN_USER.username())).thenReturn(Optional.of(TEST_USER));
         doReturn(true).when(passwordEncoder).matches(any(), any());
 
-        when(tokenRepository.findAllByUser(TEST_USER)).thenReturn(List.of());
+        Token oldToken = new Token("oldToken", TEST_USER);
+        when(jwtUtils.isTokenExpired(oldToken.getTokenValue())).thenReturn(true);
+        when(tokenRepository.findAllByUser(TEST_USER)).thenReturn(List.of(oldToken));
 
         Token token = new Token("testToken", TEST_USER);
         doReturn(token).when(authService).createToken(TEST_USER);
@@ -140,7 +137,7 @@ public class AuthServiceImplTests {
         assertEquals(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER, response.message());
         assertEquals(token.getTokenValue(), response.token());
 
-        verify(tokenService, never()).isValid(any(), eq(TEST_USER));
+        verify(jwtUtils, times(1)).isTokenExpired(any());
         verify(tokenRepository, times(1)).deleteAll(any());
     }
 
