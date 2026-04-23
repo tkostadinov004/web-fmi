@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.controller.common;
 
 import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
+import bg.sofia.uni.fmi.issuetracker.exception.auth.InvalidTokenException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
@@ -39,6 +40,12 @@ public class ExceptionHandlers {
     public ResponseEntity<String> handleDeniedAccess(AuthorizationDeniedException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<String> handleInvalidJWTTokens(InvalidTokenException ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler({ValidationException.class, MethodArgumentNotValidException.class})

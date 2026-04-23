@@ -13,6 +13,9 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
     @Query("select count(pu.id) > 0 from ProjectUser pu where pu.project = :project and pu.user = :user")
     boolean isUserInProject(@Param("user") User user, @Param("project") Project project);
 
+    @Query("select exists(select pu.id from ProjectUser pu)")
+    void a();
+
     @Query("select count(pu.id) > 0 " +
             "from ProjectUser pu " +
             "where pu.project = :project and pu.user = :user and pu.id.role in :roles")

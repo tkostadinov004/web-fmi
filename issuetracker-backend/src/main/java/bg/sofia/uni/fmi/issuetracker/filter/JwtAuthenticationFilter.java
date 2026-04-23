@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.filter;
 
-import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -21,11 +20,9 @@ import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
-    private final TokenService tokenService;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils, TokenService tokenService) {
+    public JwtAuthenticationFilter(JwtUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
-        this.tokenService = tokenService;
     }
 
     @Override
@@ -42,12 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String username = jwtUtils.extractUsername(token);
-
-        if (!tokenService.isValid(token, username)) {
+        if (!jwtUtils.isValid(token)) {
             outputUnauthorized(response);
             return;
         }
+        String username = jwtUtils.extractUsername(token);
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null, List.of());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

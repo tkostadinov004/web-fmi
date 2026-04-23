@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.filter;
 
-import bg.sofia.uni.fmi.issuetracker.service.contract.TokenService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -46,8 +45,6 @@ public class JwtAuthenticationFilterTests {
 
     @Mock
     private JwtUtils jwtUtils;
-    @Mock
-    private TokenService tokenService;
 
     @InjectMocks
     private JwtAuthenticationFilter filter;
@@ -83,13 +80,10 @@ public class JwtAuthenticationFilterTests {
     @Test
     void testFilter_StopsExecutionOnInvalidToken() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
-        when(jwtUtils.extractUsername(anyString())).thenReturn(TEST_USER.getUsername());
-        when(tokenService.isValid(anyString(), anyString())).thenReturn(false);
+        when(jwtUtils.isValid(anyString())).thenReturn(false);
         when(response.getWriter()).thenReturn(mockWriter);
 
         filter.doFilterInternal(request, response, filterChain);
-        verify(jwtUtils, times(1)).extractUsername(TEST_TOKEN.getTokenValue());
-        verify(tokenService, times(1)).isValid(TEST_TOKEN.getTokenValue(), TEST_USER.getUsername());
         verifyUnauthorizedResponse();
         verify(filterChain, never()).doFilter(any(), any());
     }
@@ -98,7 +92,7 @@ public class JwtAuthenticationFilterTests {
     void testFilter_SuccessfullyAuthenticated() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
         when(jwtUtils.extractUsername(anyString())).thenReturn(TEST_USER.getUsername());
-        when(tokenService.isValid(anyString(), anyString())).thenReturn(true);
+        when(jwtUtils.isValid(anyString())).thenReturn(true);
         SecurityContext mockSecurityContext = mock();
 
         try (MockedStatic<SecurityContextHolder> securityContextHolderMock = mockStatic(SecurityContextHolder.class)) {

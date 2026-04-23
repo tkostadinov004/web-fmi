@@ -1,66 +1,62 @@
 package bg.sofia.uni.fmi.issuetracker.utils;
 
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
-import java.util.function.Function;
 
 @Component
 public class JwtUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtils.class);
     private final Environment environment;
 
     public JwtUtils(Environment environment) {
         this.environment = environment;
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        DecodedJWT jwt = JWT.decode(token);
+        return jwt.getExpiresAt().before(new Date());
     }
 
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public boolean isValid(String token) {
+        Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
+        JWTVerifier verifier = JWT.require(algorithm).build();
+
+        try {
+            verifier.verify(token);
+            return true;
+        } catch (JWTVerificationException ex) {
+            LOGGER.error(ex.getMessage());
+            return false;
+        }
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        Claims claims = extractAllClaims(token);
-        return resolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts
-                .parser()
-                .verifyWith(getSignInKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public String extractUsername(String token) {
+        return JWT.decode(token).getSubject();
     }
 
     public String generateToken(User user) {
-        String token = Jwts
-                .builder()
-                .subject(user.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
-                .signWith(getSignInKey())
-                .compact();
+        Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
 
-        return token;
+        return JWT
+                .create()
+                .withSubject(user.getUsername())
+                .withIssuedAt(new Date(System.currentTimeMillis()))
+                .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
+                .sign(algorithm);
     }
 
-    private SecretKey getSignInKey() {
-        String key = environment.getProperty(Constants.JWT_KEY_ENV_NAME);
-        byte[] keyBytes = Decoders.BASE64URL.decode(key);
-        return Keys.hmacShaKeyFor(keyBytes);
+    private byte[] getSignInKey() {
+        return Base64.getDecoder().decode(environment.getProperty(Constants.JWT_KEY_ENV_PATH));
     }
 }
