@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
@@ -17,6 +18,7 @@ import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +65,17 @@ public class AuthServiceImpl implements AuthService {
 
         Token token = createToken(foundUser.get());
         return new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER, token.getTokenValue());
+    }
+
+    @Override
+    @Transactional
+    public void logout(String username) {
+        Optional<User> user = userRepository.findById(username);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
+        }
+
+        tokenRepository.deleteAllByUser(user.get());
     }
 
     Token createToken(User user) {

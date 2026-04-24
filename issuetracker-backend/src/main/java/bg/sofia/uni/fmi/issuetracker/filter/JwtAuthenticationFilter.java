@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.filter;
 
+import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -19,15 +20,17 @@ import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final TokenRepository tokenRepository;
     private final JwtUtils jwtUtils;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils) {
+    public JwtAuthenticationFilter(TokenRepository tokenRepository, JwtUtils jwtUtils) {
+        this.tokenRepository = tokenRepository;
         this.jwtUtils = jwtUtils;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/auth/")) {
+        if (request.getRequestURI().startsWith("/auth/") && !request.getRequestURI().startsWith("/auth/logout")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -39,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        if (!jwtUtils.isValid(token)) {
+        if (!jwtUtils.isValid(token) || !tokenRepository.existsByTokenValue(token)) {
             outputUnauthorized(response);
             return;
         }

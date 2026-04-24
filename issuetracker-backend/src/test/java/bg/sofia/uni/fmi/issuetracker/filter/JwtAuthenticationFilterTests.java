@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.filter;
 
+import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -44,6 +45,8 @@ public class JwtAuthenticationFilterTests {
     private FilterChain filterChain;
 
     @Mock
+    private TokenRepository tokenRepository;
+    @Mock
     private JwtUtils jwtUtils;
 
     @InjectMocks
@@ -68,13 +71,13 @@ public class JwtAuthenticationFilterTests {
     }
 
     @Test
-    void testFilter_StopsExecutionOnNonexistentToken() throws Exception {
-        invalidOrNonexistentTokenTest(null);
+    void testFilter_StopsExecutionOnNullAuthHeader() throws Exception {
+        invalidAuthHeaderTest(null);
     }
 
     @Test
-    void testFilter_StopsExecutionOnInvalidTokenHeaderFormat() throws Exception {
-        invalidOrNonexistentTokenTest("something else");
+    void testFilter_StopsExecutionOnInvalidAuthHeaderFormat() throws Exception {
+        invalidAuthHeaderTest("something else");
     }
 
     @Test
@@ -89,10 +92,25 @@ public class JwtAuthenticationFilterTests {
     }
 
     @Test
+    void testFilter_StopsExecutionOnNonexistentToken() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
+        when(jwtUtils.isValid(anyString())).thenReturn(true);
+        when(tokenRepository.existsByTokenValue(anyString())).thenReturn(false);
+        when(response.getWriter()).thenReturn(mockWriter);
+
+        filter.doFilterInternal(request, response, filterChain);
+        verifyUnauthorizedResponse();
+        verify(filterChain, never()).doFilter(any(), any());
+        verify(jwtUtils, times(1)).isValid(TEST_TOKEN.getTokenValue());
+        verify(tokenRepository, times(1)).existsByTokenValue(TEST_TOKEN.getTokenValue());
+    }
+
+    @Test
     void testFilter_SuccessfullyAuthenticated() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
         when(jwtUtils.extractUsername(anyString())).thenReturn(TEST_USER.getUsername());
         when(jwtUtils.isValid(anyString())).thenReturn(true);
+        when(tokenRepository.existsByTokenValue(anyString())).thenReturn(true);
         SecurityContext mockSecurityContext = mock();
 
         try (MockedStatic<SecurityContextHolder> securityContextHolderMock = mockStatic(SecurityContextHolder.class)) {
@@ -110,7 +128,7 @@ public class JwtAuthenticationFilterTests {
         verify(filterChain, times(1)).doFilter(request, response);
     }
 
-    private void invalidOrNonexistentTokenTest(String authHeader) throws Exception {
+    private void invalidAuthHeaderTest(String authHeader) throws Exception {
         when(request.getHeader("Authorization")).thenReturn(authHeader);
         when(response.getWriter()).thenReturn(mockWriter);
 

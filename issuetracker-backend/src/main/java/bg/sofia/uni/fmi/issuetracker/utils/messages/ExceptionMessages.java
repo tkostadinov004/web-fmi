@@ -13,6 +13,12 @@ public class ExceptionMessages {
         public static String userAlreadyLoggedIn(String username) {
             return USER_ALREADY_LOGGED_IN.formatted(username);
         }
+
+        private static final String USER_NOT_LOGGED = "User not logged in!";
+
+        public static String userNotLogged() {
+            return USER_NOT_LOGGED;
+        }
     }
 
     public static class Project {

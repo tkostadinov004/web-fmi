@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
@@ -139,6 +140,24 @@ public class AuthServiceImplTests {
 
         verify(jwtUtils, times(1)).isTokenExpired(any());
         verify(tokenRepository, times(1)).deleteAll(any());
+    }
+
+    @Test
+    void testLogout_ThrowsOnNonexistentUser() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.logout(TEST_USER.getUsername()))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
+                .isExactlyInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testLogout_Success() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+
+        authService.logout(TEST_USER.getUsername());
+
+        verify(tokenRepository, times(1)).deleteAllByUser(TEST_USER);
     }
 
     @Test
