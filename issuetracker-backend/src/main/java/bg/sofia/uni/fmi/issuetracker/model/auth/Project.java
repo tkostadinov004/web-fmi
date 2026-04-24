@@ -28,6 +28,10 @@ public class Project {
     public Project() {
     }
 
+    public Project(String name) {
+        this.name = name;
+    }
+
     public Project(String name, Set<ProjectUser> users) {
         this.name = name;
         this.users = users;

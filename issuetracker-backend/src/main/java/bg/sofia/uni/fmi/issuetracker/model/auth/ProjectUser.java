@@ -17,7 +17,7 @@ import java.util.Objects;
 @Table(name = "project_users")
 public class ProjectUser {
     @Embeddable
-    public class ProjectUserKey {
+    public static class ProjectUserKey {
         @Column(name = "project_uuid")
         private String projectUuid;
 
@@ -83,9 +83,10 @@ public class ProjectUser {
     public ProjectUser() {
     }
 
-    public ProjectUser(Project project, User user) {
+    public ProjectUser(Project project, User user, Role role) {
         this.project = project;
         this.user = user;
+        this.id = new ProjectUserKey(project.getUuid(), user.getUsername(), role);
     }
 
     public Project getProject() {

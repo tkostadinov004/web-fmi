@@ -26,7 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 
-import static bg.sofia.uni.fmi.issuetracker.TestConstants.TEST_USER;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

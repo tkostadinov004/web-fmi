@@ -12,7 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static bg.sofia.uni.fmi.issuetracker.TestConstants.TEST_USER;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;

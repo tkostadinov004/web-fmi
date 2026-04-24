@@ -22,8 +22,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.PrintWriter;
 import java.util.Map;
 
-import static bg.sofia.uni.fmi.issuetracker.TestConstants.TEST_TOKEN;
-import static bg.sofia.uni.fmi.issuetracker.TestConstants.TEST_USER;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TOKEN;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.any;

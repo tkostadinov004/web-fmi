@@ -10,19 +10,20 @@ import org.springframework.data.repository.query.Param;
 import java.util.Collection;
 
 public interface ProjectRepository extends JpaRepository<Project, String> {
-    @Query("select count(pu.id) > 0 from ProjectUser pu where pu.project = :project and pu.user = :user")
+    @Query("select exists(select pu.id from ProjectUser pu where pu.project = :project and pu.user = :user)")
     boolean isUserInProject(@Param("user") User user, @Param("project") Project project);
 
-    @Query("select exists(select pu.id from ProjectUser pu)")
-    void a();
+    @Query("""
+             select :#{#roles.size()} = 0 or exists(select pu.id
+             from ProjectUser pu
+             where pu.project = :project and pu.user = :user and pu.id.role in :roles)
+            """)
+    boolean hasRoles(@Param("user") User user, @Param("project") Project project, @Param("roles") Collection<Role> roles);
 
-    @Query("select count(pu.id) > 0 " +
-            "from ProjectUser pu " +
-            "where pu.project = :project and pu.user = :user and pu.id.role in :roles")
-    boolean hasRoles(@Param("user") User user, @Param("project") Project project, @Param("roles") Iterable<Role> roles);
-
-    @Query("select count(pu.id) = :#{#roles.size()} " +
-            "from ProjectUser pu " +
-            "where pu.project = :project and pu.user = :user and pu.id.role in :roles")
+    @Query("""
+             select count(pu.id) = :#{#roles.size()}
+             from ProjectUser pu
+             where pu.project = :project and pu.user = :user and pu.id.role in :roles
+            """)
     boolean hasRolesStrict(@Param("user") User user, @Param("project") Project project, @Param("roles") Collection<Role> roles);
 }
