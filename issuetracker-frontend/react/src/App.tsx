@@ -3,9 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
-
-//////////experiments
-
+import { NavLink } from 'react-router-dom'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -31,6 +29,15 @@ function App() {
         >
           Count is {count}
         </button>
+        
+        <button
+          type="button"
+          className="counter"
+          onClick={() => setCount((count) => count + 1)}
+        >
+          <NavLink to="/try">Send to page Try</NavLink>
+        </button>
+    
       </section>
 
       <div className="ticks"></div>
