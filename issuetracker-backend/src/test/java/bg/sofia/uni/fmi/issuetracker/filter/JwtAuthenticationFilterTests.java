@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.filter;
 
+import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
+import bg.sofia.uni.fmi.issuetracker.service.UserServiceImpl;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -43,9 +46,10 @@ public class JwtAuthenticationFilterTests {
     private HttpServletResponse response;
     @Mock
     private FilterChain filterChain;
-
     @Mock
     private TokenRepository tokenRepository;
+    @Mock
+    private UserServiceImpl userService;
     @Mock
     private JwtUtils jwtUtils;
 
@@ -57,14 +61,14 @@ public class JwtAuthenticationFilterTests {
 
     @BeforeEach
     void setUp() throws Exception {
-        when(request.getRequestURI()).thenReturn("/logic/test");
+        //when(request.getRequestURI()).thenReturn("/logic/test");
     }
 
     @Test
     void testFilter_DoesNotCheckTokenWithAuthEndpoints() throws Exception {
-        when(request.getRequestURI()).thenReturn("/auth/something");
+        when(request.getRequestURI()).thenReturn("/auth/login");
 
-        filter.doFilterInternal(request, response, filterChain);
+        filter.doFilter(request, response, filterChain);
 
         verify(filterChain, times(1)).doFilter(request, response);
         verify(request, never()).getHeader("Authorization");
@@ -95,14 +99,31 @@ public class JwtAuthenticationFilterTests {
     void testFilter_StopsExecutionOnNonexistentToken() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
         when(jwtUtils.isValid(anyString())).thenReturn(true);
-        when(tokenRepository.existsByTokenValue(anyString())).thenReturn(false);
+        when(tokenRepository.existsByTokenValueAndTokenType(anyString(), eq(TokenType.AUTH))).thenReturn(false);
         when(response.getWriter()).thenReturn(mockWriter);
 
         filter.doFilterInternal(request, response, filterChain);
         verifyUnauthorizedResponse();
         verify(filterChain, never()).doFilter(any(), any());
         verify(jwtUtils, times(1)).isValid(TEST_TOKEN.getTokenValue());
-        verify(tokenRepository, times(1)).existsByTokenValue(TEST_TOKEN.getTokenValue());
+        verify(tokenRepository, times(1)).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.AUTH);
+    }
+
+    @Test
+    void testFilter_StopsExecutionOnDeletedUser() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
+        when(jwtUtils.extractUsername(anyString())).thenReturn(TEST_USER.getUsername());
+        when(jwtUtils.isValid(anyString())).thenReturn(true);
+        when(tokenRepository.existsByTokenValueAndTokenType(anyString(), eq(TokenType.AUTH))).thenReturn(true);
+        when(userService.isDeleted(TEST_USER.getUsername())).thenReturn(true);
+        when(response.getWriter()).thenReturn(mockWriter);
+
+        filter.doFilterInternal(request, response, filterChain);
+        verifyUnauthorizedResponse();
+        verify(filterChain, never()).doFilter(any(), any());
+        verify(jwtUtils, times(1)).isValid(TEST_TOKEN.getTokenValue());
+        verify(tokenRepository, times(1)).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.AUTH);
+        verify(userService, times(1)).isDeleted(TEST_USER.getUsername());
     }
 
     @Test
@@ -110,7 +131,8 @@ public class JwtAuthenticationFilterTests {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN.getTokenValue());
         when(jwtUtils.extractUsername(anyString())).thenReturn(TEST_USER.getUsername());
         when(jwtUtils.isValid(anyString())).thenReturn(true);
-        when(tokenRepository.existsByTokenValue(anyString())).thenReturn(true);
+        when(tokenRepository.existsByTokenValueAndTokenType(anyString(), eq(TokenType.AUTH))).thenReturn(true);
+        when(userService.isDeleted(TEST_USER.getUsername())).thenReturn(false);
         SecurityContext mockSecurityContext = mock();
 
         try (MockedStatic<SecurityContextHolder> securityContextHolderMock = mockStatic(SecurityContextHolder.class)) {

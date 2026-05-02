@@ -5,7 +5,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.OutputUserProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
-import bg.sofia.uni.fmi.issuetracker.repository.ProjectUserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FileService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
@@ -29,12 +28,10 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final FileService fileService;
-    private final ProjectUserRepository projectUserRepository;
 
-    public UserServiceImpl(UserRepository userRepository, FileService fileService, ProjectUserRepository projectUserRepository) {
+    public UserServiceImpl(UserRepository userRepository, FileService fileService) {
         this.userRepository = userRepository;
         this.fileService = fileService;
-        this.projectUserRepository = projectUserRepository;
     }
 
     @Override
@@ -93,11 +90,11 @@ public class UserServiceImpl implements UserService {
 
         User user = userOpt.get();
         Resource profilePicture = user.getProfilePicturePath() != null ? fileService.getFile(user.getProfilePicturePath()) : null;
-        List<OutputUserProjectDTO> projects = projectUserRepository
-                .findAllByUser(user)
-                .stream()
-                .map(pu -> new OutputUserProjectDTO(pu.getProject().getName(), pu.getProject().getUuid()))
-                .toList();
+        List<OutputUserProjectDTO> projects =
+                user.getProjects()
+                        .stream()
+                        .map(pu -> new OutputUserProjectDTO(pu.getProject().getName(), pu.getProject().getUuid(), pu.getRole()))
+                        .toList();
 
         return new UserDetailsDTO(profilePicture, user.getUsername(), user.getFirstName(), user.getLastName(),
                 user.getEmail(), user.getCompanyName(), user.isAdmin(), projects);

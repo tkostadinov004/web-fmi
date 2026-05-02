@@ -106,6 +106,10 @@ public class ProjectUser {
         this.user = user;
     }
 
+    public Role getRole() {
+        return id.role;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

@@ -1,4 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.dto.output;
 
-public record OutputUserProjectDTO(String projectName, String projectId) {
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
+
+public record OutputUserProjectDTO(String projectName, String projectId, Role role) {
 }
