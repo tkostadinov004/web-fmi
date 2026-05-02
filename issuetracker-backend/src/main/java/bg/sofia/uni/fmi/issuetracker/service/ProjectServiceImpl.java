@@ -2,9 +2,9 @@ package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.auth.Project;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
@@ -52,6 +52,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return strict ? projectRepository.hasRolesStrict(user.get(), project.get(), roles) :
-                projectRepository.hasRoles(user.get(), project.get(), roles);
+            projectRepository.hasRoles(user.get(), project.get(), roles);
     }
 }

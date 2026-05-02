@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.issuetracker.repository;
 
-import bg.sofia.uni.fmi.issuetracker.model.auth.Project;
-import bg.sofia.uni.fmi.issuetracker.model.auth.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.project.Project;
+import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,18 +37,18 @@ public class ProjectRepositoryTests {
     @Transactional
     void seed() {
         TEST_USERS = List.of(
-                new User("FirstName1", "LastName1", "user1", "encryptedPass1"),
-                new User("FirstName2", "LastName2", "user2", "encryptedPass2"),
-                new User("FirstName3", "LastName3", "user3", "encryptedPass3")
+            new User("FirstName1", "LastName1", "user1", "encryptedPass1"),
+            new User("FirstName2", "LastName2", "user2", "encryptedPass2"),
+            new User("FirstName3", "LastName3", "user3", "encryptedPass3")
         );
         TEST_PROJECTS = List.of(
-                new Project("project1"),
-                new Project("project2"),
-                new Project("project3")
+            new Project("project1"),
+            new Project("project2"),
+            new Project("project3")
         );
         TEST_PROJECT_USERS = List.of(
-                new ProjectUser(TEST_PROJECTS.get(0), TEST_USERS.get(1), Role.TEAM_LEAD),
-                new ProjectUser(TEST_PROJECTS.get(1), TEST_USERS.get(1), Role.DEVELOPER)
+            new ProjectUser(TEST_PROJECTS.get(0), TEST_USERS.get(1), Role.TEAM_LEAD),
+            new ProjectUser(TEST_PROJECTS.get(1), TEST_USERS.get(1), Role.DEVELOPER)
         );
 
         TEST_USERS = userRepository.saveAll(TEST_USERS);
@@ -72,12 +72,14 @@ public class ProjectRepositoryTests {
 
     @Test
     void testHasRoles() {
-        assertTrue(projectRepository.hasRoles(TEST_USERS.get(1), TEST_PROJECTS.get(0), List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
+        assertTrue(projectRepository.hasRoles(TEST_USERS.get(1), TEST_PROJECTS.get(0),
+            List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
         assertFalse(projectRepository.hasRoles(TEST_USERS.get(2), TEST_PROJECTS.get(2), List.of(Role.TEAM_LEAD)));
     }
 
     @Test
     void testHasRolesStrict() {
-        assertFalse(projectRepository.hasRolesStrict(TEST_USERS.get(1), TEST_PROJECTS.get(0), List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
+        assertFalse(projectRepository.hasRolesStrict(TEST_USERS.get(1), TEST_PROJECTS.get(0),
+            List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
     }
 }

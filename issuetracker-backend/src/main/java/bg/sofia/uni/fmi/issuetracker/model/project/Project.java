@@ -1,5 +1,7 @@
-package bg.sofia.uni.fmi.issuetracker.model.auth;
+package bg.sofia.uni.fmi.issuetracker.model.project;
 
+import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -25,6 +28,10 @@ public class Project {
     @OneToMany(mappedBy = "project")
     private Set<ProjectUser> users = new HashSet<>();
 
+    // Is this correct ???
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets;
+
     public Project() {
     }
 
@@ -32,9 +39,10 @@ public class Project {
         this.name = name;
     }
 
-    public Project(String name, Set<ProjectUser> users) {
+    public Project(String name, Set<ProjectUser> users, List<Ticket> tickets) {
         this.name = name;
         this.users = users;
+        this.tickets = tickets;
     }
 
     public String getUuid() {
@@ -51,5 +59,25 @@ public class Project {
 
     public Set<ProjectUser> getUsers() {
         return users;
+    }
+
+    public void setUsers(Set<ProjectUser> users) {
+        this.users = users;
+    }
+
+    public List<Ticket> getTickets() {
+        return tickets;
+    }
+
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
+    }
+
+    public void addTicket(Ticket ticket) {
+        this.tickets.add(ticket);
+    }
+
+    public void removeTicket(Ticket ticket) {
+        this.tickets.remove(ticket);
     }
 }

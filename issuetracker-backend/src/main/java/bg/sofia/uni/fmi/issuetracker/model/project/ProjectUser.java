@@ -1,5 +1,7 @@
-package bg.sofia.uni.fmi.issuetracker.model.auth;
+package bg.sofia.uni.fmi.issuetracker.model.project;
 
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
+import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -58,7 +60,8 @@ public class ProjectUser {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             ProjectUserKey that = (ProjectUserKey) o;
-            return Objects.equals(projectUuid, that.projectUuid) && Objects.equals(userUsername, that.userUsername) && role == that.role;
+            return Objects.equals(projectUuid, that.projectUuid) && Objects.equals(userUsername, that.userUsername) &&
+                role == that.role;
         }
 
         @Override
