@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
-import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

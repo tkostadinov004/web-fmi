@@ -3,8 +3,10 @@ package bg.sofia.uni.fmi.issuetracker.service.contract;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+
 public interface FileService {
-    void saveFile(MultipartFile file, String path);
+    void saveOrReplaceFile(MultipartFile file, Path path);
 
     boolean fileExists(String path);
 

@@ -1,7 +1,10 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
-import bg.sofia.uni.fmi.issuetracker.dto.auth.UserLoginDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.ChangeForgottenPasswordDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.ChangePasswordDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.SendForgotPasswordEmailDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 
@@ -29,4 +32,10 @@ public interface AuthService {
      * @param username the username of the user
      */
     void logout(String username);
+
+    void changePassword(String username, ChangePasswordDTO changePasswordDTO);
+
+    void sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto);
+
+    void changeForgottenPassword(String username, ChangeForgottenPasswordDTO dto);
 }

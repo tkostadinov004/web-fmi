@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 @Service
@@ -27,12 +26,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void saveFile(MultipartFile file, String path) {
+    public void saveOrReplaceFile(MultipartFile file, Path path) {
         if (file.isEmpty()) {
             throw new FileServiceException(ExceptionMessages.File.emptyFile());
         }
 
-        Path destinationFile = root.getRoot().resolve(Paths.get(path)).normalize().toAbsolutePath();
+        Path destinationFile = root.getRoot().resolve(path).normalize().toAbsolutePath();
         if (!destinationFile.getParent().startsWith(root.getRoot().toAbsolutePath())) {
             throw new FileServiceException(ExceptionMessages.File.unableToStoreOutsideOfRoot());
         }

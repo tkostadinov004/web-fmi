@@ -100,6 +100,9 @@ public class User {
     @Column(name = "admin")
     private boolean isAdmin;
 
+    @Column(name = "deleted")
+    private boolean isDeleted;
+
     @OneToMany(mappedBy = "user")
     private Set<ProjectUser> projects = new HashSet<>();
 
@@ -151,6 +154,14 @@ public class User {
 
     public boolean isAdmin() {
         return isAdmin;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 
     public Set<ProjectUser> getProjects() {

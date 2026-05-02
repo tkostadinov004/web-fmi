@@ -8,6 +8,36 @@ public class ExceptionMessages {
             return WRONG_CREDENTIALS;
         }
 
+        private static final String WRONG_OLD_PASSWORD = "Wrong old password!";
+
+        public static String wrongOldPassword() {
+            return WRONG_OLD_PASSWORD;
+        }
+
+        private static final String NEW_PASSWORDS_DO_NOT_MATCH = "The new password and the repeated new password don't match!";
+
+        public static String newPasswordsDoNotMatch() {
+            return NEW_PASSWORDS_DO_NOT_MATCH;
+        }
+
+        private static final String WRONG_EMAIL = "The provided email doesn't match the user's real email!";
+
+        public static String wrongEmail() {
+            return WRONG_EMAIL;
+        }
+
+        private static final String ALREADY_CHANGED_PASSWORD = "You already changed your password!";
+
+        public static String alreadyChangedPassword() {
+            return ALREADY_CHANGED_PASSWORD;
+        }
+
+        private static final String FORGOT_PASSWORD_TOKEN_EXISTS = "You already started a forgot password procedure!";
+
+        public static String forgotPasswordTokenAlreadyExists() {
+            return FORGOT_PASSWORD_TOKEN_EXISTS;
+        }
+
         private static final String USER_ALREADY_LOGGED_IN = "User with username %s is already logged in!";
 
         public static String userAlreadyLoggedIn(String username) {

@@ -15,6 +15,13 @@ object that has the following form:
       "username": "...",
       "password": "..."
     },
+    "email": {
+      "host": "...",
+      "port": ...,
+      "username": "...",
+      "password": "...",
+      "default_sender": "..."
+    },
     "auth": {
       "jwt_private_key": "..."
     },
