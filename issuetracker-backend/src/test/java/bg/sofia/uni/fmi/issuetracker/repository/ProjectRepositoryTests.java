@@ -1,15 +1,14 @@
 package bg.sofia.uni.fmi.issuetracker.repository;
 
-import bg.sofia.uni.fmi.issuetracker.model.auth.Project;
-import bg.sofia.uni.fmi.issuetracker.model.auth.ProjectUser;
+import bg.sofia.uni.fmi.issuetracker.model.Project;
+import bg.sofia.uni.fmi.issuetracker.model.ProjectUser;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ProjectRepositoryTests {
     private static List<User> TEST_USERS;
     private static List<Project> TEST_PROJECTS;
@@ -37,9 +35,9 @@ public class ProjectRepositoryTests {
     @Transactional
     void seed() {
         TEST_USERS = List.of(
-                new User("FirstName1", "LastName1", "user1", "encryptedPass1"),
-                new User("FirstName2", "LastName2", "user2", "encryptedPass2"),
-                new User("FirstName3", "LastName3", "user3", "encryptedPass3")
+                User.UserBuilder.newBuilder().firstName("FirstName1").lastName("LastName1").username("user1").email("email1@email.com").password("encryptedPass1").build(),
+                User.UserBuilder.newBuilder().firstName("FirstName2").lastName("LastName2").username("user2").email("email2@email.com").password("encryptedPass2").build(),
+                User.UserBuilder.newBuilder().firstName("FirstName3").lastName("LastName3").username("user3").email("email3@email.com").password("encryptedPass3").build()
         );
         TEST_PROJECTS = List.of(
                 new Project("project1"),

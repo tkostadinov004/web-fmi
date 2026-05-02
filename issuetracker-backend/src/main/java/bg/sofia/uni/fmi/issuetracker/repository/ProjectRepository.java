@@ -1,8 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.repository;
 
-import bg.sofia.uni.fmi.issuetracker.model.auth.Project;
+import bg.sofia.uni.fmi.issuetracker.model.Project;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -23,6 +23,7 @@ object that has the following form:
         "first_name": "...",
         "last_name": "...",
         "username": "...",
+        "email": "...",
         "password": "..."
       }
     }

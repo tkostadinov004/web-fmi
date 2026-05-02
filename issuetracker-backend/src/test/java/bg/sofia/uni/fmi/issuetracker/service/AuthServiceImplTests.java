@@ -6,8 +6,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceImplTests {
     private static final UserRegisterDTO REGISTER_USER =
-            new UserRegisterDTO("FirstName", "LastName", "user", "pass");
+            new UserRegisterDTO("FirstName", "LastName", "user", "email@email.com", "company", "pass");
     private static final UserLoginDTO LOGIN_USER =
             new UserLoginDTO("user", "pass");
 

@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;

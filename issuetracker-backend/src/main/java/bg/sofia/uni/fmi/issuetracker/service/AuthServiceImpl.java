@@ -6,8 +6,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
@@ -44,7 +44,14 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistsException(ExceptionMessages.User.userAlreadyExists(user.username()));
         }
 
-        User newUser = new User(user.firstName(), user.lastName(), user.username(), passwordEncoder.encode(user.password()));
+        User newUser = User.UserBuilder.newBuilder()
+                .firstName(user.firstName())
+                .lastName(user.lastName())
+                .username(user.username())
+                .email(user.email())
+                .companyName(user.companyName())
+                .password(passwordEncoder.encode(user.password()))
+                .build();
         userRepository.save(newUser);
 
         return new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER, null);

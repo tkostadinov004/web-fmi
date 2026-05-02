@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.issuetracker.model.auth;
+package bg.sofia.uni.fmi.issuetracker.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

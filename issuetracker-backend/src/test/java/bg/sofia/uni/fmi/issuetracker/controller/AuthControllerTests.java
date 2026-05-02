@@ -26,7 +26,7 @@ public class AuthControllerTests extends BaseControllerTests {
 
     @Test
     public void testReturnsBadRequestOnInvalidName() throws Exception {
-        UserRegisterDTO invalid = new UserRegisterDTO("", "Last", "User", "Pass");
+        UserRegisterDTO invalid = new UserRegisterDTO("", "Last", "User", "email@email.com", "company", "Pass");
         String invalidUserJSON = OBJECT_MAPPER.writeValueAsString(invalid);
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(invalidUserJSON))
