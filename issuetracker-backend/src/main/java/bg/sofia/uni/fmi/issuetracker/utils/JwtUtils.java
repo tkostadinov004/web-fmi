@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.utils;
 
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -45,14 +45,14 @@ public class JwtUtils {
         return JWT.decode(token).getSubject();
     }
 
-    public String generateToken(User user) {
+    public String generateToken(User user, long validFor) {
         Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
 
         return JWT
                 .create()
                 .withSubject(user.getUsername())
                 .withIssuedAt(new Date(System.currentTimeMillis()))
-                .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + validFor))
                 .sign(algorithm);
     }
 

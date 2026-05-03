@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.config;
 
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +18,8 @@ public class AdminSeeder {
     private String adminLastName;
     @Value("${services.app.system_admin.username}")
     private String adminUsername;
+    @Value("${services.app.system_admin.email}")
+    private String adminEmail;
     @Value("${services.app.system_admin.password}")
     private String adminPassword;
 
@@ -32,7 +34,15 @@ public class AdminSeeder {
             return;
         }
 
-        User admin = new User(adminFirstName, adminLastName, adminUsername, passwordEncoder.encode(adminPassword), true);
+        User admin = User.UserBuilder.newBuilder()
+                .firstName(adminFirstName)
+                .lastName(adminLastName)
+                .username(adminUsername)
+                .email(adminEmail)
+                .companyName("admin")
+                .password(passwordEncoder.encode(adminPassword))
+                .admin(true)
+                .build();
         userRepository.save(admin);
     }
 }

@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
-import bg.sofia.uni.fmi.issuetracker.dto.auth.UserRegisterDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +25,8 @@ public class AuthControllerTests extends BaseControllerTests {
     private AuthService authService;
 
     @Test
-    public void testReturnsBadRequestOnInvalidName() throws Exception {
-        UserRegisterDTO invalid = new UserRegisterDTO("", "Last", "User", "Pass");
+    public void testReturnsBadRequestOnInvalidData() throws Exception {
+        UserRegisterDTO invalid = new UserRegisterDTO("", "Last", "User", "email@email.com", "company", "Pass");
         String invalidUserJSON = OBJECT_MAPPER.writeValueAsString(invalid);
 
         mockMvc.perform(post("/auth/register").contentType("application/json").content(invalidUserJSON))

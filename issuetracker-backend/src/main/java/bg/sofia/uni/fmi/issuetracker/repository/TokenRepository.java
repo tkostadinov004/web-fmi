@@ -1,7 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.repository;
 
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
-import bg.sofia.uni.fmi.issuetracker.model.auth.User;
+import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,14 @@ public interface TokenRepository extends JpaRepository<Token, String> {
     void deleteAllByUser(User user);
 
     boolean existsByTokenValue(String tokenValue);
+
+    boolean existsByTokenValueAndTokenType(String tokenValue, TokenType tokenType);
+
+    void deleteByTokenValueAndTokenType(String tokenValue, TokenType tokenType);
+
+    boolean existsByUserAndTokenType(User user, TokenType tokenType);
+
+    List<Token> findAllByUserAndTokenType(User user, TokenType tokenType);
+
+    void deleteAllByUserAndTokenType(User user, TokenType tokenType);
 }

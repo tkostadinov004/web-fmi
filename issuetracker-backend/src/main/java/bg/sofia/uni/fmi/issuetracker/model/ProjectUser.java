@@ -1,5 +1,6 @@
-package bg.sofia.uni.fmi.issuetracker.model.auth;
+package bg.sofia.uni.fmi.issuetracker.model;
 
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -103,6 +104,10 @@ public class ProjectUser {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Role getRole() {
+        return id.role;
     }
 
     @Override
