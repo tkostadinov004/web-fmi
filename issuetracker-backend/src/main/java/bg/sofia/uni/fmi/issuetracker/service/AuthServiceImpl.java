@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             throw new WrongCredentialsException(ExceptionMessages.Auth.wrongCredentials());
         }
 
-        List<Token> tokens = tokenRepository.findAllByUser(foundUser.get());
+        List<Token> tokens = tokenRepository.findAllByUserAndTokenType(foundUser.get(), TokenType.AUTH);
         if (tokens.stream().anyMatch(token -> !jwtUtils.isTokenExpired(token.getTokenValue()))) {
             throw new UserAlreadyLoggedException(ExceptionMessages.Auth.userAlreadyLoggedIn(user.username()));
         }
@@ -93,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
 
-        tokenRepository.deleteAllByUser(user.get());
+        tokenRepository.deleteAllByUserAndTokenType(user.get(), TokenType.AUTH);
     }
 
     @Override

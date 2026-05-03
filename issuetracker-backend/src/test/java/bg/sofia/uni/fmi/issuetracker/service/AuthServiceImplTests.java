@@ -126,7 +126,7 @@ public class AuthServiceImplTests {
         doReturn(true).when(passwordEncoder).matches(any(), any());
 
         Token token = new Token("testToken", TEST_USER);
-        when(tokenRepository.findAllByUser(TEST_USER)).thenReturn(List.of(token));
+        when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.AUTH)).thenReturn(List.of(token));
         when(jwtUtils.isTokenExpired(token.getTokenValue())).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(LOGIN_USER))
@@ -143,7 +143,7 @@ public class AuthServiceImplTests {
 
         Token oldToken = new Token("oldToken", TEST_USER);
         when(jwtUtils.isTokenExpired(oldToken.getTokenValue())).thenReturn(true);
-        when(tokenRepository.findAllByUser(TEST_USER)).thenReturn(List.of(oldToken));
+        when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.AUTH)).thenReturn(List.of(oldToken));
 
         Token token = new Token("testToken", TEST_USER);
         doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.AUTH), any(Long.class));
@@ -171,7 +171,7 @@ public class AuthServiceImplTests {
 
         authService.logout(TEST_USER.getUsername());
 
-        verify(tokenRepository, times(1)).deleteAllByUser(TEST_USER);
+        verify(tokenRepository, times(1)).deleteAllByUserAndTokenType(TEST_USER, TokenType.AUTH);
     }
 
     @Test

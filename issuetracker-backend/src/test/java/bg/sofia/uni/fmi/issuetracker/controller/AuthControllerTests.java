@@ -25,7 +25,7 @@ public class AuthControllerTests extends BaseControllerTests {
     private AuthService authService;
 
     @Test
-    public void testReturnsBadRequestOnInvalidName() throws Exception {
+    public void testReturnsBadRequestOnInvalidData() throws Exception {
         UserRegisterDTO invalid = new UserRegisterDTO("", "Last", "User", "email@email.com", "company", "Pass");
         String invalidUserJSON = OBJECT_MAPPER.writeValueAsString(invalid);
 

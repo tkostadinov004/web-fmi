@@ -1,13 +1,16 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputUserProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FileService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
+import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.apache.commons.io.FilenameUtils;
@@ -28,10 +31,12 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final FileService fileService;
+    private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, FileService fileService) {
+    public UserServiceImpl(UserRepository userRepository, FileService fileService, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.fileService = fileService;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -114,5 +119,21 @@ public class UserServiceImpl implements UserService {
 
         return page
                 .map(u -> new AdminOnlyOutputUserDTO(u.getUsername(), u.getFirstName(), u.getLastName(), u.getEmail(), u.isAdmin(), u.isDeleted()));
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(String username, UpdateUserDTO dto) {
+        Optional<User> userOpt = userRepository.findById(username);
+        if (userOpt.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
+        }
+        if (dto.email() != null && userRepository.existsByEmail(dto.email())) {
+            throw new UserAlreadyExistsException(ExceptionMessages.User.emailAlreadyExists(dto.email()));
+        }
+
+        User user = userOpt.get();
+        userMapper.patchUserFromDTO(dto, user);
+        userRepository.save(user);
     }
 }

@@ -1,13 +1,16 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputUserProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
+import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -48,6 +52,9 @@ public class UserServiceImplTests {
 
     @Mock
     private FileServiceImpl fileService;
+
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -198,5 +205,44 @@ public class UserServiceImplTests {
         assertEquals(asc, pageable.getSort().get().findFirst().get().isAscending());
 
         verify(users, times(1)).map(any(Function.class));
+    }
+
+    @Test
+    public void testUpdateUser_ThrowsOnNonexistentUser() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.updateUser(TEST_USER.getUsername(), null))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
+                .isExactlyInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    public void testUpdateUser_ThrowsIfNewEmailAlreadyExists() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+
+        String email = "alreadyexists@email.com";
+        when(userRepository.existsByEmail(email)).thenReturn(true);
+        UpdateUserDTO dto = new UpdateUserDTO(null, null, email, null);
+        assertThatThrownBy(() -> userService.updateUser(TEST_USER.getUsername(), dto))
+                .hasMessage(ExceptionMessages.User.emailAlreadyExists(dto.email()))
+                .isExactlyInstanceOf(UserAlreadyExistsException.class);
+    }
+
+    @Test
+    public void testUpdateUser_Successfully() {
+        User user = User.UserBuilder.newBuilder()
+                .email("email@email.com")
+                .firstName("firstName")
+                .lastName("lastName")
+                .companyName("company")
+                .profilePicturePath("/user/pfp.png").build();
+        when(userRepository.findById(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+
+        UpdateUserDTO dto = new UpdateUserDTO("newName", "newLastName", "newEmail@email.com", "newCompany");
+        userService.updateUser(user.getUsername(), dto);
+
+        verify(userMapper, times(1)).patchUserFromDTO(dto, user);
+        verify(userRepository, times(1)).save(user);
     }
 }

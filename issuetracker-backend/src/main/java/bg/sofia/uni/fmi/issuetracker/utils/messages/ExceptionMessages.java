@@ -71,6 +71,12 @@ public class ExceptionMessages {
         public static String userNotFound(String username) {
             return USER_NOT_FOUND.formatted(username);
         }
+
+        private static final String EMAIL_ALREADY_EXISTS = "Account with email '%s' already exists!";
+
+        public static String emailAlreadyExists(String email) {
+            return EMAIL_ALREADY_EXISTS.formatted(email);
+        }
     }
 
     public static class File {
@@ -102,6 +108,12 @@ public class ExceptionMessages {
 
         public static String cannotWrite(String file) {
             return CANNOT_WRITE.formatted(file);
+        }
+
+        private static final String INVALID_FILE = "Invalid or nonexistent file in request!";
+
+        public static String invalidFile() {
+            return INVALID_FILE;
         }
     }
 }

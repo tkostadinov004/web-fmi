@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
 import jakarta.validation.ValidationException;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,6 +87,12 @@ public class ExceptionHandlers {
     public ResponseEntity<String> handleMiscAuthException(AuthException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({MultipartException.class})
+    public ResponseEntity<String> handleMultipartException(MultipartException ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.File.invalidFile()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
