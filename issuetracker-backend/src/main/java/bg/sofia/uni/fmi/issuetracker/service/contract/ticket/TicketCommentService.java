@@ -7,7 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentAlreadyExists
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTickedException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProject;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ public interface TicketCommentService {
      * @param commentUuid the uuid of the comment
      * @return {@link TicketCommentResponse}
      * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProject                if the ticket is not in the project
+     * @throws TicketNotInProjectException       if the ticket is not in the project
      */
     TicketCommentResponse getTicketCommentByProjectAndTickedAndUuid(String projectUuid,
                                                                     String ticketUuid, String commentUuid);
@@ -88,7 +88,7 @@ public interface TicketCommentService {
      * @param ticketCommentRequest the ticketComment request of a ticketComment to be updated
      * @return {@link TicketCommentResponse}
      * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProject                if the ticket is not in the project
+     * @throws TicketNotInProjectException       if the ticket is not in the project
      */
     TicketCommentResponse updateTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid,
                                                                 String commentId,
@@ -108,7 +108,7 @@ public interface TicketCommentService {
      * @param ticketUuid  the uuid of the ticket
      * @param commentUuid the uuid of the ticketComment
      * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProject                if the ticket is not in the project
+     * @throws TicketNotInProjectException       if the ticket is not in the project
      */
     void deleteTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid, String commentUuid);
 

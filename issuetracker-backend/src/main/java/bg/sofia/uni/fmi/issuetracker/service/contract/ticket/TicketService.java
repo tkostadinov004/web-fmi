@@ -6,7 +6,9 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistExcept
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProject;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
+import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,19 @@ public interface TicketService {
      * @throws ProjectDoesNotExistException if no project with the given uuid exists
      */
     List<TicketResponse> getAllTicketsByProjectUuid(String projectUuid);
+
+    /**
+     * Returns all tickets filtered by status, priority and assigneeUsername ( all not required )
+     *
+     * @param projectUuid      the uuid of the project
+     * @param status           the status of the ticket
+     * @param priority         the priority of the ticket
+     * @param assigneeUsername the username of the assigned User
+     * @return {@link List<TicketResponse>}
+     * @throws ProjectDoesNotExistException if no project with the given uuid exists
+     */
+    List<TicketResponse> getAllTicketsByProjectUuidStatusPriorityAndAssigneeUsername(
+        String projectUuid, TicketStatus status, TicketPriority priority, String assigneeUsername);
 
     /**
      * Returns ticket by project uuid and ticket uuid
@@ -60,7 +75,7 @@ public interface TicketService {
      * @param ticket      the updated ticket request
      * @param projectUuid the project uuid
      * @return {@link TicketResponse}
-     * @throws TicketNotInProject            if no Ticket found within the project
+     * @throws TicketNotInProjectException   if no Ticket found within the project
      * @throws ProjectDoesNotExistException  if no project with the given uuid exists
      * @throws UserNotPartOfProjectException if the user is not part of the project but wants to update
      */

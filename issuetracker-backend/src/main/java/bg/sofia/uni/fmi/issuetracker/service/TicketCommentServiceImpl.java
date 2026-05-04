@@ -6,7 +6,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentAlreadyExists
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTickedException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProject;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketComment;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketCommentRepository;
@@ -140,7 +140,7 @@ public class TicketCommentServiceImpl implements TicketCommentService {
 
     private void checkIfTicketInProjectByItsUuid(String ticketUuid, String projectUuid) {
         if (!ticketRepository.findByUuid(ticketUuid).get().getProject().getUuid().equals(projectUuid)) {
-            throw new TicketNotInProject("Ticket with uuid: " + ticketUuid + " not found within the project");
+            throw new TicketNotInProjectException("Ticket with uuid: " + ticketUuid + " not found within the project");
         }
     }
 }

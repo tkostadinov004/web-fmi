@@ -6,13 +6,15 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistExcept
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProject;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
+import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,29 +36,37 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse getTicketByUuid(String uuid) {
         return TicketResponse.from(ticketRepository.findById(uuid).orElseThrow(() ->
-            new TicketNotFoundException("Ticket with uuid: " + uuid + " not found")));
+            new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(uuid))));
     }
 
     @Override
     public List<TicketResponse> getAllTicketsByProjectUuid(String projectUuid) {
-        Optional<Project> project = projectRepository.findById(projectUuid);
-        if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException("Project with uuid: " + projectUuid + " not found");
-        }
+        Project project = checkIfProjectExists(projectUuid);
 
-        return List.of((TicketResponse) ticketRepository.findAllByProject(project.get()));
+        return List.of((TicketResponse) ticketRepository.findAllByProject(project));
+    }
+
+    @Override
+    public List<TicketResponse> getAllTicketsByProjectUuidStatusPriorityAndAssigneeUsername(String projectUuid,
+                                                                                            TicketStatus status,
+                                                                                            TicketPriority priority,
+                                                                                            String assigneeUsername) {
+        checkIfProjectExists(projectUuid);
+        List<Ticket> result = ticketRepository.
+            findByTicketStatusAndTicketPriorityAndAssigneeUsername(status, priority, assigneeUsername);
+
+        return result.stream()
+            .map(TicketResponse::from)
+            .toList();
     }
 
     @Override
     public Optional<TicketResponse> getTicketByProjectUuidAndTicketUuid(String project_uuid, String ticket_uuid) {
-        Optional<Project> project = projectRepository.findById(project_uuid);
-        if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException("Project with uuid: " + project_uuid + " not found");
-        }
+        checkIfProjectExists(project_uuid);
 
         Optional<Ticket> ticket = ticketRepository.findByUuidAndProjectUuid(ticket_uuid, project_uuid);
         if (ticket.isEmpty()) {
-            throw new TicketNotFoundException("Ticket with uuid: " + ticket_uuid + " not found");
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticket_uuid));
         }
 
         return Optional.of(TicketResponse.from(ticket.get()));
@@ -65,14 +75,14 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse addTicketByProjectUuid(String projectUuid, TicketRequest request) {
         if (ticketRepository.existsById(request.getUuid())) {
-            throw new TicketAlreadyExistsException("Ticket with uuid: " + request.getUuid() + " already exists");
+            throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(request.getUuid()));
         }
 
-        Project project = projectRepository.findById(projectUuid).orElseThrow(() ->
-            new ProjectDoesNotExistException("Project with uuid: " + projectUuid + " doesn't exist"));
+        Project project = checkIfProjectExists(projectUuid);
 
         if (request.getAssignee() != null && projectRepository.isUserInProject(request.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException("User is not part of the project");
+            throw new UserNotPartOfProjectException(
+                ExceptionMessages.Project.userNotInProject(request.getAssignee().getUsername(), projectUuid));
         }
 
         if (request.getTicketStatus() == null) {
@@ -93,13 +103,14 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket existing = getTicket(uuid);
 
-        Project project = projectRepository.findById(ticket.getProject().getUuid())
-            .orElseThrow(() -> new ProjectDoesNotExistException("Project not found"));
+        Project project = checkIfProjectExists(projectUuid);
 
         if (ticket.getAssignee() != null && !projectRepository.isUserInProject(ticket.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException("User is not part of the project");
+            throw new UserNotPartOfProjectException(
+                ExceptionMessages.Project.userNotInProject(ticket.getAssignee().getUsername(), projectUuid));
         } else if (!project.getTickets().contains(existing)) {
-            throw new TicketNotInProject("Ticket with uuid: " + ticket.getUuid() + " not found within project");
+            throw new TicketNotInProjectException(
+                ExceptionMessages.Ticket.ticketNotInProject(ticket.getUuid(), projectUuid));
         }
 
         existing.setTitle(ticket.getTitle());
@@ -118,24 +129,29 @@ public class TicketServiceImpl implements TicketService {
     public void deleteTicketByProjectUuid(String projectUuid, String ticketUuid) {
         Ticket ticket = getTicket(ticketUuid);
         Project project = projectRepository.findById(projectUuid).orElseThrow(() ->
-            new ProjectDoesNotExistException("Project with uuid: " + projectUuid + " doesn't exist"));
+            new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectUuid)));
 
         if (ticket.getAssignee() != null && !projectRepository.isUserInProject(ticket.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException("User is not part of the project");
+            throw new UserNotPartOfProjectException(
+                ExceptionMessages.Project.userNotInProject(ticket.getAssignee().getUsername(), projectUuid));
         } else if (!project.getTickets().contains(ticket)) {
-            throw new TicketNotFoundException("Ticket with uuid: " + ticket.getUuid() + " not found within project");
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticket.getUuid()));
         }
 
         ticketRepository.delete(ticket);
     }
 
-//    @Override
-//    public void deleteTicketList(List<Ticket> ticketList) {
-//        ticketRepository.deleteAll(ticketList);
-//    }
-
     private Ticket getTicket(String uuid) {
         return ticketRepository.findByUuid(uuid).orElseThrow(() ->
-            new TicketNotFoundException("Ticket with uuid: " + uuid + " not found"));
+            new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(uuid)));
+    }
+
+    private Project checkIfProjectExists(String projectUuid) {
+        Optional<Project> project = projectRepository.findById(projectUuid);
+        if (project.isEmpty()) {
+            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectUuid));
+        }
+
+        return project.get();
     }
 }
