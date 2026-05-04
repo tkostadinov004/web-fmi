@@ -22,4 +22,13 @@ public class ValidationConstants {
     public static String missingParam(String paramName) {
         return MISSING_PARAM.formatted(paramName);
     }
+
+    public static class Ticket {
+        public static final String BLANK_TITLE = "Ticket title should not be blank!";
+        public static final String NULL_PRIORITY = "Ticket priority must not be null!";
+    }
+
+    public static class TicketComment {
+        public static final String BLANK_CONTENT = "Comment content should not be blank!";
+    }
 }

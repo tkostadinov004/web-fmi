@@ -1,9 +1,10 @@
 package bg.sofia.uni.fmi.issuetracker;
 
-import bg.sofia.uni.fmi.issuetracker.model.Project;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
+import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 
+import java.util.List;
 import java.util.Set;
 
 public class TestData {
@@ -15,9 +16,9 @@ public class TestData {
             .email("email@email.com")
             .build();
     public static final Project TEST_PROJECT =
-            new Project("testProject", Set.of());
+            new Project("testProject", Set.of(), List.of());
     public static final Project TEST_PROJECT_2 =
-            new Project("testProject2", Set.of());
+            new Project("testProject2", Set.of(), List.of());
     public static final Token TEST_TOKEN =
             new Token("testToken", TEST_USER);
 }

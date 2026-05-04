@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.issuetracker.repository;
 
-import bg.sofia.uni.fmi.issuetracker.model.Project;
-import bg.sofia.uni.fmi.issuetracker.model.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
+import bg.sofia.uni.fmi.issuetracker.model.project.Project;
+import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,12 +70,14 @@ public class ProjectRepositoryTests {
 
     @Test
     void testHasRoles() {
-        assertTrue(projectRepository.hasRoles(TEST_USERS.get(1), TEST_PROJECTS.get(0), List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
+        assertTrue(projectRepository.hasRoles(TEST_USERS.get(1), TEST_PROJECTS.get(0),
+                List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
         assertFalse(projectRepository.hasRoles(TEST_USERS.get(2), TEST_PROJECTS.get(2), List.of(Role.TEAM_LEAD)));
     }
 
     @Test
     void testHasRolesStrict() {
-        assertFalse(projectRepository.hasRolesStrict(TEST_USERS.get(1), TEST_PROJECTS.get(0), List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
+        assertFalse(projectRepository.hasRolesStrict(TEST_USERS.get(1), TEST_PROJECTS.get(0),
+                List.of(Role.TEAM_LEAD, Role.DEVELOPER)));
     }
 }
