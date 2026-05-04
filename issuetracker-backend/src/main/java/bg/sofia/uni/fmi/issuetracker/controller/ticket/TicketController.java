@@ -37,15 +37,15 @@ public class TicketController {
         this.priorityOrdered = priorityOrdered;
     }
 
-    @GetMapping
-    @Operation(summary = "Get all tickets for a project")
-    @ApiResponse(responseCode = "200", description = "List of tickets")
-    public ResponseEntity<?> getAllTicketsByProject(
-        @Parameter(description = "Project uuid", required = true)
-        @PathVariable String projectId) {
-
-        return ResponseEntity.ok(ticketService.getAllTicketsByProjectUuid(projectId));
-    }
+//    @GetMapping
+//    @Operation(summary = "Get all tickets for a project")
+//    @ApiResponse(responseCode = "200", description = "List of tickets")
+//    public ResponseEntity<?> getAllTicketsByProject(
+//        @Parameter(description = "Project uuid", required = true)
+//        @PathVariable String projectId) {
+//
+//        return ResponseEntity.ok(ticketService.getAllTicketsByProjectUuid(projectId));
+//    }
 
     @GetMapping("/{ticketId}")
     @Operation(summary = "Get ticket by UUID", description = "Returns a single ticket by its UUID")
