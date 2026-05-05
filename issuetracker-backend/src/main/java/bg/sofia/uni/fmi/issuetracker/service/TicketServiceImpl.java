@@ -97,7 +97,7 @@ public class TicketServiceImpl implements TicketService {
             throw new UserNotPartOfProjectException(ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
         }
 
-        Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.sprint(),
+        Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(),
                 dto.ticketPriority(), dto.ticketStatus(), dto.dueDate(), project,
                 assignee.orElse(null), List.of());
 

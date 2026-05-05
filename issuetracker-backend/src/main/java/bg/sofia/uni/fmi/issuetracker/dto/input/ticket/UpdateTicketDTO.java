@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.dto.input.ticket;
 
-import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
@@ -21,8 +20,6 @@ public record UpdateTicketDTO(@Size(max = 100, message = ValidationConstants.Tic
                               TicketStatus ticketStatus,
                               @Schema(description = "Updated priority level of the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
                               TicketPriority ticketPriority,
-                              @Schema(description = "Updated sprint associated with the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-                              Sprint sprint,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)
                               @Schema(description = "Updated due date for the ticket. Optional. Must be in the future. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string", format = "date-time")
                               LocalDateTime dueDate) {

@@ -2,7 +2,6 @@ package bg.sofia.uni.fmi.issuetracker.model.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
-import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -40,10 +39,6 @@ public class Ticket {
     @Enumerated(value = EnumType.STRING)
     private TicketPriority ticketPriority;
 
-    @ManyToOne
-    @JoinColumn(name = "sprint_uuid")
-    private Sprint sprint;
-
     @Column(name = "create_date")
     private LocalDateTime createDate = LocalDateTime.now();
 
@@ -76,13 +71,12 @@ public class Ticket {
 
     }
 
-    public Ticket(String code, String title, String description, Sprint sprint, TicketPriority ticketPriority,
+    public Ticket(String code, String title, String description, TicketPriority ticketPriority,
                   TicketStatus status, LocalDateTime dueDate, Project project, User assignee,
                   List<Ticket> dependentTickets) {
         this.code = code;
         this.title = title;
         this.description = description;
-        this.sprint = sprint;
         this.ticketPriority = ticketPriority;
         this.ticketStatus = status;
         this.createDate = LocalDateTime.now();
@@ -132,14 +126,6 @@ public class Ticket {
 
     public void setTicketPriority(TicketPriority ticketPriority) {
         this.ticketPriority = ticketPriority;
-    }
-
-    public Sprint getSprint() {
-        return sprint;
-    }
-
-    public void setSprint(Sprint sprint) {
-        this.sprint = sprint;
     }
 
     public LocalDateTime getCreateDate() {

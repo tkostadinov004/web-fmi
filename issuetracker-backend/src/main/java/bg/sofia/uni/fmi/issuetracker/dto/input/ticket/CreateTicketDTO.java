@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.dto.input.ticket;
 
-import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
@@ -29,8 +28,6 @@ public record CreateTicketDTO(@NotBlank(message = ValidationConstants.Ticket.BLA
                               @NotNull(message = ValidationConstants.Ticket.NULL_PRIORITY)
                               @Schema(description = "Priority level of the ticket. Required.", requiredMode = Schema.RequiredMode.REQUIRED)
                               TicketPriority ticketPriority,
-                              @Schema(description = "Sprint object associated with the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-                              Sprint sprint,
                               @Schema(description = "UUID of the project this ticket belongs to. Required.", requiredMode = Schema.RequiredMode.REQUIRED)
                               String projectUuid,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)
