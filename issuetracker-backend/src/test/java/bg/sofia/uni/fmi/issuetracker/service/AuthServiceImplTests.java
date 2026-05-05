@@ -281,8 +281,8 @@ public class AuthServiceImplTests {
 
         Token token = new Token("testToken", TEST_USER);
         doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.FORGOT_PASSWORD), any(Long.class));
-        when(featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(Optional.empty());
-        
+        when(featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(false);
+
         SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(TEST_USER.getEmail(), "");
         authService.sendForgotPasswordEmail(TEST_USER.getUsername(), dto);
 

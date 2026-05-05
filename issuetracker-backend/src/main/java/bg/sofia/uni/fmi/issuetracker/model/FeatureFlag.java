@@ -14,13 +14,13 @@ public class FeatureFlag {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "value", length = 1024)
-    private String value;
+    @Column(name = "value")
+    private boolean value;
 
     public FeatureFlag() {
     }
 
-    public FeatureFlag(String name, String value) {
+    public FeatureFlag(String name, boolean value) {
         this.name = name;
         this.value = value;
     }
@@ -33,11 +33,11 @@ public class FeatureFlag {
         this.name = name;
     }
 
-    public String getValue() {
+    public boolean getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(boolean value) {
         this.value = value;
     }
 

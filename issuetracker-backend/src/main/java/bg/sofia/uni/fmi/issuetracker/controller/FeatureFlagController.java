@@ -2,7 +2,6 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.AddFeatureFlagDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.UpdateFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -57,8 +57,8 @@ public class FeatureFlagController {
     })
     @GetMapping("/{name}")
     @RequireAdmin
-    public ResponseEntity<String> getValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name) {
-        return ResponseEntity.ok(featureFlagService.getFeatureFlagValueSafe(name));
+    public ResponseEntity<OutputFeatureFlagDTO> getValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name) {
+        return ResponseEntity.ok(featureFlagService.getFeatureFlag(name));
     }
 
     @Operation(summary = "Create a feature flag", description = "Creates a new feature flag with the provided name and value.")
@@ -88,9 +88,9 @@ public class FeatureFlagController {
     })
     @PatchMapping("/{name}")
     @RequireAdmin
-    public ResponseEntity<Void> editFeatureFlag(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name,
-                                                @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Feature flag update data", required = true, content = @Content) @Valid @RequestBody UpdateFeatureFlagDTO dto) {
-        featureFlagService.editFeatureFlagValue(name, dto);
+    public ResponseEntity<Void> setFeatureFlagValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name,
+                                                    @Parameter(description = "The new value for the feature flag", required = true) @RequestParam(name = "new_value") boolean new_value) {
+        featureFlagService.setFeatureFlagValue(name, new_value);
         return ResponseEntity.noContent().build();
     }
 

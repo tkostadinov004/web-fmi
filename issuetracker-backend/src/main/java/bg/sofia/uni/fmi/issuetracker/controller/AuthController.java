@@ -24,8 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Authentication", description = "Endpoints for registration, login, logout and password recovery")
@@ -106,9 +104,8 @@ public class AuthController {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String forgotPasswordToken = authService.sendForgotPasswordEmail(username, dto);
 
-        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG);
         HttpHeaders headers = new HttpHeaders();
-        if (shouldSkipEmailSending.isPresent() && Boolean.parseBoolean(shouldSkipEmailSending.get())) {
+        if (featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)) {
             headers.add("Reset-Token", forgotPasswordToken);
         }
         return ResponseEntity

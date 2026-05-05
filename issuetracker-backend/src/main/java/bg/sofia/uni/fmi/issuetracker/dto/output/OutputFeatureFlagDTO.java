@@ -6,6 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record OutputFeatureFlagDTO(
         @Schema(description = "Unique name of the feature flag.", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
-        @Schema(description = "Current value of the feature flag.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        String value) {
+        @Schema(description = "Current value of the feature flag.", requiredMode = Schema.RequiredMode.REQUIRED)
+        boolean value) {
 } 

@@ -1,14 +1,12 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.AddFeatureFlagDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.UpdateFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.featureflag.FeatureFlagAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.featureflag.FeatureFlagNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.FeatureFlag;
 import bg.sofia.uni.fmi.issuetracker.repository.FeatureFlagRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
-import bg.sofia.uni.fmi.issuetracker.service.mapper.FeatureFlagMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +17,9 @@ import java.util.Optional;
 @Service
 public class FeatureFlagServiceImpl implements FeatureFlagService {
     private final FeatureFlagRepository featureFlagRepository;
-    private final FeatureFlagMapper mapper;
 
-    public FeatureFlagServiceImpl(FeatureFlagRepository featureFlagRepository, FeatureFlagMapper mapper) {
+    public FeatureFlagServiceImpl(FeatureFlagRepository featureFlagRepository) {
         this.featureFlagRepository = featureFlagRepository;
-        this.mapper = mapper;
     }
 
     @Override
@@ -46,34 +42,31 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     }
 
     @Override
-    public Optional<String> getFeatureFlagValueUnsafe(String name) {
+    public boolean isFeatureEnabled(String name) {
         Optional<FeatureFlag> featureFlag = featureFlagRepository.findById(name);
-        if (featureFlag.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(featureFlag.get().getValue());
+        return featureFlag.isPresent() && featureFlag.get().getValue();
     }
 
     @Override
-    public String getFeatureFlagValueSafe(String name) {
-        Optional<String> featureFlagValue = getFeatureFlagValueUnsafe(name);
-        if (featureFlagValue.isEmpty()) {
+    public OutputFeatureFlagDTO getFeatureFlag(String name) {
+        Optional<FeatureFlag> featureFlagOpt = featureFlagRepository.findById(name);
+        if (featureFlagOpt.isEmpty()) {
             throw new FeatureFlagNotFoundException(ExceptionMessages.FeatureFlag.featureFlagNotFound(name));
         }
 
-        return featureFlagValue.get();
+        FeatureFlag featureFlag = featureFlagOpt.get();
+        return new OutputFeatureFlagDTO(featureFlag.getName(), featureFlag.getValue());
     }
 
     @Override
     @Transactional
-    public void editFeatureFlagValue(String name, UpdateFeatureFlagDTO dto) {
+    public void setFeatureFlagValue(String name, boolean newValue) {
         Optional<FeatureFlag> featureFlag = featureFlagRepository.findById(name);
         if (featureFlag.isEmpty()) {
             throw new FeatureFlagNotFoundException(ExceptionMessages.FeatureFlag.featureFlagNotFound(name));
         }
 
-        mapper.patchFeatureFlagFromDTO(dto, featureFlag.get());
+        featureFlag.get().setValue(newValue);
         featureFlagRepository.save(featureFlag.get());
     }
 
