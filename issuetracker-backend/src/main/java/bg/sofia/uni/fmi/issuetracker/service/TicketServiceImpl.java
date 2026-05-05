@@ -1,19 +1,24 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketRequest;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketResponse;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,134 +27,146 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class TicketServiceImpl implements TicketService {
-
     private final TicketRepository ticketRepository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+    private final TicketMapper ticketMapper;
 
-    public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository) {
+    public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository, UserRepository userRepository, TicketMapper ticketMapper) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+        this.ticketMapper = ticketMapper;
     }
 
     @Override
-    public TicketResponse getTicketByUuid(String uuid) {
-        return TicketResponse.from(ticketRepository.findById(uuid).orElseThrow(() ->
-            new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(uuid))));
-    }
-
-    @Override
-    public List<TicketResponse> getAllTicketsByProjectUuid(String projectUuid) {
-        Project project = checkIfProjectExists(projectUuid);
-
-        return List.of((TicketResponse) ticketRepository.findAllByProject(project));
-    }
-
-    @Override
-    public List<TicketResponse> getAllTicketsByProjectUuidStatusPriorityAndAssigneeUsername(String projectUuid,
-                                                                                            TicketStatus status,
-                                                                                            TicketPriority priority,
-                                                                                            String assigneeUsername) {
-        checkIfProjectExists(projectUuid);
-        List<Ticket> result = ticketRepository.
-            findByTicketStatusAndTicketPriorityAndAssigneeUsername(status, priority, assigneeUsername);
-
-        return result.stream()
-            .map(TicketResponse::from)
-            .toList();
-    }
-
-    @Override
-    public Optional<TicketResponse> getTicketByProjectUuidAndTicketUuid(String project_uuid, String ticket_uuid) {
-        checkIfProjectExists(project_uuid);
-
-        Optional<Ticket> ticket = ticketRepository.findByUuidAndProjectUuid(ticket_uuid, project_uuid);
+    public TicketDetailsDTO getTicketByCode(String code) {
+        Optional<Ticket> ticket = ticketRepository.findById(code);
         if (ticket.isEmpty()) {
-            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticket_uuid));
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
         }
 
-        return Optional.of(TicketResponse.from(ticket.get()));
+        return TicketDetailsDTO.from(ticket.get());
     }
 
     @Override
-    public TicketResponse addTicketByProjectUuid(String projectUuid, TicketRequest request) {
-        if (ticketRepository.existsById(request.getUuid())) {
-            throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(request.getUuid()));
-        }
+    public List<TicketDetailsDTO> getAllTicketsByProject(String projectUuid) {
+        Project project = fetchProject(projectUuid);
 
-        Project project = checkIfProjectExists(projectUuid);
-
-        if (request.getAssignee() != null && projectRepository.isUserInProject(request.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException(
-                ExceptionMessages.Project.userNotInProject(request.getAssignee().getUsername(), projectUuid));
-        }
-
-        if (request.getTicketStatus() == null) {
-            request.setTicketStatus(TicketStatus.TO_DO);
-        }
-
-        Ticket toAdd = new Ticket(request.getTitle(), request.getDescription(), request.getSprint(),
-            request.getTicketPriority(), request.getTicketStatus(), request.getDueDate(), request.getProject(),
-            request.getAssignee(), request.getDependentTicketUuids());
-
-        ticketRepository.save(toAdd);
-
-        return TicketResponse.from(toAdd);
+        return project
+                .getTickets()
+                .stream()
+                .map(TicketDetailsDTO::from)
+                .toList();
     }
 
     @Override
-    public TicketResponse updateTicketByProjectUuid(String projectUuid, String uuid, TicketRequest ticket) {
-
-        Ticket existing = getTicket(uuid);
-
-        Project project = checkIfProjectExists(projectUuid);
-
-        if (ticket.getAssignee() != null && !projectRepository.isUserInProject(ticket.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException(
-                ExceptionMessages.Project.userNotInProject(ticket.getAssignee().getUsername(), projectUuid));
-        } else if (!project.getTickets().contains(existing)) {
-            throw new TicketNotInProjectException(
-                ExceptionMessages.Ticket.ticketNotInProject(ticket.getUuid(), projectUuid));
+    public List<TicketDetailsDTO> getAllTicketsByStatusPriorityAndAssigneeUsername(TicketStatus status,
+                                                                                   TicketPriority priority,
+                                                                                   String assigneeUsername) {
+        Optional<User> assignee = userRepository.findById(assigneeUsername);
+        if (assignee.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
         }
 
-        existing.setTitle(ticket.getTitle());
-        existing.setDescription(ticket.getDescription());
-        existing.setSprint(ticket.getSprint());
-        existing.setTicketPriority(ticket.getTicketPriority());
-        existing.setTicketStatus(ticket.getTicketStatus());
-        // existing.setProject(project); ???
-        existing.setAssignee(ticket.getAssignee());
-        existing.setUpdateDate();
+        List<Ticket> result = ticketRepository.findAllByAssigneeAndTicketStatusAndTicketPriority(assignee.get(), status, priority);
 
-        return TicketResponse.from(ticketRepository.save(existing));
+        return result
+                .stream()
+                .map(TicketDetailsDTO::from)
+                .toList();
     }
 
     @Override
-    public void deleteTicketByProjectUuid(String projectUuid, String ticketUuid) {
-        Ticket ticket = getTicket(ticketUuid);
-        Project project = projectRepository.findById(projectUuid).orElseThrow(() ->
-            new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectUuid)));
-
-        if (ticket.getAssignee() != null && !projectRepository.isUserInProject(ticket.getAssignee(), project)) {
-            throw new UserNotPartOfProjectException(
-                ExceptionMessages.Project.userNotInProject(ticket.getAssignee().getUsername(), projectUuid));
-        } else if (!project.getTickets().contains(ticket)) {
-            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticket.getUuid()));
+    public Ticket createTicket(CreateTicketDTO dto) {
+        if (ticketRepository.existsById(dto.code())) {
+            throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code()));
         }
 
+        Optional<User> assignee = Optional.empty();
+        if (dto.assigneeUsername() != null) {
+            assignee = userRepository.findById(dto.assigneeUsername());
+            if (assignee.isEmpty()) {
+                throw new UserNotFoundException(ExceptionMessages.User.userNotFound(dto.assigneeUsername()));
+            }
+        }
+
+        Project project = fetchProject(dto.projectUuid());
+        if (assignee.isPresent() && !projectRepository.isUserInProject(assignee.get(), project)) {
+            throw new UserNotPartOfProjectException(ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
+        }
+
+        Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.sprint(),
+                dto.ticketPriority(), dto.ticketStatus(), dto.dueDate(), project,
+                assignee.orElse(null), List.of());
+
+        return ticketRepository.save(ticket);
+    }
+
+    @Override
+    @Transactional
+    public void addDependentTicketToTicket(String parentTicketCode, CreateTicketDTO ticket) {
+        Ticket parentTicket = getTicket(parentTicketCode);
+        if (!parentTicket.getProject().getUuid().equals(ticket.projectUuid())) {
+            throw new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
+        }
+
+        Ticket dependentTicket = createTicket(ticket);
+
+        parentTicket.addDependentTicket(dependentTicket);
+        ticketRepository.save(parentTicket);
+    }
+
+    @Override
+    public void changeTicketAssignee(String ticketCode, String assigneeUsername) {
+        Ticket ticket = getTicket(ticketCode);
+        if (assigneeUsername == null) {
+            ticket.setAssignee(null);
+            ticketRepository.save(ticket);
+            return;
+        }
+
+        Optional<User> assignee = userRepository.findById(assigneeUsername);
+        if (assignee.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
+        }
+
+        ticket.setAssignee(assignee.get());
+        ticketRepository.save(ticket);
+    }
+
+    @Override
+    @Transactional
+    public void updateTicket(String code, UpdateTicketDTO dto) {
+        Ticket ticket = getTicket(code);
+
+        ticketMapper.patchTicketFromDTO(dto, ticket);
+        ticketRepository.save(ticket);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTicket(String ticketCode) {
+        Ticket ticket = getTicket(ticketCode);
+
+        ticketRepository.deleteAll(ticket.getDependentTickets());
         ticketRepository.delete(ticket);
     }
 
-    private Ticket getTicket(String uuid) {
-        return ticketRepository.findByUuid(uuid).orElseThrow(() ->
-            new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(uuid)));
+    private Ticket getTicket(String code) {
+        Optional<Ticket> ticket = ticketRepository.findById(code);
+        if (ticket.isEmpty()) {
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
+        }
+
+        return ticket.get();
     }
 
-    private Project checkIfProjectExists(String projectUuid) {
+    private Project fetchProject(String projectUuid) {
         Optional<Project> project = projectRepository.findById(projectUuid);
         if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectUuid));
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectUuid));
         }
 
         return project.get();

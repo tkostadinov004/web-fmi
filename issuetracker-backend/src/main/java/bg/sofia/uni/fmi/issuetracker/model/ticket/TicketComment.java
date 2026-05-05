@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.model.ticket;
 
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,36 +16,34 @@ import java.util.Objects;
 @Entity
 @Table(name = "ticket_comments")
 public class TicketComment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "uuid")
     private String uuid;
 
     @ManyToOne
-    @JoinColumn(name = "ticket")
+    @JoinColumn(name = "ticket_code")
     private Ticket ticket;
 
     @ManyToOne
-    @JoinColumn(name = "author")
+    @JoinColumn(name = "author_username")
     private User author;
 
     @Column(name = "content", nullable = false, length = 5000)
     private String content;
 
-    @Column(name = "create_date")
-    private LocalDateTime createDate = LocalDateTime.now();
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public TicketComment() {
 
     }
 
-    public TicketComment(String uuid, Ticket ticket, User author, String content, LocalDateTime createDate) {
-        this.uuid = uuid;
+    public TicketComment(Ticket ticket, User author, String content, LocalDateTime createdAt) {
         this.ticket = ticket;
         this.author = author;
         this.content = content;
-        this.createDate = createDate;
+        this.createdAt = createdAt;
     }
 
     public String getUuid() {
@@ -75,8 +74,8 @@ public class TicketComment {
         this.content = content;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     @Override

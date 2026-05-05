@@ -123,21 +123,23 @@ public class ExceptionMessages {
     }
 
     public static class Ticket {
-        private static final String TICKET_ALREADY_EXISTS = "Ticket with UUID %s already exists!";
-        private static final String TICKET_NOT_FOUND = "Ticket with UUID %s not found!";
-        private static final String TICKET_NOT_IN_PROJECT =
-            "Ticket with UUID %s does not belong to project with UUID %s!";
+        private static final String TICKET_ALREADY_EXISTS = "Ticket named '%s' already exists!";
 
-        public static String ticketAlreadyExists(String ticketUuid) {
-            return TICKET_ALREADY_EXISTS.formatted(ticketUuid);
+        public static String ticketAlreadyExists(String code) {
+            return TICKET_ALREADY_EXISTS.formatted(code);
         }
 
-        public static String ticketNotFound(String ticketUuid) {
-            return TICKET_NOT_FOUND.formatted(ticketUuid);
+        private static final String TICKET_NOT_FOUND = "Ticket '%s' not found!";
+
+        public static String ticketNotFound(String code) {
+            return TICKET_NOT_FOUND.formatted(code);
         }
 
-        public static String ticketNotInProject(String ticketUuid, String projectUuid) {
-            return TICKET_NOT_IN_PROJECT.formatted(ticketUuid, projectUuid);
+        private static final String TICKET_PROJECT_MISMATCH =
+                "Ticket '%s' and parent ticket '%s' cannot be from different projects!";
+
+        public static String ticketProjectMismatch(String parentCode, String dependentCode) {
+            return TICKET_PROJECT_MISMATCH.formatted(parentCode, dependentCode);
         }
     }
 
@@ -145,7 +147,7 @@ public class ExceptionMessages {
         private static final String COMMENT_ALREADY_EXISTS = "Ticket comment with UUID %s already exists!";
         private static final String COMMENT_NOT_FOUND = "Ticket comment with UUID %s not found!";
         private static final String COMMENT_NOT_IN_TICKET =
-            "Ticket comment with UUID %s does not belong to ticket with UUID %s!";
+                "Ticket comment with UUID %s does not belong to ticket with title '%s'!";
 
         public static String ticketCommentAlreadyExists(String commentUuid) {
             return COMMENT_ALREADY_EXISTS.formatted(commentUuid);
@@ -155,8 +157,8 @@ public class ExceptionMessages {
             return COMMENT_NOT_FOUND.formatted(commentUuid);
         }
 
-        public static String ticketCommentNotInTicket(String commentUuid, String ticketUuid) {
-            return COMMENT_NOT_IN_TICKET.formatted(commentUuid, ticketUuid);
+        public static String ticketCommentNotInTicket(String commentUuid, String ticketTitle) {
+            return COMMENT_NOT_IN_TICKET.formatted(commentUuid, ticketTitle);
         }
     }
 }

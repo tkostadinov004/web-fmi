@@ -6,9 +6,9 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.OutputUserProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
+import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -19,7 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -163,7 +162,7 @@ public class UserServiceImplTests {
 
     @Test
     public void testGetUser_Correctly() {
-        User user = spy(User.UserBuilder.newBuilder().username("user").password("pass").profilePicturePath("/user/pfp.png").build());
+        User user = spy(User.UserBuilder.newBuilder().profilePicturePath("pfpPath").username("user").password("pass").profilePicturePath("/user/pfp.png").build());
         when(userRepository.findById(user.getUsername())).thenReturn(Optional.of(user));
         Set<ProjectUser> projects = Set.of(
                 new ProjectUser(TEST_PROJECT, user, Role.TEAM_LEAD),
@@ -171,15 +170,10 @@ public class UserServiceImplTests {
         );
         doReturn(projects).when(user).getProjects();
 
-        Resource profilePicture = mock();
-        when(fileService.getFile(user.getProfilePicturePath())).thenReturn(profilePicture);
-
-        UserDetailsDTO expected = new UserDetailsDTO(profilePicture, user.getUsername(), user.getFirstName(), user.getLastName(),
+        UserDetailsDTO expected = new UserDetailsDTO(user.getProfilePicturePath(), user.getUsername(), user.getFirstName(), user.getLastName(),
                 user.getEmail(), user.getCompanyName(), user.isAdmin(),
                 projects.stream().map(pu -> new OutputUserProjectDTO(pu.getProject().getName(), pu.getProject().getUuid(), pu.getRole())).toList());
         assertEquals(expected, userService.getUser(user.getUsername()));
-
-        verify(fileService, times(1)).getFile(user.getProfilePicturePath());
     }
 
     @Test

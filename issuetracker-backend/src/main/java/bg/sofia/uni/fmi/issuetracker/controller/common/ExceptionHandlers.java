@@ -1,12 +1,16 @@
 package bg.sofia.uni.fmi.issuetracker.controller.common;
 
+import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
+import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
@@ -32,7 +36,9 @@ import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse
 public class ExceptionHandlers {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlers.class);
 
-    @ExceptionHandler({UserAlreadyExistsException.class, UserAlreadyLoggedException.class, UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class})
+    @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
+            UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
+            TicketCommentNotInTicketException.class, TicketNotInProjectException.class})
     public ResponseEntity<String> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);
@@ -56,7 +62,7 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler({ValidationException.class})
+    @ExceptionHandler({ValidationException.class, IllegalArgumentException.class})
     public ResponseEntity<String> handleValidationFailure(Exception ex) {
         LOGGER.error(ex.getMessage());
         return ResponseEntity.badRequest().body(ex.getMessage());
@@ -89,8 +95,8 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({MultipartException.class})
-    public ResponseEntity<String> handleMultipartException(MultipartException ex) {
+    @ExceptionHandler({MultipartException.class, FileServiceException.class})
+    public ResponseEntity<String> handleFileExceptions(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.File.invalidFile()), HttpStatus.BAD_REQUEST);
     }

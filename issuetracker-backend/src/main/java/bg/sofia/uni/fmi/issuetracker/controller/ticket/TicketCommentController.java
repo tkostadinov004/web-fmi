@@ -1,110 +1,68 @@
 package bg.sofia.uni.fmi.issuetracker.controller.ticket;
 
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentRequest;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentResponse;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/projects/{projectId}/tickets/{ticketId}/comments")
-@Tag(name = "Ticket Comments", description = "Operations for managing ticket comments")
+@RequestMapping("/comments")
+@Tag(name = "Ticket Comment", description = "Endpoints for ticket comment management")
 public class TicketCommentController {
-
     private final TicketCommentService ticketCommentService;
 
     public TicketCommentController(TicketCommentService ticketCommentService) {
         this.ticketCommentService = ticketCommentService;
     }
 
-    @GetMapping
-    @Operation(summary = "Get all comments", description = "Returns all comments in the form of a list")
-    @ApiResponse(responseCode = "200", description = "List of comments")
-    public ResponseEntity<?> getAllComments(
-        @Parameter(description = "Uuid of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Uuid of the ticket", required = true)
-        @PathVariable String ticketId) {
-
-        return ResponseEntity.ok(ticketCommentService.
-            getAllTicketCommentsByProjectAndTicket(projectId, ticketId));
-    }
-
+    @Operation(summary = "Get a comment", description = "Retrieves the details of a specific ticket comment by its UUID.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Comment retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Comment not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/{commentId}")
-    @Operation(summary = "Get comment by UUID", description = "Returns a single ticket comment by its UUID")
-    @ApiResponse(responseCode = "200", description = "Comment found")
-    @ApiResponse(responseCode = "404", description = "Comment not found")
-    public ResponseEntity<TicketCommentResponse> getTicketCommentByUuid(
-        @Parameter(description = "Uuid of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Uuid of the ticket", required = true)
-        @PathVariable String ticketId,
-        @Parameter(description = "UUID of the comment", required = true)
-        @PathVariable String commentId) {
-
-        return ResponseEntity.ok(ticketCommentService.
-            getTicketCommentByProjectAndTickedAndUuid(projectId, ticketId, commentId));
+    public ResponseEntity<TicketCommentDetailsDTO> getComment(@Parameter(description = "UUID of the comment", required = true) @PathVariable String commentId) {
+        return ResponseEntity.ok(ticketCommentService.getTicketComment(commentId));
     }
 
-    @PostMapping
-    @Operation(summary = "Create comment", description = "Creates a new comment for a ticket")
-    @ApiResponse(responseCode = "201", description = "Comment created")
-    @ApiResponse(responseCode = "400", description = "Invalid input")
-    public ResponseEntity<TicketCommentResponse> addTicketComment(
-        @Parameter(description = "Uuid of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Uuid of the ticket", required = true)
-        @PathVariable String ticketId,
-        @Parameter(description = "Comment data", required = true)
-        @RequestBody TicketCommentRequest ticketCommentRequest) {
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(ticketCommentService.
-            addTicketCommentByProjectAndTicket(projectId, ticketId, ticketCommentRequest));
+    @Operation(summary = "Update a comment", description = "Updates the content of an existing ticket comment.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Comment updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid update data"),
+            @ApiResponse(responseCode = "404", description = "Comment not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<Void> updateTicketComment(@Parameter(description = "UUID of the comment to update", required = true) @PathVariable String commentId,
+                                                    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Comment update data", required = true, content = @Content) @Valid @RequestBody UpdateTicketCommentDTO dto) {
+        ticketCommentService.updateTicketComment(commentId, dto);
+        return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{commentId}")
-    @Operation(summary = "Update comment", description = "Updates an existing comment by UUID")
-    @ApiResponse(responseCode = "200", description = "Comment updated")
-    @ApiResponse(responseCode = "404", description = "Comment not found")
-    public ResponseEntity<TicketCommentResponse> updateTicketComment(
-        @Parameter(description = "Uuid of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Uuid of the ticket", required = true)
-        @PathVariable String ticketId,
-        @Parameter(description = "Uuid of the comment", required = true)
-        @PathVariable String commentId,
-        @Parameter(description = "Updated comment data", required = true)
-        @RequestBody TicketCommentRequest ticketCommentRequest) {
-
-        return ResponseEntity.ok(ticketCommentService.
-            updateTicketCommentByProjectAndTicket(projectId, ticketId, commentId, ticketCommentRequest));
-    }
-
+    @Operation(summary = "Delete a comment", description = "Removes a comment from a ticket.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Comment deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Comment not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @DeleteMapping("/{commentId}")
-    @Operation(summary = "Delete comment", description = "Deletes a comment by UUID")
-    @ApiResponse(responseCode = "204", description = "Comment deleted")
-    @ApiResponse(responseCode = "404", description = "Comment not found")
-    public ResponseEntity<Void> deleteTicketComment(
-        @Parameter(description = "Uuid of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Uuid of the ticket", required = true)
-        @PathVariable String ticketId,
-        @Parameter(description = "UUID of the comment", required = true)
-        @PathVariable String commentId) {
-
-        ticketCommentService.deleteTicketCommentByProjectAndTicket(projectId, ticketId, commentId);
+    public ResponseEntity<Void> deleteTicketComment(@Parameter(description = "UUID of the comment to delete", required = true) @PathVariable String commentId) {
+        ticketCommentService.deleteTicketComment(commentId);
         return ResponseEntity.noContent().build();
     }
 }

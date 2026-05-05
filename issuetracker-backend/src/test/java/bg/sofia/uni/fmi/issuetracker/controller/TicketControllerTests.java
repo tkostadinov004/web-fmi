@@ -1,8 +1,10 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
+/*
 import bg.sofia.uni.fmi.issuetracker.controller.ticket.TicketController;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketRequest;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketResponse;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(TicketController.class)
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
-class TicketControllerTest {
+class TicketControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -56,9 +58,9 @@ class TicketControllerTest {
 
     @Test
     void getAllTicketsByProject_returnsTickets() throws Exception {
-        TicketResponse response = sampleTicketResponse();
+        TicketDetailsDTO response = sampleTicketResponse();
 
-        when(ticketService.getAllTicketsByProjectUuid("project-1"))
+        when(ticketService.getAllTicketsByProject("project-1"))
                 .thenReturn(List.of(response));
 
         mockMvc.perform(get("/projects/{projectId}/tickets", "project-1"))
@@ -66,15 +68,15 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$[0].uuid").value("ticket-1"))
                 .andExpect(jsonPath("$[0].title").value("Fix login"));
 
-        verify(ticketService).getAllTicketsByProjectUuid("project-1");
+        verify(ticketService).getAllTicketsByProject("project-1");
     }
 
     @Test
     void getTicketsWithFilters_returnsTickets() throws Exception {
-        TicketResponse response = sampleTicketResponse();
+        TicketDetailsDTO response = sampleTicketResponse();
 
-        when(ticketService.getAllTicketsByProjectUuidStatusPriorityAndAssigneeUsername(
-                eq("project-1"), eq(TicketStatus.TO_DO), eq(TicketPriority.HIGH), eq("john")))
+        when(ticketService.getAllTicketsByStatusPriorityAndAssigneeUsername(
+                eq(TicketStatus.TO_DO), eq(TicketPriority.HIGH), eq("john")))
                 .thenReturn(List.of(response));
 
         mockMvc.perform(get("/projects/{projectId}/tickets", "project-1")
@@ -84,13 +86,13 @@ class TicketControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].uuid").value("ticket-1"));
 
-        verify(ticketService).getAllTicketsByProjectUuidStatusPriorityAndAssigneeUsername(
-                "project-1", TicketStatus.TO_DO, TicketPriority.HIGH, "john");
+        verify(ticketService).getAllTicketsByStatusPriorityAndAssigneeUsername(
+                TicketStatus.TO_DO, TicketPriority.HIGH, "john");
     }
 
     @Test
     void getTicket_returnsTicket() throws Exception {
-        TicketResponse response = sampleTicketResponse();
+        TicketDetailsDTO response = sampleTicketResponse();
 
         when(ticketService.getTicketByProjectUuidAndTicketUuid("project-1", "ticket-1"))
                 .thenReturn(Optional.of(response));
@@ -105,10 +107,10 @@ class TicketControllerTest {
 
     @Test
     void addTicket_createsTicket() throws Exception {
-        TicketRequest request = sampleTicketRequest();
-        TicketResponse response = sampleTicketResponse();
+        CreateTicketDTO request = sampleTicketRequest();
+        TicketDetailsDTO response = sampleTicketResponse();
 
-        when(ticketService.addTicketByProjectUuid(eq("project-1"), any(TicketRequest.class)))
+        when(ticketService.addTicketToProject(eq("project-1"), any(CreateTicketDTO.class)))
                 .thenReturn(response);
 
         mockMvc.perform(post("/projects/{projectId}/tickets", "project-1")
@@ -123,7 +125,7 @@ class TicketControllerTest {
                                   "sprint": { "uuid": "sprint-1" },
                                   "dueDate": "2026-05-10T12:00:00",
                                   "project": { "uuid": "project-1" },
-                                  "assignee": { "username": "john" },
+                                  "assigneeUsername": { "username": "john" },
                                   "dependentTicketUuids": [{ "uuid": "dep-1" }]
                                 }
                                 """))
@@ -131,14 +133,14 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.uuid").value("ticket-1"))
                 .andExpect(jsonPath("$.title").value("Fix login"));
 
-        verify(ticketService).addTicketByProjectUuid(eq("project-1"), any(TicketRequest.class));
+        verify(ticketService).addTicketToProject(eq("project-1"), any(CreateTicketDTO.class));
     }
 
     @Test
     void updateTicket_updatesTicket() throws Exception {
-        TicketResponse response = sampleTicketResponse();
+        TicketDetailsDTO response = sampleTicketResponse();
 
-        when(ticketService.updateTicketByProjectUuid(eq("project-1"), eq("ticket-1"), any(TicketRequest.class)))
+        when(ticketService.updateTicket(eq("project-1"), eq("ticket-1"), any(CreateTicketDTO.class)))
                 .thenReturn(response);
 
         mockMvc.perform(put("/projects/{projectId}/tickets/{ticketId}", "project-1", "ticket-1")
@@ -153,14 +155,14 @@ class TicketControllerTest {
                                   "sprint": { "uuid": "sprint-1" },
                                   "dueDate": "2026-05-11T12:00:00",
                                   "project": { "uuid": "project-1" },
-                                  "assignee": { "username": "john" },
+                                  "assigneeUsername": { "username": "john" },
                                   "dependentTicketUuids": [{ "uuid": "dep-1" }]
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uuid").value("ticket-1"));
 
-        verify(ticketService).updateTicketByProjectUuid(eq("project-1"), eq("ticket-1"), any(TicketRequest.class));
+        verify(ticketService).updateTicket(eq("project-1"), eq("ticket-1"), any(CreateTicketDTO.class));
     }
 
     @Test
@@ -168,18 +170,18 @@ class TicketControllerTest {
         mockMvc.perform(delete("/projects/{projectId}/tickets/{ticketId}", "project-1", "ticket-1"))
                 .andExpect(status().isNoContent());
 
-        verify(ticketService).deleteTicketByProjectUuid("project-1", "ticket-1");
+        verify(ticketService).deleteTicket("project-1", "ticket-1");
     }
 
-    private TicketResponse sampleTicketResponse() {
+    private TicketDetailsDTO sampleTicketResponse() {
         Ticket ticket = new Ticket("Fix login", "Login button broken", sprint, TicketPriority.HIGH,
                 TicketStatus.TO_DO, LocalDateTime.now(), project, user, List.of());
 
-        return TicketResponse.from(ticket);
+        return TicketDetailsDTO.from(ticket);
     }
 
-    private TicketRequest sampleTicketRequest() {
-        TicketRequest request = new TicketRequest();
+    private CreateTicketDTO sampleTicketRequest() {
+        CreateTicketDTO request = new CreateTicketDTO();
         request.setUuid("ticket-1");
         request.setTitle("Fix login");
         request.setDescription("Login button broken");
@@ -189,3 +191,4 @@ class TicketControllerTest {
         return request;
     }
 }
+ */

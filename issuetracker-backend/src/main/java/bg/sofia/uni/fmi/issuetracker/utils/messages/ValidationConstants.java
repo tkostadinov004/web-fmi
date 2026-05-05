@@ -24,8 +24,15 @@ public class ValidationConstants {
     }
 
     public static class Ticket {
+        public static final String BLANK_CODE = "Ticket code should not be blank!";
         public static final String BLANK_TITLE = "Ticket title should not be blank!";
-        public static final String NULL_PRIORITY = "Ticket priority must not be null!";
+        public static final String NULL_PRIORITY = "You should provide a ticket priority!";
+
+        public static final String LENGTH_CODE = "Ticket code should be at most 100 characters long!";
+        public static final String LENGTH_TITLE = "Ticket title should be at most 100 characters long!";
+        public static final String LENGTH_DESCRIPTION = "Ticket description should be at most 500 characters long!";
+
+        public static final String DUE_DATE_IN_THE_PAST = "The provided ticket due date is in the past!";
     }
 
     public static class TicketComment {

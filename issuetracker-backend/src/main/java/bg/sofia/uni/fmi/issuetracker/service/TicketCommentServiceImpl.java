@@ -1,146 +1,105 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentRequest;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentResponse;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTickedException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketComment;
+import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketCommentRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
+import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketCommentMapper;
+import bg.sofia.uni.fmi.issuetracker.utils.Constants;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
-@Transactional
 public class TicketCommentServiceImpl implements TicketCommentService {
-
     private final TicketCommentRepository ticketCommentRepository;
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
+    private final TicketCommentMapper mapper;
 
-    public TicketCommentServiceImpl(TicketCommentRepository ticketCommentRepo, TicketRepository ticketRepo) {
+    public TicketCommentServiceImpl(TicketCommentRepository ticketCommentRepo, TicketRepository ticketRepo, UserRepository userRepository, TicketCommentMapper mapper) {
         this.ticketCommentRepository = ticketCommentRepo;
         this.ticketRepository = ticketRepo;
-    }
-
-
-    @Override
-    public List<TicketCommentResponse> getAllTicketCommentsByProjectAndTicket(String projectUuid, String ticketUuid) {
-        checkIfTicketInProjectByItsUuid(ticketUuid, projectUuid);
-
-        return ticketCommentRepository.getAllByTicketUuid(ticketUuid).stream()
-            .map(TicketCommentResponse::from)
-            .toList();
+        this.userRepository = userRepository;
+        this.mapper = mapper;
     }
 
     @Override
-    public TicketCommentResponse getTicketCommentByUuid(String uuid) {
-        return TicketCommentResponse.from(ticketCommentRepository.findByUuid(uuid).orElseThrow(() ->
-            new TicketCommentNotFoundException("Ticket comment with uuid: " + uuid + " not found")));
-    }
+    public Page<TicketCommentDetailsDTO> getAllCommentsForTicket(String ticketCode, int pageNumber, int pageSize) {
+        pageNumber = pageNumber <= 0 ? Integer.parseInt(Constants.DEFAULT_PAGE_NUMBER) : pageNumber;
+        pageSize = pageSize <= 0 ? Integer.parseInt(Constants.DEFAULT_PAGE_SIZE) : pageSize;
 
-    @Override
-    public TicketCommentResponse getTicketCommentByProjectAndTickedAndUuid(String projectUuid, String ticketUuid,
-                                                                           String commentUuid) {
-        checkIfTicketInProjectByItsUuid(ticketUuid, projectUuid);
-        checkIfTicketCommentInTicketByItsUuid(commentUuid, ticketUuid);
-
-        return getTicketCommentByUuid(commentUuid);
-    }
-
-    @Override
-    public TicketCommentResponse addTicketComment(TicketCommentRequest request) {
-
-        if (ticketCommentRepository.findByUuid(request.getUuid()).isPresent()) {
-            throw new TicketCommentAlreadyExistsException(
-                "Ticket comment with uuid: " + request.getUuid() + " already exists");
+        Optional<Ticket> ticket = ticketRepository.findById(ticketCode);
+        if (ticket.isEmpty()) {
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticketCode));
         }
 
-        Ticket ticket = ticketRepository.findById(request.getTicket().getUuid())
-            .orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
+        Pageable pageRequest = PageRequest.of(pageNumber - 1, pageSize);
+        Page<TicketComment> page = ticketCommentRepository.findAllByTicket(ticket.get(), pageRequest);
 
-        TicketComment comment = new TicketComment(request.getUuid(), request.getTicket(), request.getAuthor(),
-            request.getContent(), request.getCreateDate());
-
-        return TicketCommentResponse.from(ticketCommentRepository.save(comment));
+        return page.map(TicketCommentDetailsDTO::from);
     }
 
     @Override
-    public TicketCommentResponse addTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid,
-                                                                    TicketCommentRequest ticketCommentRequest) {
-        checkIfTicketInProjectByItsUuid(ticketUuid, projectUuid);
-
-        return addTicketComment(ticketCommentRequest);
-    }
-
-    @Override
-    public TicketCommentResponse updateTicketComment(String uuid, TicketCommentRequest ticketComment) {
-
-        TicketComment existing = getTicketComment(uuid);
-
-        // This should be all that can be changed ???
-        existing.setContent(ticketComment.getContent());
-
-        return TicketCommentResponse.from(ticketCommentRepository.save(existing));
-    }
-
-    @Override
-    public TicketCommentResponse updateTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid,
-                                                                       String commentId,
-                                                                       TicketCommentRequest ticketCommentRequest) {
-        checkIfTicketInProjectByItsUuid(ticketUuid, projectUuid);
-        checkIfTicketCommentInTicketByItsUuid(commentId, ticketUuid);
-
-        return updateTicketComment(commentId, ticketCommentRequest);
-    }
-
-    @Override
-    public void deleteTicketCommentByUuid(String uuid) {
-        TicketComment ticketComment = getTicketComment(uuid);
-        ticketCommentRepository.delete(ticketComment);
-    }
-
-    @Override
-    public void deleteTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid, String commentUuid) {
-        checkIfTicketInProjectByItsUuid(ticketUuid, projectUuid);
-        checkIfTicketCommentInTicketByItsUuid(commentUuid, ticketUuid);
-
-        deleteTicketCommentByUuid(commentUuid);
-    }
-
-//    @Override
-//    public void deleteTicketList(List<TicketCommentRequest> requests) {
-//        ticketCommentRepository.deleteAll(requests.stream()
-//            .map(request -> ticketCommentRepository.findByUuid(request.getUuid()).get())
-//            .toList());
-//    }
-
-    private TicketComment getTicketComment(String uuid) {
-        return ticketCommentRepository.findByUuid(uuid).orElseThrow(() ->
-            new TicketCommentNotFoundException("Ticket comment with uuid: " + uuid + " not found"));
-    }
-
-    // To do after making the project oriented structures
-//    private void checkIfProjectExists(String projectUuid) {
-//
-//    }
-
-    private void checkIfTicketCommentInTicketByItsUuid(String ticketCommentUuid, String ticketUuid) {
-        if (!ticketCommentRepository.findByUuid(ticketCommentUuid).get().getTicket().getUuid().equals(ticketUuid)) {
-            throw new TicketCommentNotInTickedException(
-                "Ticket comment with uuid: " + ticketCommentUuid + " not found within the ticket");
+    public TicketCommentDetailsDTO getTicketComment(String commentUuid) {
+        Optional<TicketComment> ticketComment = ticketCommentRepository.findById(commentUuid);
+        if (ticketComment.isEmpty()) {
+            throw new TicketCommentNotFoundException(ExceptionMessages.TicketComment.ticketCommentNotFound(commentUuid));
         }
+
+        return TicketCommentDetailsDTO.from(ticketComment.get());
     }
 
-    private void checkIfTicketInProjectByItsUuid(String ticketUuid, String projectUuid) {
-        if (!ticketRepository.findByUuid(ticketUuid).get().getProject().getUuid().equals(projectUuid)) {
-            throw new TicketNotInProjectException("Ticket with uuid: " + ticketUuid + " not found within the project");
+    @Override
+    public void addTicketComment(String authorUsername, String ticketCode, CreateTicketCommentDTO dto) {
+        Optional<User> author = userRepository.findById(authorUsername);
+        if (author.isEmpty()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(authorUsername));
         }
+
+        Optional<Ticket> ticket = ticketRepository.findById(ticketCode);
+        if (ticket.isEmpty()) {
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(ticketCode));
+        }
+
+        TicketComment comment = new TicketComment(ticket.get(), author.get(), dto.content(), LocalDateTime.now());
+        ticketCommentRepository.save(comment);
+    }
+
+    @Override
+    @Transactional
+    public void updateTicketComment(String commentUuid, UpdateTicketCommentDTO dto) {
+        Optional<TicketComment> ticketComment = ticketCommentRepository.findById(commentUuid);
+        if (ticketComment.isEmpty()) {
+            throw new TicketCommentNotFoundException(ExceptionMessages.TicketComment.ticketCommentNotFound(commentUuid));
+        }
+
+        mapper.patchTicketCommentFromDTO(dto, ticketComment.get());
+        ticketCommentRepository.save(ticketComment.get());
+    }
+
+    @Override
+    public void deleteTicketComment(String commentUuid) {
+        Optional<TicketComment> ticketComment = ticketCommentRepository.findById(commentUuid);
+        if (ticketComment.isEmpty()) {
+            throw new TicketCommentNotFoundException(ExceptionMessages.TicketComment.ticketCommentNotFound(commentUuid));
+        }
+
+        ticketCommentRepository.delete(ticketComment.get());
     }
 }
