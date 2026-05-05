@@ -8,4 +8,5 @@ public class Constants {
     public static final long DEFAULT_FORGOT_PASSWORD_TOKEN_VALIDITY = 5 * 60 * 1000; // 5 minutes
     public static final String DEFAULT_PAGE_NUMBER = "1";
     public static final String DEFAULT_PAGE_SIZE = "10";
+    public static final String SKIP_EMAIL_FEATURE_FLAG = "SKIP_EMAIL";
 }

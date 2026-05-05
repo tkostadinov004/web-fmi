@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
+import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -105,7 +106,7 @@ public class AuthController {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String forgotPasswordToken = authService.sendForgotPasswordEmail(username, dto);
 
-        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe("SKIP_EMAIL");
+        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG);
         HttpHeaders headers = new HttpHeaders();
         if (shouldSkipEmailSending.isPresent() && Boolean.parseBoolean(shouldSkipEmailSending.get())) {
             headers.add("Reset-Token", forgotPasswordToken);

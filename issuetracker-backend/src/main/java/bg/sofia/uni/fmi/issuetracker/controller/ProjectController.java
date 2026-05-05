@@ -28,6 +28,7 @@ public class ProjectController {
     @Operation(summary = "Get all tickets in a project", description = "Retrieves all tickets belonging to a specific project.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })

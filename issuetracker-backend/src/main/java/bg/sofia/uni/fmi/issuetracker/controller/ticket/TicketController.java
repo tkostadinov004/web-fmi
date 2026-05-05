@@ -47,6 +47,7 @@ public class TicketController {
     @Operation(summary = "Get ticket details", description = "Retrieves detailed information for a specific ticket by its code.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ticket retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Ticket not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -59,6 +60,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ticket created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid ticket data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Project or assignee user not found"),
             @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists, or assignee is not part of the project"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
@@ -73,6 +75,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dependent ticket created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid ticket data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Parent ticket, project, or assignee user not found"),
             @ApiResponse(responseCode = "409", description = "Dependent ticket code already exists, assignee not part of project, or ticket not in project"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
@@ -87,6 +90,7 @@ public class TicketController {
     @Operation(summary = "Change ticket assignee", description = "Assigns or reassigns a ticket to a different user.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Assignee changed successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Ticket or assignee user not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -101,6 +105,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ticket updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid update data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Ticket not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -114,6 +119,7 @@ public class TicketController {
     @Operation(summary = "Delete a ticket", description = "Removes a ticket from the system. This will also remove any associated dependencies and comments.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ticket deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Ticket not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -126,6 +132,7 @@ public class TicketController {
     @Operation(summary = "Get ticket comments", description = "Retrieves paginated comments for a specific ticket.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Ticket not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })

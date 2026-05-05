@@ -27,6 +27,7 @@ public class FileController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "File retrieved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid or missing file"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "File not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })

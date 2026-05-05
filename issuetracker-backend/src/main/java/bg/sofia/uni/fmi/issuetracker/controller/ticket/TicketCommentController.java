@@ -32,6 +32,7 @@ public class TicketCommentController {
     @Operation(summary = "Get a comment", description = "Retrieves the details of a specific ticket comment by its UUID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Comment retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Comment not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -44,6 +45,7 @@ public class TicketCommentController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid update data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Comment not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
@@ -57,6 +59,7 @@ public class TicketCommentController {
     @Operation(summary = "Delete a comment", description = "Removes a comment from a ticket.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
             @ApiResponse(responseCode = "404", description = "Comment not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
