@@ -20,8 +20,6 @@ public record TicketDetailsDTO(
         TicketStatus ticketStatus,
         @Schema(description = "Priority level of the ticket (e.g., LOW, MEDIUM, HIGH, CRITICAL).", requiredMode = Schema.RequiredMode.REQUIRED)
         TicketPriority ticketPriority,
-        @Schema(description = "UUID of the sprint associated with the ticket.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        String sprintUuid,
         @Schema(description = "Timestamp when the ticket was created. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.REQUIRED, type = "string", format = "date-time")
         LocalDateTime createDate,
         @Schema(description = "Timestamp when the ticket was last updated. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.REQUIRED, type = "string", format = "date-time")
@@ -46,7 +44,7 @@ public record TicketDetailsDTO(
                 .toList();
 
         return new TicketDetailsDTO(ticket.getCode(), ticket.getTitle(), ticket.getDescription(), ticket.getTicketStatus(),
-                ticket.getTicketPriority(), ticket.getSprint() != null ? ticket.getSprint().getUuid() : null, ticket.getCreateDate(), ticket.getUpdateDate(),
+                ticket.getTicketPriority(), ticket.getCreateDate(), ticket.getUpdateDate(),
                 ticket.getDueDate(), ticket.getProject().getUuid(), assigneeDTO, dependentTicketDTOS);
     }
 }
