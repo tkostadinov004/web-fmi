@@ -18,6 +18,7 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
+import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.EmailUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
@@ -66,6 +67,8 @@ public class AuthServiceImplTests {
     private PasswordEncoder passwordEncoder;
     @Mock
     private EmailUtils emailUtils;
+    @Mock
+    private FeatureFlagService featureFlagService;
 
     @Spy
     @InjectMocks
@@ -278,7 +281,8 @@ public class AuthServiceImplTests {
 
         Token token = new Token("testToken", TEST_USER);
         doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.FORGOT_PASSWORD), any(Long.class));
-
+        when(featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(Optional.empty());
+        
         SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(TEST_USER.getEmail(), "");
         authService.sendForgotPasswordEmail(TEST_USER.getUsername(), dto);
 

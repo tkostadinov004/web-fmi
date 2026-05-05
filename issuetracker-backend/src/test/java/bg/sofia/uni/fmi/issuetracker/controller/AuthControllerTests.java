@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -23,6 +24,9 @@ public class AuthControllerTests extends BaseControllerTests {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private FeatureFlagService featureFlagService;
 
     @Test
     public void testReturnsBadRequestOnInvalidData() throws Exception {
