@@ -38,8 +38,13 @@ object that has the following form:
 }
 ```
 
-Running in Maven:
+If you want to skip forgot password email sending, send a POST request to /featureflags with the following body:
 
-```shell
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-DSPRING_APPLICATION_JSON=<your_object_here>"
+```json
+{
+  "name": "SKIP_EMAIL",
+  "value": "true"
+}
 ```
+
+*Note that you have to be logged in as an admin in order to execute this request!*
