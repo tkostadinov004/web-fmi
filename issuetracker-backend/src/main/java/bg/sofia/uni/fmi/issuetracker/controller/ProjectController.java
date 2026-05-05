@@ -1,9 +1,13 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,10 +31,14 @@ public class ProjectController {
 
     @Operation(summary = "Get all tickets in a project", description = "Retrieves all tickets belonging to a specific project.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Project not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TicketDetailsDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/tickets")
     public ResponseEntity<List<TicketDetailsDTO>> getAllTicketsByProject(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {

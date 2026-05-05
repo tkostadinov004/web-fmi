@@ -11,6 +11,6 @@ public record AddFeatureFlagDTO(
         @Length(max = 255, message = ValidationConstants.FeatureFlag.LENGTH_NAME)
         @Schema(description = "Unique name of the feature flag. Must not be blank and must be at most 255 characters.", requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 255)
         String name,
-        @Schema(description = "Value of the feature flag. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-        String value) {
+        @Schema(description = "Value of the feature flag. Defaults to false if not provided.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        boolean value) {
 } 

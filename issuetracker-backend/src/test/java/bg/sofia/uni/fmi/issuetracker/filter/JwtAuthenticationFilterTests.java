@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.filter;
 import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.service.UserServiceImpl;
+import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
@@ -19,10 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.PrintWriter;
-import java.util.Map;
 
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TOKEN;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
@@ -166,6 +165,6 @@ public class JwtAuthenticationFilterTests {
         verify(response, times(1)).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         verify(response, times(1)).setContentType("application/json");
         verify(response, times(1)).getWriter();
-        verify(mockWriter, times(1)).write(new ObjectMapper().writeValueAsString(Map.of("message", OutputMessages.System.UNAUTHORIZED)));
+        verify(mockWriter, times(1)).write(CommonUtils.buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED));
     }
 }

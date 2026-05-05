@@ -1,13 +1,11 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.AddFeatureFlagDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.UpdateFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.featureflag.FeatureFlagAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.featureflag.FeatureFlagNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service contract for managing feature flags.
@@ -29,30 +27,30 @@ public interface FeatureFlagService {
     void addFeatureFlag(AddFeatureFlagDTO dto);
 
     /**
-     * Retrieves the value of a feature flag by name without throwing an exception.
+     * Checks if a feature flag is enabled.
      *
      * @param name the name of the feature flag
-     * @return an {@link Optional} containing the feature flag value if found, or an empty optional otherwise
+     * @return {@code true} if the feature flag is enabled, {@code false} if the feature flag does not exist or is set to false
      */
-    Optional<String> getFeatureFlagValueUnsafe(String name);
+    boolean isFeatureEnabled(String name);
 
     /**
-     * Retrieves the value of a feature flag by name.
+     * Retrieves a feature flag by name.
      *
      * @param name the name of the feature flag
-     * @return the value of the feature flag
+     * @return the {@link OutputFeatureFlagDTO} containing feature flag details
      * @throws FeatureFlagNotFoundException if the feature flag with the given name does not exist
      */
-    String getFeatureFlagValueSafe(String name);
+    OutputFeatureFlagDTO getFeatureFlag(String name);
 
     /**
-     * Updates the value of an existing feature flag.
+     * Updates the value of a feature flag.
      *
      * @param name the name of the feature flag to update
-     * @param dto  the {@link UpdateFeatureFlagDTO} containing the new value
+     * @param newValue the new value for the feature flag
      * @throws FeatureFlagNotFoundException if the feature flag with the given name does not exist
      */
-    void editFeatureFlagValue(String name, UpdateFeatureFlagDTO dto);
+    void setFeatureFlagValue(String name, boolean newValue);
 
     /**
      * Deletes a feature flag.

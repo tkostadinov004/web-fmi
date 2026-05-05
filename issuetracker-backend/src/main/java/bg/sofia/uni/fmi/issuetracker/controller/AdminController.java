@@ -3,10 +3,14 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 import bg.sofia.uni.fmi.issuetracker.controller.common.PaginationLinkHeader;
 import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,11 +38,16 @@ public class AdminController {
 
     @Operation(summary = "List all users", description = "Returns a paginated list of users for admin review.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User list returned successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid pagination or sorting parameters"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "User list returned successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AdminOnlyOutputUserDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination or sorting parameters",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/users")
     @RequireAdmin

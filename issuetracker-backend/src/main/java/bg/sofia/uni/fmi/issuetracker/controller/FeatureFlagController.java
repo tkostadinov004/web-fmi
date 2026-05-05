@@ -2,12 +2,14 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.AddFeatureFlagDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.UpdateFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,10 +39,14 @@ public class FeatureFlagController {
 
     @Operation(summary = "List all feature flags", description = "Retrieves all configured feature flags.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Feature flags retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Feature flags retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OutputFeatureFlagDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
     @RequireAdmin
@@ -49,26 +56,36 @@ public class FeatureFlagController {
 
     @Operation(summary = "Get feature flag value", description = "Retrieves the current value of the specified feature flag.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Feature flag value retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "404", description = "Feature flag not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Feature flag value retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = OutputFeatureFlagDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Feature flag not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{name}")
     @RequireAdmin
-    public ResponseEntity<String> getValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name) {
-        return ResponseEntity.ok(featureFlagService.getFeatureFlagValueSafe(name));
+    public ResponseEntity<OutputFeatureFlagDTO> getValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name) {
+        return ResponseEntity.ok(featureFlagService.getFeatureFlag(name));
     }
 
     @Operation(summary = "Create a feature flag", description = "Creates a new feature flag with the provided name and value.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Feature flag created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid feature flag data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "409", description = "A feature flag with the given name already exists"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid feature flag data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "A feature flag with the given name already exists",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
     @RequireAdmin
@@ -80,27 +97,36 @@ public class FeatureFlagController {
     @Operation(summary = "Update a feature flag", description = "Updates the value of an existing feature flag.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Feature flag updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid updated feature flag data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "404", description = "Feature flag not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid updated feature flag data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Feature flag not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{name}")
     @RequireAdmin
-    public ResponseEntity<Void> editFeatureFlag(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name,
-                                                @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Feature flag update data", required = true, content = @Content) @Valid @RequestBody UpdateFeatureFlagDTO dto) {
-        featureFlagService.editFeatureFlagValue(name, dto);
+    public ResponseEntity<Void> setFeatureFlagValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name,
+                                                    @Parameter(description = "The new value for the feature flag", required = true) @RequestParam(name = "new_value") boolean new_value) {
+        featureFlagService.setFeatureFlagValue(name, new_value);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Delete a feature flag", description = "Deletes the specified feature flag.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Feature flag deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges"),
-            @ApiResponse(responseCode = "404", description = "Feature flag not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "204", description = "Feature flag deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Feature flag not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{name}")
     @RequireAdmin

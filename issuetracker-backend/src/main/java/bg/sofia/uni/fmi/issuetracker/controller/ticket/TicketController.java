@@ -6,12 +6,15 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,10 +49,14 @@ public class TicketController {
 
     @Operation(summary = "Get ticket details", description = "Retrieves detailed information for a specific ticket by its code.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Ticket retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Ticket retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = TicketDetailsDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{code}")
     public ResponseEntity<TicketDetailsDTO> getTicketByCode(@Parameter(description = "Unique code identifier of the ticket", required = true) @PathVariable String code) {
@@ -59,11 +66,16 @@ public class TicketController {
     @Operation(summary = "Create a new ticket", description = "Creates a new ticket in the specified project with the provided details.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ticket created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid ticket data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Project or assignee user not found"),
-            @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists, or assignee is not part of the project"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid ticket data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Project or assignee user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists, or assignee is not part of the project",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
     public ResponseEntity<Void> createTicket(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket creation data", required = true, content = @Content) @Valid @RequestBody CreateTicketDTO dto) {
@@ -90,9 +102,12 @@ public class TicketController {
     @Operation(summary = "Change ticket assignee", description = "Assigns or reassigns a ticket to a different user.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Assignee changed successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket or assignee user not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket or assignee user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{code}/assignee")
     public ResponseEntity<Void> changeAssignee(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
@@ -104,10 +119,14 @@ public class TicketController {
     @Operation(summary = "Update ticket information", description = "Updates ticket properties such as title, description, status, priority, and due date.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ticket updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid update data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid update data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{code}")
     public ResponseEntity<Void> updateTicket(@Parameter(description = "Code of the ticket to update", required = true) @PathVariable String code,
@@ -119,9 +138,12 @@ public class TicketController {
     @Operation(summary = "Delete a ticket", description = "Removes a ticket from the system. This will also remove any associated dependencies and comments.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ticket deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{code}")
     public ResponseEntity<Void> deleteTicket(@Parameter(description = "Code of the ticket to delete", required = true) @PathVariable String code) {
@@ -131,10 +153,14 @@ public class TicketController {
 
     @Operation(summary = "Get ticket comments", description = "Retrieves paginated comments for a specific ticket.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Comments retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TicketCommentDetailsDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{code}/comments")
     public ResponseEntity<List<TicketCommentDetailsDTO>> getAllCommentsForTicket(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
@@ -153,10 +179,14 @@ public class TicketController {
     @Operation(summary = "Add comment to ticket", description = "Creates a new comment on a ticket. The author is the currently authenticated user.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment added successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid comment data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Ticket or author user not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid comment data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket or author user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/{code}/comments")
     public ResponseEntity<Void> addCommentToTicket(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,

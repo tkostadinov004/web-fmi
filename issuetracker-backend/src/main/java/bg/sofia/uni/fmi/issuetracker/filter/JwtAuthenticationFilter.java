@@ -18,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponse;
+import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponseAsJson;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -71,6 +71,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     void outputUnauthorized(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write(buildErrorResponse(OutputMessages.System.UNAUTHORIZED));
+        response.getWriter().write(buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED));
     }
 }

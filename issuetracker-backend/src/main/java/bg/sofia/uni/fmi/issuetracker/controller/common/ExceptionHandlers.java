@@ -11,6 +11,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectExcep
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
@@ -39,37 +41,37 @@ public class ExceptionHandlers {
     @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
             UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
             TicketCommentNotInTicketException.class, TicketNotInProjectException.class})
-    public ResponseEntity<String> handleConflictErrors(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler({WrongCredentialsException.class})
-    public ResponseEntity<String> handleUserLogicError(AuthException ex) {
+    public ResponseEntity<ErrorResponse> handleUserLogicError(AuthException ex) {
         LOGGER.error(ex.getMessage());
         return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<String> handleNotFound(NotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<String> handleDeniedAccess(AuthorizationDeniedException ex) {
+    public ResponseEntity<ErrorResponse> handleDeniedAccess(AuthorizationDeniedException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler({ValidationException.class, IllegalArgumentException.class})
-    public ResponseEntity<String> handleValidationFailure(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleValidationFailure(Exception ex) {
         LOGGER.error(ex.getMessage());
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ValidationErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getAllErrors().forEach(error -> {
@@ -78,34 +80,34 @@ public class ExceptionHandlers {
             errors.put(fieldName, errorMessage);
         });
 
-        return new ResponseEntity<>(Map.of("errors", errors), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ValidationErrorResponse(errors), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({MissingServletRequestParameterException.class})
-    public ResponseEntity<Map<String, Object>> handleMissingRequestParam(MissingServletRequestParameterException ex) {
+    public ResponseEntity<ErrorResponse> handleMissingRequestParam(MissingServletRequestParameterException ex) {
         LOGGER.error(ex.getMessage());
         String name = ex.getParameterName();
 
-        return new ResponseEntity<>(Map.of("error", ValidationConstants.missingParam(name)), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse(ValidationConstants.missingParam(name)), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({AuthException.class})
-    public ResponseEntity<String> handleMiscAuthException(AuthException ex) {
+    public ResponseEntity<ErrorResponse> handleMiscAuthException(AuthException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({MultipartException.class, FileServiceException.class})
-    public ResponseEntity<String> handleFileExceptions(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleFileExceptions(Exception ex) {
         LOGGER.error(ex.getMessage());
-        return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.File.invalidFile()), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse(ExceptionMessages.File.invalidFile()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleOtherExceptions(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         return ResponseEntity
                 .internalServerError()
-                .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+                .body(new ErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
     }
 }

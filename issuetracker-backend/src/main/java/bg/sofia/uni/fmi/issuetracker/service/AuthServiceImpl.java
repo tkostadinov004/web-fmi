@@ -133,9 +133,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Token emailToken = createToken(user.get(), TokenType.FORGOT_PASSWORD, Constants.DEFAULT_FORGOT_PASSWORD_TOKEN_VALIDITY);
-
-        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG);
-        if (shouldSkipEmailSending.isEmpty() || !Boolean.parseBoolean(shouldSkipEmailSending.get())) {
+        if (!featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)) {
             emailUtils.sendForgotPasswordEmail(dto.email(), dto.redirectUrl(), emailToken);
         }
 

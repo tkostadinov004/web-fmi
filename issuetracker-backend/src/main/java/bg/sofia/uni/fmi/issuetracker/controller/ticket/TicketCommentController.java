@@ -2,10 +2,12 @@ package bg.sofia.uni.fmi.issuetracker.controller.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,10 +33,14 @@ public class TicketCommentController {
 
     @Operation(summary = "Get a comment", description = "Retrieves the details of a specific ticket comment by its UUID.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Comment retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Comment not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "200", description = "Comment retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = TicketCommentDetailsDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Comment not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{commentId}")
     public ResponseEntity<TicketCommentDetailsDTO> getComment(@Parameter(description = "UUID of the comment", required = true) @PathVariable String commentId) {
@@ -44,10 +50,14 @@ public class TicketCommentController {
     @Operation(summary = "Update a comment", description = "Updates the content of an existing ticket comment.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid update data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Comment not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid update data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Comment not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{commentId}")
     public ResponseEntity<Void> updateTicketComment(@Parameter(description = "UUID of the comment to update", required = true) @PathVariable String commentId,
@@ -59,9 +69,12 @@ public class TicketCommentController {
     @Operation(summary = "Delete a comment", description = "Removes a comment from a ticket.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Comment not found"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Comment not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteTicketComment(@Parameter(description = "UUID of the comment to delete", required = true) @PathVariable String commentId) {
