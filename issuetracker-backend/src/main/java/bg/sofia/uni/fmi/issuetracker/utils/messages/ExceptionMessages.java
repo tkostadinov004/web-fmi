@@ -161,4 +161,17 @@ public class ExceptionMessages {
             return COMMENT_NOT_IN_TICKET.formatted(commentUuid, ticketTitle);
         }
     }
+
+    public static class FeatureFlag {
+        private static final String FEATURE_FLAG_ALREADY_EXISTS = "Feature flag '%s' already exists!";
+        private static final String FEATURE_FLAG_NOT_FOUND = "Feature flag '%s' not found!";
+
+        public static String featureFlagAlreadyExists(String name) {
+            return FEATURE_FLAG_ALREADY_EXISTS.formatted(name);
+        }
+
+        public static String featureFlagNotFound(String name) {
+            return FEATURE_FLAG_NOT_FOUND.formatted(name);
+        }
+    }
 }

@@ -19,6 +19,7 @@ import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.EmailUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
@@ -39,14 +40,16 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final EmailUtils emailUtils;
+    private final FeatureFlagService featureFlagService;
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, JwtUtils jwtUtils, PasswordEncoder passwordEncoder, EmailUtils emailUtils) {
+    public AuthServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, JwtUtils jwtUtils, PasswordEncoder passwordEncoder, EmailUtils emailUtils, FeatureFlagService featureFlagService) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.jwtUtils = jwtUtils;
         this.passwordEncoder = passwordEncoder;
         this.emailUtils = emailUtils;
+        this.featureFlagService = featureFlagService;
     }
 
     @Override
@@ -115,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto) {
+    public String sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto) {
         Optional<User> user = userRepository.findById(username);
         if (user.isEmpty() || user.get().isDeleted()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
@@ -130,7 +133,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Token emailToken = createToken(user.get(), TokenType.FORGOT_PASSWORD, Constants.DEFAULT_FORGOT_PASSWORD_TOKEN_VALIDITY);
-        emailUtils.sendForgotPasswordEmail(dto.email(), dto.redirectUrl(), emailToken);
+
+        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe(Constants.SKIP_EMAIL_FEATURE_FLAG);
+        if (shouldSkipEmailSending.isEmpty() || !Boolean.parseBoolean(shouldSkipEmailSending.get())) {
+            emailUtils.sendForgotPasswordEmail(dto.email(), dto.redirectUrl(), emailToken);
+        }
+
+        return emailToken.getTokenValue();
     }
 
     @Override
