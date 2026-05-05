@@ -70,11 +70,12 @@ public interface AuthService {
      *
      * @param username the username requesting a password reset
      * @param dto      the forgot-password email request data, including email address and redirect URL
+     * @return the token used for resetting the password
      * @throws UserNotFoundException                     if the user does not exist or is marked as deleted
      * @throws AuthException                             if the provided email does not match the user's registered email
      * @throws ForgotPasswordTokenAlreadyExistsException if a valid reset token already exists for the user
      */
-    void sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto);
+    String sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto);
 
     /**
      * Changes the user's forgotten password using a valid token.

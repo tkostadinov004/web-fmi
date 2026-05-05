@@ -7,11 +7,14 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,14 +23,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Authentication", description = "Endpoints for registration, login, logout and password recovery")
 public class AuthController {
     private final AuthService authService;
+    private final Environment environment;
+    private final FeatureFlagService featureFlagService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, Environment environment, FeatureFlagService featureFlagService) {
         this.authService = authService;
+        this.environment = environment;
+        this.featureFlagService = featureFlagService;
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new account for a user and returns a success message.")
@@ -94,8 +103,17 @@ public class AuthController {
     @PostMapping("/forgotPassword")
     public ResponseEntity<Void> sendForgotPasswordEmail(@Valid @RequestBody SendForgotPasswordEmailDTO dto) {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        authService.sendForgotPasswordEmail(username, dto);
-        return ResponseEntity.noContent().build();
+        String forgotPasswordToken = authService.sendForgotPasswordEmail(username, dto);
+
+        Optional<String> shouldSkipEmailSending = featureFlagService.getFeatureFlagValueUnsafe("SKIP_EMAIL");
+        HttpHeaders headers = new HttpHeaders();
+        if (shouldSkipEmailSending.isPresent() && Boolean.parseBoolean(shouldSkipEmailSending.get())) {
+            headers.add("Reset-Token", forgotPasswordToken);
+        }
+        return ResponseEntity
+                .noContent()
+                .headers(headers)
+                .build();
     }
 
     @Operation(summary = "Reset forgotten password", description = "Resets the password for the current user using a valid forgot-password token.")

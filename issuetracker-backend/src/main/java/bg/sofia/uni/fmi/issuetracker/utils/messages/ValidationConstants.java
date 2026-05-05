@@ -38,4 +38,9 @@ public class ValidationConstants {
     public static class TicketComment {
         public static final String BLANK_CONTENT = "Comment content should not be blank!";
     }
+
+    public static class FeatureFlag {
+        public static final String BLANK_NAME = "Feature flag name should not be blank!";
+        public static final String LENGTH_NAME = "Feature flag name should be at most 255 characters long!";
+    }
 }
