@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "sprints")
 public class Sprint {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "uuid")

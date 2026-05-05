@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.ticket;
 
-public class TicketCommentAlreadyExistsException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
+
+public class TicketCommentAlreadyExistsException extends AlreadyExistsException {
     public TicketCommentAlreadyExistsException(String message) {
         super(message);
     }

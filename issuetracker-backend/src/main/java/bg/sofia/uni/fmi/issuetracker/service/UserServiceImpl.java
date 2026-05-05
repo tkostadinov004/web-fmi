@@ -14,7 +14,6 @@ import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -94,14 +93,13 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userOpt.get();
-        Resource profilePicture = user.getProfilePicturePath() != null ? fileService.getFile(user.getProfilePicturePath()) : null;
         List<OutputUserProjectDTO> projects =
                 user.getProjects()
                         .stream()
                         .map(pu -> new OutputUserProjectDTO(pu.getProject().getName(), pu.getProject().getUuid(), pu.getRole()))
                         .toList();
 
-        return new UserDetailsDTO(profilePicture, user.getUsername(), user.getFirstName(), user.getLastName(),
+        return new UserDetailsDTO(user.getProfilePicturePath(), user.getUsername(), user.getFirstName(), user.getLastName(),
                 user.getEmail(), user.getCompanyName(), user.isAdmin(), projects);
     }
 

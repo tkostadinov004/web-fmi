@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
@@ -54,7 +54,7 @@ public class ProjectServiceImplTests {
 
         assertThatThrownBy(() -> projectService.isMemberOf(TEST_USER.getUsername(), projectId))
                 .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
-                .isExactlyInstanceOf(ProjectDoesNotExistException.class);
+                .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class ProjectServiceImplTests {
 
         assertThatThrownBy(() -> projectService.hasRoles(TEST_USER.getUsername(), projectId, List.of(), false))
                 .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
-                .isExactlyInstanceOf(ProjectDoesNotExistException.class);
+                .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test

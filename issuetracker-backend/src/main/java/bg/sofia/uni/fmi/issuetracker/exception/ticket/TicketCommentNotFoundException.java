@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.ticket;
 
-public class TicketCommentNotFoundException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
+
+public class TicketCommentNotFoundException extends NotFoundException {
     public TicketCommentNotFoundException(String message) {
         super(message);
     }

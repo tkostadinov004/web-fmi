@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.auth;
 
-public class ForgotPasswordTokenAlreadyExistsException extends AuthException {
+import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
+
+public class ForgotPasswordTokenAlreadyExistsException extends AlreadyExistsException {
     public ForgotPasswordTokenAlreadyExistsException(String message) {
         super(message);
     }

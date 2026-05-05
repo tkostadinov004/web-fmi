@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
@@ -33,7 +33,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectId));
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
         }
 
         return projectRepository.isUserInProject(user.get(), project.get());
@@ -48,7 +48,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
-            throw new ProjectDoesNotExistException(ExceptionMessages.Project.projectNotFound(projectId));
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
         }
 
         return strict ? projectRepository.hasRolesStrict(user.get(), project.get(), roles) :

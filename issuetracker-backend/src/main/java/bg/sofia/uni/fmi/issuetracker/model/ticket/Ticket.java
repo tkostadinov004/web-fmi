@@ -1,13 +1,12 @@
 package bg.sofia.uni.fmi.issuetracker.model.ticket;
 
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -22,17 +21,11 @@ import java.util.Objects;
 @Entity
 @Table(name = "tickets")
 public class Ticket {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "uuid")
-    private String uuid;
+    @Column(name = "code", nullable = false, unique = true, length = 100)
+    private String code;
 
-    // Human readable identification
-//    @Column(name = "code", nullable = false, unique = true, length = 100)
-//    private String code;
-
-    @Column(name = "title", nullable = false, unique = true, length = 100)
+    @Column(name = "title", nullable = false, length = 100)
     private String title;
 
     @Column(name = "description", length = 500)
@@ -67,13 +60,11 @@ public class Ticket {
     @JoinColumn(name = "assignee_username")
     private User assignee;
 
-    // Should there be List of tickets 'this' depends on ( not only tickets that depend on 'this' ) ???
-    // Is this ok ???
     @ManyToMany
     @JoinTable(
             name = "ticket_dependencies",
-            joinColumns = @JoinColumn(name = "ticket_uuid"),
-            inverseJoinColumns = @JoinColumn(name = "depends_on_ticket_uuid")
+            joinColumns = @JoinColumn(name = "ticket_code"),
+            inverseJoinColumns = @JoinColumn(name = "depends_on_ticket_code")
     )
     private List<Ticket> dependentTickets;
 
@@ -81,9 +72,10 @@ public class Ticket {
 
     }
 
-    public Ticket(String title, String description, Sprint sprint, TicketPriority ticketPriority,
+    public Ticket(String code, String title, String description, Sprint sprint, TicketPriority ticketPriority,
                   TicketStatus status, LocalDateTime dueDate, Project project, User assignee,
                   List<Ticket> dependentTickets) {
+        this.code = code;
         this.title = title;
         this.description = description;
         this.sprint = sprint;
@@ -97,8 +89,13 @@ public class Ticket {
         this.dependentTickets = dependentTickets;
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getCode() {
+        return code;
+    }
+
+    public Ticket setCode(String code) {
+        this.code = code;
+        return this;
     }
 
     public String getTitle() {
@@ -192,11 +189,11 @@ public class Ticket {
     @Override
     public boolean equals(Object object) {
         if (!(object instanceof Ticket ticket)) return false;
-        return Objects.equals(uuid, ticket.uuid);
+        return Objects.equals(code, ticket.code);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(uuid);
+        return Objects.hashCode(code);
     }
 }

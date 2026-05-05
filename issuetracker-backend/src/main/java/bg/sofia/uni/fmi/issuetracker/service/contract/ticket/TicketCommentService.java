@@ -1,121 +1,56 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract.ticket;
 
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentRequest;
-import bg.sofia.uni.fmi.issuetracker.dto.ticket.TicketCommentResponse;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectDoesNotExistException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentAlreadyExistsException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTickedException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
-
-import java.util.List;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
+import org.springframework.data.domain.Page;
 
 public interface TicketCommentService {
-
+    /**
+     * Retrieves paginated comments for a specific ticket.
+     *
+     * @param ticketCode the code of the ticket to retrieve comments for
+     * @param pageNumber the page number (1-indexed), defaults to 1 if less than or equal to 0
+     * @param pageSize the number of comments per page, defaults to a default page size if less than or equal to 0
+     * @return a {@link Page} of {@link TicketCommentDetailsDTO} containing paginated ticket comments
+     * @throws TicketNotFoundException if no ticket with the given code exists
+     */
+    Page<TicketCommentDetailsDTO> getAllCommentsForTicket(String ticketCode, int pageNumber, int pageSize);
 
     /**
-     * Returns all comments of a ticket
+     * Retrieves a specific ticket comment by its UUID.
      *
-     * @param projectUuid the uuid of the project
-     * @param ticketUuid  the uuid of the ticket
-     * @return {@link List < TicketCommentResponse >}
-     * @throws ProjectDoesNotExistException if no project with the given uuid exists
+     * @param commentUuid the UUID of the comment to retrieve
+     * @return a {@link TicketCommentDetailsDTO} containing the comment details
+     * @throws TicketCommentNotFoundException if no comment with the given UUID exists
      */
-    List<TicketCommentResponse> getAllTicketCommentsByProjectAndTicket(String projectUuid, String ticketUuid);
+    TicketCommentDetailsDTO getTicketComment(String commentUuid);
 
     /**
-     * Returns the TicketComment with given uuid
+     * Adds a new comment to a ticket.
      *
-     * @param uuid the uuid of the ticket
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentNotFoundException if the TicketComment is not found
+     * @param authorUsername the username of the comment author
+     * @param ticketCode the code of the ticket to add the comment to
+     * @param dto the {@link CreateTicketCommentDTO} containing comment data
+     * @throws UserNotFoundException if the author username does not exist
+     * @throws TicketNotFoundException if no ticket with the given code exists
      */
-    TicketCommentResponse getTicketCommentByUuid(String uuid);
+    void addTicketComment(String authorUsername, String ticketCode, CreateTicketCommentDTO dto);
 
     /**
-     * Returns the TicketComment and checked if in the right project and ticket
+     * Updates an existing ticket comment.
      *
-     * @param projectUuid the uuid of the project
-     * @param ticketUuid  the uuid of the ticket
-     * @param commentUuid the uuid of the comment
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProjectException       if the ticket is not in the project
+     * @param commentUuid the UUID of the comment to update
+     * @param dto the {@link UpdateTicketCommentDTO} containing updated comment data
+     * @throws TicketCommentNotFoundException if no comment with the given UUID exists
      */
-    TicketCommentResponse getTicketCommentByProjectAndTickedAndUuid(String projectUuid,
-                                                                    String ticketUuid, String commentUuid);
+    void updateTicketComment(String commentUuid, UpdateTicketCommentDTO dto);
 
     /**
-     * Returns the added ticketComment
+     * Deletes a ticket comment.
      *
-     * @param ticketCommentRequest the ticketComment request of a ticketComment to be added
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentAlreadyExistsException if the ticketComment already exists
-     * @throws TicketNotFoundException             if the ticket does not exist
+     * @param commentUuid the UUID of the comment to delete
+     * @throws TicketCommentNotFoundException if no comment with the given UUID exists
      */
-    TicketCommentResponse addTicketComment(TicketCommentRequest ticketCommentRequest);
-
-    /**
-     * Returns the added ticketComment
-     *
-     * @param projectUuid          the uuid of the project
-     * @param ticketUuid           the uuid of the ticket
-     * @param ticketCommentRequest the ticketComment request of a ticketComment to be added
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentAlreadyExistsException if the ticketComment already exists
-     * @throws TicketNotFoundException             if the ticket does not exist
-     */
-    TicketCommentResponse addTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid,
-                                                             TicketCommentRequest ticketCommentRequest);
-
-    /**
-     * Returns the updated ticketComment
-     *
-     * @param uuid          the uuid of the ticketComment
-     * @param ticketComment the updated ticketComment
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentNotFoundException if no ticketComment exists with given uuid
-     */
-    TicketCommentResponse updateTicketComment(String uuid, TicketCommentRequest ticketComment);
-
-    /**
-     * Returns the updated ticketComment
-     *
-     * @param projectUuid          the uuid of the project
-     * @param ticketUuid           the uuid of the ticket
-     * @param commentId            the uuid of the ticketComment
-     * @param ticketCommentRequest the ticketComment request of a ticketComment to be updated
-     * @return {@link TicketCommentResponse}
-     * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProjectException       if the ticket is not in the project
-     */
-    TicketCommentResponse updateTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid,
-                                                                String commentId,
-                                                                TicketCommentRequest ticketCommentRequest);
-
-    /**
-     * Deletes the ticketComment with the given uuid
-     *
-     * @param uuid the uuid of the ticketComment to be deleted
-     * @throws TicketCommentNotFoundException if no ticketComment found with given uuid
-     */
-    void deleteTicketCommentByUuid(String uuid);
-
-    /**
-     *
-     * @param projectUuid the uuid of the project
-     * @param ticketUuid  the uuid of the ticket
-     * @param commentUuid the uuid of the ticketComment
-     * @throws TicketCommentNotInTickedException if the comment is not in the ticket
-     * @throws TicketNotInProjectException       if the ticket is not in the project
-     */
-    void deleteTicketCommentByProjectAndTicket(String projectUuid, String ticketUuid, String commentUuid);
-
-//    /**
-//     * Deletes a list of ticketComments
-//     *
-//     * @param ticketCommentList the list of tickets to be deleted
-//     */
-//    void deleteTicketList(List<TicketCommentRequest> ticketCommentList);
+    void deleteTicketComment(String commentUuid);
 }
