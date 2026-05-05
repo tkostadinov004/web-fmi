@@ -3,6 +3,12 @@ package bg.sofia.uni.fmi.issuetracker.service.contract.ticket;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
@@ -31,8 +37,8 @@ public interface TicketService {
     /**
      * Retrieves all tickets filtered by status, priority, and assignee username.
      *
-     * @param status the {@link TicketStatus} to filter by
-     * @param priority the {@link TicketPriority} to filter by
+     * @param status           the {@link TicketStatus} to filter by
+     * @param priority         the {@link TicketPriority} to filter by
      * @param assigneeUsername the username of the assigned user to filter by
      * @return a list of {@link TicketDetailsDTO} matching the specified filters
      * @throws UserNotFoundException if the user with the given username does not exist
@@ -45,9 +51,9 @@ public interface TicketService {
      *
      * @param dto the {@link CreateTicketDTO} containing ticket creation data
      * @return the created {@link Ticket} entity
-     * @throws TicketAlreadyExistsException if a ticket with the given code already exists
-     * @throws UserNotFoundException if the assignee username does not exist
-     * @throws ProjectNotFoundException if the project does not exist
+     * @throws TicketAlreadyExistsException  if a ticket with the given code already exists
+     * @throws UserNotFoundException         if the assignee username does not exist
+     * @throws ProjectNotFoundException      if the project does not exist
      * @throws UserNotPartOfProjectException if the assignee is not a member of the project
      */
     Ticket createTicket(CreateTicketDTO dto);
@@ -56,11 +62,11 @@ public interface TicketService {
      * Adds a dependent ticket to a parent ticket.
      *
      * @param parentTicketCode the code of the parent ticket
-     * @param dto the {@link CreateTicketDTO} containing dependent ticket creation data
-     * @throws TicketNotFoundException if the parent ticket does not exist
-     * @throws TicketNotInProjectException if the dependent ticket's project does not match the parent ticket's project
-     * @throws TicketAlreadyExistsException if a ticket with the given code already exists
-     * @throws UserNotFoundException if the assignee username does not exist
+     * @param dto              the {@link CreateTicketDTO} containing dependent ticket creation data
+     * @throws TicketNotFoundException       if the parent ticket does not exist
+     * @throws TicketNotInProjectException   if the dependent ticket's project does not match the parent ticket's project
+     * @throws TicketAlreadyExistsException  if a ticket with the given code already exists
+     * @throws UserNotFoundException         if the assignee username does not exist
      * @throws UserNotPartOfProjectException if the assignee is not a member of the project
      */
     void addDependentTicketToTicket(String parentTicketCode, CreateTicketDTO dto);
@@ -68,10 +74,10 @@ public interface TicketService {
     /**
      * Changes the assignee of a ticket.
      *
-     * @param ticketCode the code of the ticket to update
+     * @param ticketCode       the code of the ticket to update
      * @param assigneeUsername the username of the new assignee
      * @throws TicketNotFoundException if the ticket does not exist
-     * @throws UserNotFoundException if the assignee username does not exist
+     * @throws UserNotFoundException   if the assignee username does not exist
      */
     void changeTicketAssignee(String ticketCode, String assigneeUsername);
 
@@ -79,7 +85,7 @@ public interface TicketService {
      * Updates ticket information.
      *
      * @param code the code of the ticket to update
-     * @param dto the {@link UpdateTicketDTO} containing updated ticket data
+     * @param dto  the {@link UpdateTicketDTO} containing updated ticket data
      * @throws TicketNotFoundException if the ticket does not exist
      */
     void updateTicket(String code, UpdateTicketDTO dto);

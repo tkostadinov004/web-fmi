@@ -35,7 +35,10 @@ public record TicketDetailsDTO(
         @Schema(description = "List of tickets that depend on this ticket.", requiredMode = Schema.RequiredMode.REQUIRED)
         List<DependentTicketDTO> dependentTickets) {
     public static TicketDetailsDTO from(Ticket ticket) {
-        TicketDetailsAssigneeDTO assigneeDTO = new TicketDetailsAssigneeDTO(ticket.getAssignee().getProfilePicturePath(), ticket.getAssignee().getUsername());
+        TicketDetailsAssigneeDTO assigneeDTO = null;
+        if (ticket.getAssignee() != null) {
+            assigneeDTO = new TicketDetailsAssigneeDTO(ticket.getAssignee().getProfilePicturePath(), ticket.getAssignee().getUsername());
+        }
         List<DependentTicketDTO> dependentTicketDTOS = ticket
                 .getDependentTickets()
                 .stream()
@@ -43,7 +46,7 @@ public record TicketDetailsDTO(
                 .toList();
 
         return new TicketDetailsDTO(ticket.getCode(), ticket.getTitle(), ticket.getDescription(), ticket.getTicketStatus(),
-                ticket.getTicketPriority(), ticket.getSprint().getUuid(), ticket.getCreateDate(), ticket.getUpdateDate(),
+                ticket.getTicketPriority(), ticket.getSprint() != null ? ticket.getSprint().getUuid() : null, ticket.getCreateDate(), ticket.getUpdateDate(),
                 ticket.getDueDate(), ticket.getProject().getUuid(), assigneeDTO, dependentTicketDTOS);
     }
 }

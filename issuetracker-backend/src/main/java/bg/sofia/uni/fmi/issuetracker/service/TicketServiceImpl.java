@@ -109,10 +109,11 @@ public class TicketServiceImpl implements TicketService {
     public void addDependentTicketToTicket(String parentTicketCode, CreateTicketDTO ticket) {
         Ticket parentTicket = getTicket(parentTicketCode);
         if (!parentTicket.getProject().getUuid().equals(ticket.projectUuid())) {
-            throw new TicketNotInProjectException(ExceptionMessages.Ticket.ticketNotInProject(ticket.code(), parentTicket.getProject().getUuid()));
+            throw new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
         }
 
         Ticket dependentTicket = createTicket(ticket);
+
         parentTicket.addDependentTicket(dependentTicket);
         ticketRepository.save(parentTicket);
     }
@@ -120,6 +121,12 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void changeTicketAssignee(String ticketCode, String assigneeUsername) {
         Ticket ticket = getTicket(ticketCode);
+        if (assigneeUsername == null) {
+            ticket.setAssignee(null);
+            ticketRepository.save(ticket);
+            return;
+        }
+
         Optional<User> assignee = userRepository.findById(assigneeUsername);
         if (assignee.isEmpty()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
@@ -142,6 +149,8 @@ public class TicketServiceImpl implements TicketService {
     @Transactional
     public void deleteTicket(String ticketCode) {
         Ticket ticket = getTicket(ticketCode);
+
+        ticketRepository.deleteAll(ticket.getDependentTickets());
         ticketRepository.delete(ticket);
     }
 

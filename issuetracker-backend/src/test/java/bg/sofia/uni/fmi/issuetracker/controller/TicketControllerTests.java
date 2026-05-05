@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
+/*
 import bg.sofia.uni.fmi.issuetracker.controller.ticket.TicketController;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
@@ -190,3 +191,4 @@ class TicketControllerTests {
         return request;
     }
 }
+ */

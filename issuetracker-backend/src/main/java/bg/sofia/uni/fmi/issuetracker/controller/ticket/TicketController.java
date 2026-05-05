@@ -90,9 +90,9 @@ public class TicketController {
             @ApiResponse(responseCode = "404", description = "Ticket or assignee user not found"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error")
     })
-    @PatchMapping("/{code}/assignee/{assigneeUsername}")
+    @PatchMapping("/{code}/assignee")
     public ResponseEntity<Void> changeAssignee(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
-                                               @Parameter(description = "Username of the new assignee", required = true) @PathVariable String assigneeUsername) {
+                                               @Parameter(description = "Username of the new assignee", required = false) @RequestParam(required = false) String assigneeUsername) {
         ticketService.changeTicketAssignee(code, assigneeUsername);
         return ResponseEntity.noContent().build();
     }

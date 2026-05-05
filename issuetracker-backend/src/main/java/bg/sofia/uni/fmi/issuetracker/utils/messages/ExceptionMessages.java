@@ -135,11 +135,11 @@ public class ExceptionMessages {
             return TICKET_NOT_FOUND.formatted(code);
         }
 
-        private static final String TICKET_NOT_IN_PROJECT =
-                "Ticket '%s' does not belong to project with UUID %s!";
+        private static final String TICKET_PROJECT_MISMATCH =
+                "Ticket '%s' and parent ticket '%s' cannot be from different projects!";
 
-        public static String ticketNotInProject(String code, String projectUuid) {
-            return TICKET_NOT_IN_PROJECT.formatted(code, projectUuid);
+        public static String ticketProjectMismatch(String parentCode, String dependentCode) {
+            return TICKET_PROJECT_MISMATCH.formatted(parentCode, dependentCode);
         }
     }
 

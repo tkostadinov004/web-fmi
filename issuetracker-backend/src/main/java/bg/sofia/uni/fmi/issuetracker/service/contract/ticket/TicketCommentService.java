@@ -3,6 +3,9 @@ package bg.sofia.uni.fmi.issuetracker.service.contract.ticket;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import org.springframework.data.domain.Page;
 
 public interface TicketCommentService {

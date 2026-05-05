@@ -13,8 +13,8 @@ public record TicketCommentDetailsDTO(
         String content,
         @Schema(description = "Timestamp when the comment was created. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.REQUIRED, type = "string", format = "date-time")
         LocalDateTime createDate,
-        @Schema(description = "UUID of the ticket this comment belongs to.", requiredMode = Schema.RequiredMode.REQUIRED)
-        String ticketUuid,
+        @Schema(description = "Code of the ticket this comment belongs to.", requiredMode = Schema.RequiredMode.REQUIRED)
+        String ticketCode,
         @Schema(description = "Username of the comment's author.", requiredMode = Schema.RequiredMode.REQUIRED)
         String authorUsername) {
     public static TicketCommentDetailsDTO from(TicketComment ticketComment) {
