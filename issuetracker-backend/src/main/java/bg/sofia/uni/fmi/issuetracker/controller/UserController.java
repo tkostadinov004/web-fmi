@@ -4,6 +4,7 @@ import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -92,7 +93,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User profile updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid profile update data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",

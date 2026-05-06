@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -42,6 +43,8 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User created successfully",
                     content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid user data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "A user with the provided username already exists",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -88,6 +91,8 @@ public class AuthController {
     @Operation(summary = "Change user password", description = "Changes the password of the currently authenticated user after verifying the old password and matching new password fields.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "The old password is incorrect or the new passwords do not match",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
@@ -107,6 +112,8 @@ public class AuthController {
     @Operation(summary = "Request a forgot-password email", description = "Sends a password recovery email to the registered address for the current user.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Password reset email sent successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "The provided email does not match the current user's email",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
@@ -136,6 +143,8 @@ public class AuthController {
     @Operation(summary = "Reset forgotten password", description = "Resets the password for the current user using a valid forgot-password token.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Password reset successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "The new passwords do not match",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",

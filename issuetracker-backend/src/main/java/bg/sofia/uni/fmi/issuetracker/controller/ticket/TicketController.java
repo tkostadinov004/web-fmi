@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -67,7 +68,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ticket created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid ticket data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Project or assignee user not found",
@@ -86,11 +87,16 @@ public class TicketController {
     @Operation(summary = "Add dependent ticket", description = "Adds a new ticket as a dependent of a parent ticket. Both tickets must belong to the same project.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dependent ticket created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid ticket data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials"),
-            @ApiResponse(responseCode = "404", description = "Parent ticket, project, or assignee user not found"),
-            @ApiResponse(responseCode = "409", description = "Dependent ticket code already exists, assignee not part of project, or ticket not in project"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+            @ApiResponse(responseCode = "400", description = "Invalid ticket data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Parent ticket, project, or assignee user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Dependent ticket code already exists, assignee not part of project, or ticket not in project",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/{parentCode}/dependents")
     public ResponseEntity<Void> addDependentTicket(@Parameter(description = "Code of the parent ticket", required = true) @PathVariable String parentCode,
@@ -120,7 +126,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ticket updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid update data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Ticket not found",
@@ -180,7 +186,7 @@ public class TicketController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment added successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid comment data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Ticket or author user not found",

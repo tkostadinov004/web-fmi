@@ -43,7 +43,7 @@ If you want to skip forgot password email sending, send a POST request to /featu
 ```json
 {
   "name": "SKIP_EMAIL",
-  "value": "true"
+  "value": true
 }
 ```
 
