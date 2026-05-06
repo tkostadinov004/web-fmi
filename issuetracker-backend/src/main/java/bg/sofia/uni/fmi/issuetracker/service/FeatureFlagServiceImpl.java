@@ -37,7 +37,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
             throw new FeatureFlagAlreadyExistsException(ExceptionMessages.FeatureFlag.featureFlagAlreadyExists(dto.name()));
         }
 
-        FeatureFlag featureFlag = new FeatureFlag(dto.name(), dto.value());
+        FeatureFlag featureFlag = new FeatureFlag(dto.name(), dto.valueAsBoolean());
         featureFlagRepository.save(featureFlag);
     }
 

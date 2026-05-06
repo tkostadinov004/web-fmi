@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.controller.ticket;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,7 +52,7 @@ public class TicketCommentController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Comment updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid update data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Comment not found",
