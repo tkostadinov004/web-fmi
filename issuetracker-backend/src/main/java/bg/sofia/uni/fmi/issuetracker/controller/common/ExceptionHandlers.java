@@ -16,6 +16,8 @@ import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +25,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +84,23 @@ public class ExceptionHandlers {
             errors.put(fieldName, errorMessage);
         });
 
-        return new ResponseEntity<>(new ValidationErrorResponse(errors), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(new ValidationErrorResponse(errors));
+    }
+
+    @ExceptionHandler({ConstraintViolationException.class})
+    public ResponseEntity<ValidationErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getConstraintViolations().forEach(cv -> {
+            String fieldName = "";
+            for (Path.Node node : cv.getPropertyPath()) {
+                fieldName = node.getName();
+            }
+
+            errors.put(fieldName, cv.getMessage());
+        });
+
+        return ResponseEntity.badRequest().body(new ValidationErrorResponse(errors));
     }
 
     @ExceptionHandler({MissingServletRequestParameterException.class})
@@ -88,19 +108,25 @@ public class ExceptionHandlers {
         LOGGER.error(ex.getMessage());
         String name = ex.getParameterName();
 
-        return new ResponseEntity<>(new ErrorResponse(ValidationConstants.missingParam(name)), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(buildErrorResponse(ValidationConstants.missingParam(name)));
     }
 
     @ExceptionHandler({AuthException.class})
     public ResponseEntity<ErrorResponse> handleMiscAuthException(AuthException ex) {
         LOGGER.error(ex.getMessage());
-        return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler({MultipartException.class, FileServiceException.class})
     public ResponseEntity<ErrorResponse> handleFileExceptions(Exception ex) {
         LOGGER.error(ex.getMessage());
-        return new ResponseEntity<>(new ErrorResponse(ExceptionMessages.File.invalidFile()), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(buildErrorResponse(ExceptionMessages.File.invalidFile()));
+    }
+
+    @ExceptionHandler({HttpRequestMethodNotSupportedException.class, NoResourceFoundException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidUrl(Exception ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidUrl()), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
@@ -108,6 +134,6 @@ public class ExceptionHandlers {
         LOGGER.error(ex.getMessage(), ex);
         return ResponseEntity
                 .internalServerError()
-                .body(new ErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+                .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
     }
 }

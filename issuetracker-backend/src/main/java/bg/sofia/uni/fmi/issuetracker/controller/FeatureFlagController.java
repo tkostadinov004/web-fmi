@@ -6,6 +6,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,7 +16,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,6 +33,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/featureflags")
+@Validated
 @Tag(name = "Feature Flag", description = "Endpoints for managing feature flags")
 public class FeatureFlagController {
     private final FeatureFlagService featureFlagService;
@@ -98,8 +102,10 @@ public class FeatureFlagController {
     @Operation(summary = "Update a feature flag", description = "Updates the value of an existing feature flag.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Feature flag updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid updated feature flag data",
+            @ApiResponse(responseCode = "400", description = "Name or new value not provided",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid updated feature flag data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
@@ -111,9 +117,12 @@ public class FeatureFlagController {
     })
     @PatchMapping("/{name}")
     @RequireAdmin
-    public ResponseEntity<Void> setFeatureFlagValue(@Parameter(description = "Name of the feature flag", required = true) @PathVariable String name,
-                                                    @Parameter(description = "The new value for the feature flag", required = true) @RequestParam(name = "new_value") boolean new_value) {
-        featureFlagService.setFeatureFlagValue(name, new_value);
+    public ResponseEntity<Void> setFeatureFlagValue(@Parameter(description = "Name of the feature flag", required = true)
+                                                    @PathVariable String name,
+                                                    @Parameter(description = "The new value for the feature flag", required = true)
+                                                    @RequestParam(name = "new_value")
+                                                    @Pattern(regexp = "(true)|(false)", message = ValidationConstants.FeatureFlag.INVALID_VALUE) String newValue) {
+        featureFlagService.setFeatureFlagValue(name, Boolean.parseBoolean(newValue));
         return ResponseEntity.noContent().build();
     }
 

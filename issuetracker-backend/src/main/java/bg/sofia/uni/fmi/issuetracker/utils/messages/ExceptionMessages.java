@@ -1,6 +1,12 @@
 package bg.sofia.uni.fmi.issuetracker.utils.messages;
 
 public class ExceptionMessages {
+    private static final String INVALID_URL = "Invalid URL!";
+
+    public static String invalidUrl() {
+        return INVALID_URL;
+    }
+
     public static class Auth {
         private static final String WRONG_CREDENTIALS = "Wrong username or password!";
 
