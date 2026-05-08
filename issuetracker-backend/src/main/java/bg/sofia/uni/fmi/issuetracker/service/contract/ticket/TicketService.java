@@ -10,8 +10,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 
 import java.util.List;
 
@@ -33,18 +31,6 @@ public interface TicketService {
      * @throws ProjectNotFoundException if the project with the given UUID does not exist
      */
     List<TicketDetailsDTO> getAllTicketsByProject(String projectUuid);
-
-    /**
-     * Retrieves all tickets filtered by status, priority, and assignee username.
-     *
-     * @param status           the {@link TicketStatus} to filter by
-     * @param priority         the {@link TicketPriority} to filter by
-     * @param assigneeUsername the username of the assigned user to filter by
-     * @return a list of {@link TicketDetailsDTO} matching the specified filters
-     * @throws UserNotFoundException if the user with the given username does not exist
-     */
-    List<TicketDetailsDTO> getAllTicketsByStatusPriorityAndAssigneeUsername(
-            TicketStatus status, TicketPriority priority, String assigneeUsername);
 
     /**
      * Creates a new ticket.

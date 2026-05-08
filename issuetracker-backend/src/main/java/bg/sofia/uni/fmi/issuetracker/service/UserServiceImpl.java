@@ -76,7 +76,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
 
-        String resultPath = fileService.saveOrReplaceFile(picture, Path.of(username), "profile-picture");
+        String resultPath = fileService.saveOrReplaceFile(picture, Path.of(username), Constants.PROFILE_PICTURE_FILENAME);
 
         user.get().setProfilePicturePath(resultPath);
         userRepository.save(user.get());

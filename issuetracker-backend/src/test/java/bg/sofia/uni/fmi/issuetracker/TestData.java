@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker;
 
+import bg.sofia.uni.fmi.issuetracker.model.FeatureFlag;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
@@ -21,4 +22,7 @@ public class TestData {
             new Project("testProject2", Set.of(), List.of());
     public static final Token TEST_TOKEN =
             new Token("testToken", TEST_USER);
+    public static final FeatureFlag TEST_FEATURE_FLAG_1 = new FeatureFlag("FF_1", true);
+    public static final FeatureFlag TEST_FEATURE_FLAG_2 = new FeatureFlag("FF_2", false);
+    public static final List<FeatureFlag> FEATURE_FLAGS = List.of(TEST_FEATURE_FLAG_1, TEST_FEATURE_FLAG_2);
 }
