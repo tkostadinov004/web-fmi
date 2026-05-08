@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.service;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
@@ -83,10 +84,13 @@ public class TicketCommentServiceImpl implements TicketCommentService {
 
     @Override
     @Transactional
-    public void updateTicketComment(String commentUuid, UpdateTicketCommentDTO dto) {
+    public void updateTicketComment(String commentUuid, UpdateTicketCommentDTO dto, String username) {
         Optional<TicketComment> ticketComment = ticketCommentRepository.findById(commentUuid);
         if (ticketComment.isEmpty()) {
             throw new TicketCommentNotFoundException(ExceptionMessages.TicketComment.ticketCommentNotFound(commentUuid));
+        }
+        if (!ticketComment.get().getAuthor().getUsername().equals(username)) {
+            throw new OwnershipMismatchException(ExceptionMessages.TicketComment.allowedToModifyOnlyOwnComments());
         }
 
         mapper.patchTicketCommentFromDTO(dto, ticketComment.get());
@@ -94,10 +98,13 @@ public class TicketCommentServiceImpl implements TicketCommentService {
     }
 
     @Override
-    public void deleteTicketComment(String commentUuid) {
+    public void deleteTicketComment(String commentUuid, String username) {
         Optional<TicketComment> ticketComment = ticketCommentRepository.findById(commentUuid);
         if (ticketComment.isEmpty()) {
             throw new TicketCommentNotFoundException(ExceptionMessages.TicketComment.ticketCommentNotFound(commentUuid));
+        }
+        if (!ticketComment.get().getAuthor().getUsername().equals(username)) {
+            throw new OwnershipMismatchException(ExceptionMessages.TicketComment.allowedToDeleteOnlyOwnComments());
         }
 
         ticketCommentRepository.delete(ticketComment.get());

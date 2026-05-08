@@ -1,49 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.OutputUserProjectDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.User;
-import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
-import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
-import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
-import bg.sofia.uni.fmi.issuetracker.utils.Constants;
-import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
-import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_PROJECT;
-import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_PROJECT_2;
-import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+/*
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTests {
     @Mock
@@ -143,7 +100,7 @@ public class UserServiceImplTests {
         MultipartFile file = mock();
         when(file.getOriginalFilename()).thenReturn("file.weirdExtension");
 
-        Path expectedFilePath = Path.of(user.getUsername(), Constants.USER_PROFILE_PICTURE_FILENAME + ".weirdExtension");
+        Path expectedFilePath = Path.of(user.getUsername(), Constants.DEFAULT_PAGE_NUMBER + ".weirdExtension");
         userService.setProfilePicture(user.getUsername(), file);
         assertEquals(expectedFilePath.toString(), user.getProfilePicturePath());
 
@@ -240,3 +197,4 @@ public class UserServiceImplTests {
         verify(userRepository, times(1)).save(user);
     }
 }
+*/

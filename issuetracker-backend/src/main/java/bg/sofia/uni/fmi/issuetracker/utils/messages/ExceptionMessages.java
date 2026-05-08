@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.utils.messages;
 
+import bg.sofia.uni.fmi.issuetracker.utils.Constants;
+
 public class ExceptionMessages {
     private static final String INVALID_URL = "Invalid URL!";
 
@@ -91,12 +93,6 @@ public class ExceptionMessages {
     }
 
     public static class File {
-        private static final String FILE_ALREADY_EXISTS = "File '%s' already exists!";
-
-        public static String fileAlreadyExists(String path) {
-            return FILE_ALREADY_EXISTS.formatted(path);
-        }
-
         private static final String EMPTY_FILE = "The file you're trying to upload is empty!";
 
         public static String emptyFile() {
@@ -126,6 +122,24 @@ public class ExceptionMessages {
         public static String invalidFile() {
             return INVALID_FILE;
         }
+
+        private static final String SIZE_EXCEEDED = "The provided file must be less than %s megabytes!";
+
+        public static String sizeExceeded() {
+            return SIZE_EXCEEDED.formatted(Constants.MAX_IMAGE_FILE_SIZE / 1_000_000); // dividing by 1 MB
+        }
+
+        private static final String INVALID_FORMAT = "The provided file must have one of the following extensions: %s!";
+
+        public static String invalidFormat() {
+            return INVALID_FORMAT.formatted(String.join(", ", Constants.VALID_IMAGE_FORMATS));
+        }
+
+        private static final String INVALID_CUSTOM_NAME = "File name contains invalid characters!";
+
+        public static String invalidCustomName() {
+            return INVALID_CUSTOM_NAME;
+        }
     }
 
     public static class Ticket {
@@ -151,20 +165,36 @@ public class ExceptionMessages {
 
     public static class TicketComment {
         private static final String COMMENT_ALREADY_EXISTS = "Ticket comment with UUID %s already exists!";
-        private static final String COMMENT_NOT_FOUND = "Ticket comment with UUID %s not found!";
-        private static final String COMMENT_NOT_IN_TICKET =
-                "Ticket comment with UUID %s does not belong to ticket with title '%s'!";
 
         public static String ticketCommentAlreadyExists(String commentUuid) {
             return COMMENT_ALREADY_EXISTS.formatted(commentUuid);
         }
 
+        private static final String COMMENT_NOT_FOUND = "Ticket comment with UUID %s not found!";
+
         public static String ticketCommentNotFound(String commentUuid) {
             return COMMENT_NOT_FOUND.formatted(commentUuid);
         }
 
+        private static final String COMMENT_NOT_IN_TICKET =
+                "Ticket comment with UUID %s does not belong to ticket with title '%s'!";
+
         public static String ticketCommentNotInTicket(String commentUuid, String ticketTitle) {
             return COMMENT_NOT_IN_TICKET.formatted(commentUuid, ticketTitle);
+        }
+
+        private static final String ALLOWED_TO_MODIFY_ONLY_OWN_COMMENTS =
+                "You're only allowed to modify your own comments!";
+
+        public static String allowedToModifyOnlyOwnComments() {
+            return ALLOWED_TO_MODIFY_ONLY_OWN_COMMENTS;
+        }
+
+        private static final String ALLOWED_TO_DELETE_ONLY_OWN_COMMENTS =
+                "You're only allowed to delete your own comments!";
+
+        public static String allowedToDeleteOnlyOwnComments() {
+            return ALLOWED_TO_DELETE_ONLY_OWN_COMMENTS;
         }
     }
 

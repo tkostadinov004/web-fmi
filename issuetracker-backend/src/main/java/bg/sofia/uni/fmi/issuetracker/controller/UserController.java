@@ -3,9 +3,12 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
+import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -57,7 +61,7 @@ public class UserController {
     @Operation(summary = "Update a user's profile picture", description = "Uploads or replaces the profile picture for the specified user.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Profile picture updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid or missing picture file",
+            @ApiResponse(responseCode = "400", description = "Invalid picture file format, picture file larger than limit, or missing picture file",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -66,9 +70,13 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PatchMapping("/{username}/profilePicture")
-    public ResponseEntity<Void> changeProfilePicture(@Parameter(description = "Username of the user to update", required = true) @PathVariable String username,
-                                                     @Parameter(description = "Multipart file containing the new profile picture", required = true) @RequestParam("file") MultipartFile picture) {
+    @PatchMapping("/profilePictures")
+    public ResponseEntity<Void> changeProfilePicture(@Parameter(description = "Multipart file containing the new profile picture", required = true) @RequestParam("file") MultipartFile picture) {
+        if (!CommonUtils.isImageFile(picture)) {
+            throw new InvalidFileFormatException(ExceptionMessages.File.invalidFormat());
+        }
+
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.setProfilePicture(username, picture);
         return ResponseEntity.noContent().build();
     }
@@ -103,8 +111,9 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PatchMapping("/{username}")
-    public ResponseEntity<Void> patchUser(@Valid @RequestBody UpdateUserDTO dto, @PathVariable String username) {
+    @PatchMapping
+    public ResponseEntity<Void> patchUser(@Valid @RequestBody UpdateUserDTO dto) {
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.updateUser(username, dto);
         return ResponseEntity.noContent().build();
     }

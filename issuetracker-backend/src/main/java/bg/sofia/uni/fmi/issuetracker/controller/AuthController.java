@@ -111,7 +111,7 @@ public class AuthController {
 
     @Operation(summary = "Request a forgot-password email", description = "Sends a password recovery email to the registered address for the current user.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Password reset email sent successfully"),
+            @ApiResponse(responseCode = "202", description = "Password reset email sent successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "The provided email does not match the current user's email",
@@ -135,7 +135,7 @@ public class AuthController {
             headers.add("Reset-Token", forgotPasswordToken);
         }
         return ResponseEntity
-                .noContent()
+                .accepted()
                 .headers(headers)
                 .build();
     }

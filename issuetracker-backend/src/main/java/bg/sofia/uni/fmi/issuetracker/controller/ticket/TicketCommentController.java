@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -55,6 +56,8 @@ public class TicketCommentController {
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "User tried updating someone else's comment",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Comment not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -63,7 +66,8 @@ public class TicketCommentController {
     @PatchMapping("/{commentId}")
     public ResponseEntity<Void> updateTicketComment(@Parameter(description = "UUID of the comment to update", required = true) @PathVariable String commentId,
                                                     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Comment update data", required = true, content = @Content) @Valid @RequestBody UpdateTicketCommentDTO dto) {
-        ticketCommentService.updateTicketComment(commentId, dto);
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        ticketCommentService.updateTicketComment(commentId, dto, username);
         return ResponseEntity.noContent().build();
     }
 
@@ -72,6 +76,8 @@ public class TicketCommentController {
             @ApiResponse(responseCode = "204", description = "Comment deleted successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "User tried deleting someone else's comment",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Comment not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -79,7 +85,8 @@ public class TicketCommentController {
     })
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteTicketComment(@Parameter(description = "UUID of the comment to delete", required = true) @PathVariable String commentId) {
-        ticketCommentService.deleteTicketComment(commentId);
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        ticketCommentService.deleteTicketComment(commentId, username);
         return ResponseEntity.noContent().build();
     }
 }

@@ -2,8 +2,10 @@ package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FileService;
+import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.FileServiceRoot;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -26,12 +29,18 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void saveOrReplaceFile(MultipartFile file, Path path) {
+    public String saveOrReplaceFile(MultipartFile file, Path targetDirectory, String customName) {
         if (file.isEmpty()) {
             throw new FileServiceException(ExceptionMessages.File.emptyFile());
         }
+        if (customName != null && !CommonUtils.isValidFilename(customName)) {
+            throw new FileServiceException(ExceptionMessages.File.invalidCustomName());
+        }
 
-        Path destinationFile = root.getRoot().resolve(path).normalize().toAbsolutePath();
+        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+        String filename = (customName != null ? customName : UUID.randomUUID()) + "." + extension;
+
+        Path destinationFile = root.getRoot().resolve(targetDirectory).resolve(filename).normalize().toAbsolutePath();
         if (!destinationFile.getParent().startsWith(root.getRoot().toAbsolutePath())) {
             throw new FileServiceException(ExceptionMessages.File.unableToStoreOutsideOfRoot());
         }
@@ -44,6 +53,8 @@ public class FileServiceImpl implements FileService {
         } catch (IOException e) {
             throw new FileServiceException(ExceptionMessages.File.cannotWrite(destinationFile.toString()), e);
         }
+
+        return filename;
     }
 
     @Override
