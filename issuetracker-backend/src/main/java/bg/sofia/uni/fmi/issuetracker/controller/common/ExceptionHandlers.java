@@ -2,11 +2,13 @@ package bg.sofia.uni.fmi.issuetracker.controller.common;
 
 import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
+import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -48,6 +51,12 @@ public class ExceptionHandlers {
     public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler({OwnershipMismatchException.class})
+    public ResponseEntity<ErrorResponse> handleOwnershipMismatch(OwnershipMismatchException ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler({WrongCredentialsException.class})
@@ -117,10 +126,28 @@ public class ExceptionHandlers {
         return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler({MultipartException.class, FileServiceException.class})
-    public ResponseEntity<ErrorResponse> handleFileExceptions(Exception ex) {
+    @ExceptionHandler({MultipartException.class})
+    public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException ex) {
         LOGGER.error(ex.getMessage());
         return ResponseEntity.badRequest().body(buildErrorResponse(ExceptionMessages.File.invalidFile()));
+    }
+
+    @ExceptionHandler({FileServiceException.class})
+    public ResponseEntity<ErrorResponse> handleFileExceptions(FileServiceException ex) {
+        LOGGER.error(ex.getMessage());
+        return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler({MaxUploadSizeExceededException.class})
+    public ResponseEntity<ErrorResponse> handleFileOutOfBounds(MaxUploadSizeExceededException ex) {
+        LOGGER.error(ex.getMessage());
+        return ResponseEntity.badRequest().body(buildErrorResponse(ExceptionMessages.File.sizeExceeded()));
+    }
+
+    @ExceptionHandler({InvalidFileFormatException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidFileFormat(InvalidFileFormatException ex) {
+        LOGGER.error(ex.getMessage());
+        return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class, NoResourceFoundException.class})

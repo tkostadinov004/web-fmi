@@ -13,7 +13,6 @@ import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.UserMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -77,11 +76,9 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
 
-        String extension = FilenameUtils.getExtension(picture.getOriginalFilename());
-        Path fileOutputPath = Path.of(username, Constants.USER_PROFILE_PICTURE_FILENAME + "." + extension);
-        fileService.saveOrReplaceFile(picture, fileOutputPath);
+        String resultPath = fileService.saveOrReplaceFile(picture, Path.of(username), "profile-picture");
 
-        user.get().setProfilePicturePath(fileOutputPath.toString());
+        user.get().setProfilePicturePath(resultPath);
         userRepository.save(user.get());
     }
 

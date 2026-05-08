@@ -13,11 +13,13 @@ public interface FileService {
      * <p>The provided file is stored under the configured root directory. Any
      * necessary parent directories are created and existing content is overwritten if the file already exists.</p>
      *
-     * @param file the uploaded file to store
-     * @param path the relative path under the service root where the file should be saved
-     * @throws FileServiceException if the file is empty, the path is outside the configured root, or the file cannot be written
+     * @param file            the uploaded file to store
+     * @param targetDirectory the relative path under the service root where the file should be saved
+     * @param customName      a custom name for the file. If {@code null}, a random UUID will be generated and used as a name
+     * @return the path to the saved file
+     * @throws FileServiceException if the file is empty, the path is outside the configured root, the provided custom file name is invalid, or the file cannot be written
      */
-    void saveOrReplaceFile(MultipartFile file, Path path);
+    String saveOrReplaceFile(MultipartFile file, Path targetDirectory, String customName);
 
     /**
      * Checks whether a file exists at the given filesystem path.
