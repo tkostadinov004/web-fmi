@@ -19,6 +19,6 @@ public record TicketCommentDetailsDTO(
         String authorUsername) {
     public static TicketCommentDetailsDTO from(TicketComment ticketComment) {
         return new TicketCommentDetailsDTO(ticketComment.getUuid(), ticketComment.getContent(),
-                ticketComment.getCreatedAt(), ticketComment.getUuid(), ticketComment.getAuthor().getUsername());
+                ticketComment.getCreatedAt(), ticketComment.getTicket().getCode(), ticketComment.getAuthor().getUsername());
     }
 }

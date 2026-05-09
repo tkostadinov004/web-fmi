@@ -1,194 +1,218 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
-/*
-import bg.sofia.uni.fmi.issuetracker.controller.ticket.TicketController;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
-import bg.sofia.uni.fmi.issuetracker.model.User;
-import bg.sofia.uni.fmi.issuetracker.model.project.Project;
-import bg.sofia.uni.fmi.issuetracker.model.sprint.Sprint;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
+import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.PriorityOrdered;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(TicketController.class)
-@org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
-class TicketControllerTests {
-
-    @Autowired
-    private MockMvc mockMvc;
+@WebMvcTest(controllers = {TicketController.class})
+public class TicketControllerTests extends BaseControllerTests {
+    @MockitoBean
+    private TicketService ticketService;
 
     @MockitoBean
-    private bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService ticketService;
-
-    @MockitoBean
-    private PriorityOrdered priorityOrdered;
-
-    // For test purposes
-
-    @MockitoBean
-    private Sprint sprint;
-
-    @MockitoBean
-    private Project project;
-
-    @MockitoBean
-    private User user;
+    private TicketCommentService ticketCommentService;
 
     @Test
-    void getAllTicketsByProject_returnsTickets() throws Exception {
-        TicketDetailsDTO response = sampleTicketResponse();
+    public void testGetTicketByCode_ReturnsOk() throws Exception {
+        TicketDetailsDTO dto = new TicketDetailsDTO("TICKET-1", "Title", "Description", TicketStatus.IN_PROGRESS,
+                TicketPriority.MEDIUM, LocalDateTime.now(), LocalDateTime.now(), null, "project-uuid", null, List.of());
+        when(ticketService.getTicketByCode("TICKET-1")).thenReturn(dto);
 
-        when(ticketService.getAllTicketsByProject("project-1"))
-                .thenReturn(List.of(response));
-
-        mockMvc.perform(get("/projects/{projectId}/tickets", "project-1"))
+        mockMvc.perform(get("/tickets/TICKET-1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].uuid").value("ticket-1"))
-                .andExpect(jsonPath("$[0].title").value("Fix login"));
-
-        verify(ticketService).getAllTicketsByProject("project-1");
+                .andExpect(jsonPath("$.code").value("TICKET-1"))
+                .andExpect(jsonPath("$.title").value("Title"));
     }
 
     @Test
-    void getTicketsWithFilters_returnsTickets() throws Exception {
-        TicketDetailsDTO response = sampleTicketResponse();
+    public void testGetTicketByCode_ReturnsNotFoundWhenMissing() throws Exception {
+        when(ticketService.getTicketByCode("MISSING")).thenThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
 
-        when(ticketService.getAllTicketsByStatusPriorityAndAssigneeUsername(
-                eq(TicketStatus.TO_DO), eq(TicketPriority.HIGH), eq("john")))
-                .thenReturn(List.of(response));
-
-        mockMvc.perform(get("/projects/{projectId}/tickets", "project-1")
-                        .param("ticketStatus", "TODO")
-                        .param("ticketPriority", "HIGH")
-                        .param("assigneeUsername", "john"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].uuid").value("ticket-1"));
-
-        verify(ticketService).getAllTicketsByStatusPriorityAndAssigneeUsername(
-                TicketStatus.TO_DO, TicketPriority.HIGH, "john");
+        mockMvc.perform(get("/tickets/MISSING"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
     }
 
     @Test
-    void getTicket_returnsTicket() throws Exception {
-        TicketDetailsDTO response = sampleTicketResponse();
+    public void testCreateTicket_ReturnsOkWhenSuccessful() throws Exception {
+        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", TicketStatus.IN_PROGRESS,
+                TicketPriority.HIGH, "project-uuid", LocalDateTime.now().plusDays(2), "assignee");
 
-        when(ticketService.getTicketByProjectUuidAndTicketUuid("project-1", "ticket-1"))
-                .thenReturn(Optional.of(response));
-
-        mockMvc.perform(get("/projects/{projectId}/tickets/{ticketId}", "project-1", "ticket-1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.uuid").value("ticket-1"))
-                .andExpect(jsonPath("$.title").value("Fix login"));
-
-        verify(ticketService).getTicketByProjectUuidAndTicketUuid("project-1", "ticket-1");
+        mockMvc.perform(post("/tickets")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void addTicket_createsTicket() throws Exception {
-        CreateTicketDTO request = sampleTicketRequest();
-        TicketDetailsDTO response = sampleTicketResponse();
+    public void testCreateTicket_ReturnsBadRequestOnInvalidData() throws Exception {
+        CreateTicketDTO invalid = new CreateTicketDTO("", "", null, null, null, null, LocalDateTime.now().minusDays(1), null);
 
-        when(ticketService.addTicketToProject(eq("project-1"), any(CreateTicketDTO.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(post("/projects/{projectId}/tickets", "project-1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "uuid": "ticket-1",
-                                  "title": "Fix login",
-                                  "description": "Login button broken",
-                                  "ticketStatus": "TODO",
-                                  "ticketPriority": "HIGH",
-                                  "sprint": { "uuid": "sprint-1" },
-                                  "dueDate": "2026-05-10T12:00:00",
-                                  "project": { "uuid": "project-1" },
-                                  "assigneeUsername": { "username": "john" },
-                                  "dependentTicketUuids": [{ "uuid": "dep-1" }]
-                                }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.uuid").value("ticket-1"))
-                .andExpect(jsonPath("$.title").value("Fix login"));
-
-        verify(ticketService).addTicketToProject(eq("project-1"), any(CreateTicketDTO.class));
+        mockMvc.perform(post("/tickets")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(invalid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.code").exists())
+                .andExpect(jsonPath("$.errors.title").exists())
+                .andExpect(jsonPath("$.errors.ticketPriority").exists());
     }
 
     @Test
-    void updateTicket_updatesTicket() throws Exception {
-        TicketDetailsDTO response = sampleTicketResponse();
+    public void testCreateTicket_ReturnsConflictWhenAlreadyExists() throws Exception {
+        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", TicketStatus.IN_PROGRESS,
+                TicketPriority.HIGH, "project-uuid", LocalDateTime.now().plusDays(2), null);
+        when(ticketService.createTicket(dto)).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code())));
 
-        when(ticketService.updateTicket(eq("project-1"), eq("ticket-1"), any(CreateTicketDTO.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(put("/projects/{projectId}/tickets/{ticketId}", "project-1", "ticket-1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "uuid": "ticket-1",
-                                  "title": "Fix login",
-                                  "description": "Updated description",
-                                  "ticketStatus": "UNDER_DEVELOPMENT",
-                                  "ticketPriority": "HIGH",
-                                  "sprint": { "uuid": "sprint-1" },
-                                  "dueDate": "2026-05-11T12:00:00",
-                                  "project": { "uuid": "project-1" },
-                                  "assigneeUsername": { "username": "john" },
-                                  "dependentTicketUuids": [{ "uuid": "dep-1" }]
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.uuid").value("ticket-1"));
-
-        verify(ticketService).updateTicket(eq("project-1"), eq("ticket-1"), any(CreateTicketDTO.class));
+        mockMvc.perform(post("/tickets")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code())));
     }
 
     @Test
-    void deleteTicket_deletesTicket() throws Exception {
-        mockMvc.perform(delete("/projects/{projectId}/tickets/{ticketId}", "project-1", "ticket-1"))
+    public void testAddDependentTicket_ReturnsOkWhenSuccessful() throws Exception {
+        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details", TicketStatus.IN_PROGRESS,
+                TicketPriority.LOW, "project-uuid", LocalDateTime.now().plusDays(2), null);
+
+        mockMvc.perform(post("/tickets/PARENT-1/dependents")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testAddDependentTicket_ReturnsConflictWhenDependentTicketNotInProject() throws Exception {
+        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details", TicketStatus.IN_PROGRESS,
+                TicketPriority.LOW, "project-uuid", LocalDateTime.now().plusDays(2), null);
+        doThrow(new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(dto.code(), "PARENT-1")))
+                .when(ticketService).addDependentTicketToTicket("PARENT-1", dto);
+
+        mockMvc.perform(post("/tickets/PARENT-1/dependents")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketProjectMismatch(dto.code(), "PARENT-1")));
+    }
+
+    @Test
+    public void testChangeAssignee_ReturnsNoContentWhenSuccessful() throws Exception {
+        mockMvc.perform(patch("/tickets/CODE-1/assignee").param("assigneeUsername", "newuser"))
                 .andExpect(status().isNoContent());
-
-        verify(ticketService).deleteTicket("project-1", "ticket-1");
     }
 
-    private TicketDetailsDTO sampleTicketResponse() {
-        Ticket ticket = new Ticket("Fix login", "Login button broken", sprint, TicketPriority.HIGH,
-                TicketStatus.TO_DO, LocalDateTime.now(), project, user, List.of());
+    @Test
+    public void testChangeAssignee_ReturnsNotFoundWhenTicketMissing() throws Exception {
+        doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING"))).when(ticketService).changeTicketAssignee("MISSING", "newuser");
 
-        return TicketDetailsDTO.from(ticket);
+        mockMvc.perform(patch("/tickets/MISSING/assignee").param("assigneeUsername", "newuser"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
     }
 
-    private CreateTicketDTO sampleTicketRequest() {
-        CreateTicketDTO request = new CreateTicketDTO();
-        request.setUuid("ticket-1");
-        request.setTitle("Fix login");
-        request.setDescription("Login button broken");
-        request.setTicketStatus(TicketStatus.TO_DO);
-        request.setTicketPriority(TicketPriority.HIGH);
-        request.setDueDate(java.time.LocalDateTime.now().plusDays(3));
-        return request;
+    @Test
+    public void testUpdateTicket_ReturnsNoContentWhenSuccessful() throws Exception {
+        UpdateTicketDTO dto = new UpdateTicketDTO("Updated Title", null, TicketStatus.IN_PROGRESS, TicketPriority.HIGHEST, LocalDateTime.now().plusDays(5));
+
+        mockMvc.perform(patch("/tickets/CODE-1")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testUpdateTicket_ReturnsBadRequestOnInvalidData() throws Exception {
+        UpdateTicketDTO invalid = new UpdateTicketDTO("", null, null, null, LocalDateTime.now().minusDays(1));
+
+        mockMvc.perform(patch("/tickets/CODE-1")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(invalid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.dueDate").exists());
+    }
+
+    @Test
+    public void testDeleteTicket_ReturnsNoContentWhenSuccessful() throws Exception {
+        mockMvc.perform(delete("/tickets/CODE-1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testDeleteTicket_ReturnsNotFoundWhenMissing() throws Exception {
+        doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING"))).when(ticketService).deleteTicket("MISSING");
+
+        mockMvc.perform(delete("/tickets/MISSING"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
+    }
+
+    @Test
+    public void testGetAllCommentsForTicket_ReturnsOkAndLinkHeader() throws Exception {
+        TicketCommentDetailsDTO comment = new TicketCommentDetailsDTO("UUID-1", "Hello", LocalDateTime.now(), "TICKET-1", "author");
+        when(ticketCommentService.getAllCommentsForTicket("TICKET-1", 1, 10))
+                .thenReturn(new PageImpl<>(List.of(comment)));
+
+        mockMvc.perform(get("/tickets/TICKET-1/comments"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Link", containsString("rel=")))
+                .andExpect(jsonPath("$[0].uuid").value("UUID-1"));
+    }
+
+    @Test
+    public void testAddCommentToTicket_ReturnsNoContentWhenSuccessful() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("author", null));
+        CreateTicketCommentDTO dto = new CreateTicketCommentDTO("New comment");
+
+        mockMvc.perform(post("/tickets/TICKET-1/comments")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testAddCommentToTicket_ReturnsBadRequestWhenInvalidData() throws Exception {
+        CreateTicketCommentDTO invalid = new CreateTicketCommentDTO("");
+
+        mockMvc.perform(post("/tickets/TICKET-1/comments")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(OBJECT_MAPPER.writeValueAsString(invalid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.content").exists());
+    }
+
+    @Test
+    public void testUnauthorizedRequest_ReturnsUnauthorized() throws Exception {
+        super.unauthorizedRequest(get("/tickets/TICKET-1"));
     }
 }
- */

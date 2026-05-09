@@ -22,7 +22,7 @@ public class CommonUtils {
         try {
             return OBJECT_MAPPER.writeValueAsString(buildErrorResponse(message));
         } catch (JsonProcessingException e) {
-            return "{\"message\":\"" + message + "\"}";
+            return "{\"error\":\"" + message + "\"}";
         }
     }
 

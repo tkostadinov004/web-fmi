@@ -12,8 +12,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
@@ -56,23 +54,6 @@ public class TicketServiceImpl implements TicketService {
 
         return project
                 .getTickets()
-                .stream()
-                .map(TicketDetailsDTO::from)
-                .toList();
-    }
-
-    @Override
-    public List<TicketDetailsDTO> getAllTicketsByStatusPriorityAndAssigneeUsername(TicketStatus status,
-                                                                                   TicketPriority priority,
-                                                                                   String assigneeUsername) {
-        Optional<User> assignee = userRepository.findById(assigneeUsername);
-        if (assignee.isEmpty()) {
-            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
-        }
-
-        List<Ticket> result = ticketRepository.findAllByAssigneeAndTicketStatusAndTicketPriority(assignee.get(), status, priority);
-
-        return result
                 .stream()
                 .map(TicketDetailsDTO::from)
                 .toList();

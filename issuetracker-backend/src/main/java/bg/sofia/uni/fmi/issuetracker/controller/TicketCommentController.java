@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.issuetracker.controller.ticket;
+package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
