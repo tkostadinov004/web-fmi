@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.model.project;
 
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
+import bg.sofia.uni.fmi.issuetracker.utils.VisibleForTesting;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,9 +30,8 @@ public class Project {
     @OneToMany(mappedBy = "project")
     private Set<ProjectUser> users = new HashSet<>();
 
-    // Is this correct ???
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ticket> tickets;
+    private List<Ticket> tickets = new ArrayList<>();
 
     public Project() {
     }
@@ -43,6 +44,12 @@ public class Project {
         this.name = name;
         this.users = users;
         this.tickets = tickets;
+    }
+
+    @VisibleForTesting
+    public Project(String uuid, String name, Set<ProjectUser> users, List<Ticket> tickets) {
+        this(name, users, tickets);
+        this.uuid = uuid;
     }
 
     public String getUuid() {

@@ -9,8 +9,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsExcepti
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.User;
-import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
@@ -18,28 +16,36 @@ import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketMapper;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_PROJECT;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TICKET;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER_2;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TicketServiceImplTests {
+    private static final CreateTicketDTO CREATE_TICKET_DTO = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription", TicketStatus.TO_DO,
+            TicketPriority.HIGH, "proj-1", LocalDateTime.now().plusDays(2), TEST_USER.getUsername());
+
     @Mock
     private TicketRepository ticketRepository;
 
@@ -56,300 +62,241 @@ public class TicketServiceImplTests {
     private TicketServiceImpl service;
 
     @Test
-    void testGetTicketByCode_ThrowsWhenNotFound() {
-        String code = "TICKET-1";
-        when(ticketRepository.findById(code)).thenReturn(Optional.empty());
+    void testGetTicketByCode_ThrowsWhenTicketNotFound() {
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getTicketByCode(code))
+        assertThatThrownBy(() -> service.getTicketByCode(TEST_TICKET.getCode()))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testGetTicketByCode_ReturnsTicketDetails() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(3), project, null, new ArrayList<>());
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
 
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
+        TicketDetailsDTO dto = service.getTicketByCode(TEST_TICKET.getCode());
 
-        TicketDetailsDTO dto = service.getTicketByCode(ticket.getCode());
-
-        assertEquals(ticket.getCode(), dto.code());
-        assertEquals(ticket.getTitle(), dto.title());
-        assertEquals(ticket.getProject().getUuid(), dto.projectUuid());
+        assertEquals(TEST_TICKET.getCode(), dto.code());
+        assertEquals(TEST_TICKET.getTitle(), dto.title());
+        assertEquals(TEST_TICKET.getProject().getUuid(), dto.projectUuid());
     }
 
     @Test
     void testGetAllTicketsByProject_ThrowsWhenProjectNotFound() {
-        String projectUuid = "missing-project";
-        when(projectRepository.findById(projectUuid)).thenReturn(Optional.empty());
+        when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getAllTicketsByProject(projectUuid))
+        assertThatThrownBy(() -> service.getAllTicketsByProject(TEST_PROJECT.getUuid()))
+                .hasMessage(ExceptionMessages.Project.projectNotFound(TEST_PROJECT.getUuid()))
                 .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test
-    void testGetAllTicketsByProject_ReturnsMappedTickets() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
+    void testGetAllTicketsByProject_ReturnsMappedTicketsSuccessfully() {
+        when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
 
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.HIGH,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(5), project, null, new ArrayList<>());
-        project.setTickets(List.of(ticket));
-
-        when(projectRepository.findById(project.getUuid())).thenReturn(Optional.of(project));
-
-        List<TicketDetailsDTO> result = service.getAllTicketsByProject(project.getUuid());
+        List<TicketDetailsDTO> result = service.getAllTicketsByProject(TEST_PROJECT.getUuid());
 
         assertEquals(1, result.size());
-        assertEquals(ticket.getCode(), result.get(0).code());
+        assertEquals(TEST_TICKET.getCode(), result.get(0).code());
     }
 
     @Test
     void testCreateTicket_ThrowsWhenTicketAlreadyExists() {
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.MEDIUM, "proj-1", null, null);
-        when(ticketRepository.existsById(dto.code())).thenReturn(true);
+        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(true);
 
-        assertThatThrownBy(() -> service.createTicket(dto))
+        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
+                .hasMessage(ExceptionMessages.Ticket.ticketAlreadyExists(CREATE_TICKET_DTO.code()))
                 .isExactlyInstanceOf(TicketAlreadyExistsException.class);
     }
 
     @Test
     void testCreateTicket_ThrowsWhenAssigneeNotFound() {
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.MEDIUM, "proj-1", LocalDateTime.now().plusDays(1), "assignee");
-        when(ticketRepository.existsById(dto.code())).thenReturn(false);
-        when(userRepository.findById(dto.assigneeUsername())).thenReturn(Optional.empty());
+        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
+        when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.createTicket(dto))
+        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
+                .hasMessage(ExceptionMessages.User.userNotFound(CREATE_TICKET_DTO.assigneeUsername()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     void testCreateTicket_ThrowsWhenProjectNotFound() {
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.MEDIUM, "proj-1", null, null);
-        when(ticketRepository.existsById(dto.code())).thenReturn(false);
-        when(projectRepository.findById(dto.projectUuid())).thenReturn(Optional.empty());
+        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
+        when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.createTicket(dto))
+        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
+                .hasMessage(ExceptionMessages.Project.projectNotFound(CREATE_TICKET_DTO.projectUuid()))
                 .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test
     void testCreateTicket_ThrowsWhenAssigneeNotInProject() {
-        User assignee = User.UserBuilder.newBuilder().username("assignee").password("pass").build();
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.MEDIUM, project.getUuid(), null, assignee.getUsername());
+        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
+        when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(false);
 
-        when(ticketRepository.existsById(dto.code())).thenReturn(false);
-        when(userRepository.findById(assignee.getUsername())).thenReturn(Optional.of(assignee));
-        when(projectRepository.findById(dto.projectUuid())).thenReturn(Optional.of(project));
-        when(projectRepository.isUserInProject(assignee, project)).thenReturn(false);
-
-        assertThatThrownBy(() -> service.createTicket(dto))
+        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
+                .hasMessage(ExceptionMessages.Project.userNotInProject(CREATE_TICKET_DTO.assigneeUsername(), CREATE_TICKET_DTO.projectUuid()))
                 .isExactlyInstanceOf(UserNotPartOfProjectException.class);
     }
 
     @Test
     void testCreateTicket_SuccessWithoutAssignee() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.LOW, project.getUuid(), LocalDateTime.now().plusDays(1), null);
+        CreateTicketDTO dtoWithoutAssignee = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription", TicketStatus.TO_DO,
+                TicketPriority.HIGH, "proj-1", LocalDateTime.now().plusDays(2), null);
+        when(ticketRepository.existsById(dtoWithoutAssignee.code())).thenReturn(false);
+        when(projectRepository.findById(dtoWithoutAssignee.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
 
-        when(ticketRepository.existsById(dto.code())).thenReturn(false);
-        when(projectRepository.findById(dto.projectUuid())).thenReturn(Optional.of(project));
-        doAnswer(invocation -> invocation.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
+        Ticket created = service.createTicket(dtoWithoutAssignee);
+        assertEquals(dtoWithoutAssignee.code(), created.getCode());
+        assertNull(created.getAssignee());
+        assertEquals(TEST_PROJECT, created.getProject());
 
-        Ticket created = service.createTicket(dto);
-
-        assertEquals(dto.code(), created.getCode());
-        assertEquals(dto.assigneeUsername(), created.getAssignee() == null ? null : created.getAssignee().getUsername());
-        assertEquals(project, created.getProject());
+        verify(ticketRepository, times(1)).save(any());
     }
 
     @Test
     void testCreateTicket_SuccessWithAssignee() {
-        User assignee = User.UserBuilder.newBuilder().username("assignee").password("pass").build();
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        CreateTicketDTO dto = new CreateTicketDTO("TICKET-1", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.LOW, project.getUuid(), LocalDateTime.now().plusDays(1), assignee.getUsername());
+        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
+        when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
+        doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any());
 
-        when(ticketRepository.existsById(dto.code())).thenReturn(false);
-        when(userRepository.findById(assignee.getUsername())).thenReturn(Optional.of(assignee));
-        when(projectRepository.findById(dto.projectUuid())).thenReturn(Optional.of(project));
-        when(projectRepository.isUserInProject(assignee, project)).thenReturn(true);
-        doAnswer(invocation -> invocation.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
+        Ticket created = service.createTicket(CREATE_TICKET_DTO);
 
-        Ticket created = service.createTicket(dto);
-
-        assertEquals(assignee, created.getAssignee());
-        assertEquals(project, created.getProject());
+        assertEquals(TEST_USER, created.getAssignee());
+        assertEquals(TEST_PROJECT, created.getProject());
     }
 
     @Test
     void testAddDependentTicketToTicket_ThrowsWhenParentTicketNotFound() {
-        String parentCode = "PARENT-1";
-        when(ticketRepository.findById(parentCode)).thenReturn(Optional.empty());
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addDependentTicketToTicket(parentCode, new CreateTicketDTO("TICKET-2", "Title", "Description", TicketStatus.TO_DO,
-                TicketPriority.LOW, "proj-1", null, null)))
+        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2", TicketStatus.TO_DO,
+                TicketPriority.LOW, TEST_PROJECT.getUuid(), null, null);
+        assertThatThrownBy(() -> service.addDependentTicketToTicket(TEST_TICKET.getCode(), dependentTicketDTO))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
-    void testAddDependentTicketToTicket_ThrowsWhenTicketProjectMismatch() {
-        Project parentProject = new Project("Parent Project", null, new ArrayList<>());
-        setPrivateField(parentProject, "uuid", "proj-parent");
-        Ticket parentTicket = new Ticket("PARENT-1", "Parent", "Desc", TicketPriority.LOW,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), parentProject, null, new ArrayList<>());
+    void testAddDependentTicketToTicket_ThrowsWhenDependentTicketIsNotInTheSameProjectAsParent() {
+        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2", TicketStatus.TO_DO,
+                TicketPriority.LOW, "something else", null, null);
 
-        Project childProject = new Project("Child Project", null, new ArrayList<>());
-        setPrivateField(childProject, "uuid", "proj-child");
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
 
-        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("CHILD-1", "Child", "Desc", TicketStatus.TO_DO,
-                TicketPriority.LOW, childProject.getUuid(), null, null);
-
-        when(ticketRepository.findById(parentTicket.getCode())).thenReturn(Optional.of(parentTicket));
-        
-        assertThatThrownBy(() -> service.addDependentTicketToTicket(parentTicket.getCode(), dependentTicketDTO))
+        assertThatThrownBy(() -> service.addDependentTicketToTicket(TEST_TICKET.getCode(), dependentTicketDTO))
+                .hasMessage(ExceptionMessages.Ticket.ticketProjectMismatch(dependentTicketDTO.code(), TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotInProjectException.class);
     }
 
     @Test
     void testAddDependentTicketToTicket_Successfully() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket parentTicket = new Ticket("PARENT-1", "Parent", "Desc", TicketPriority.LOW,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project, null, new ArrayList<>());
-        List<Ticket> dependentTickets = new ArrayList<>();
-        parentTicket.setDependentTickets(dependentTickets);
+        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2", TicketStatus.TO_DO,
+                TicketPriority.LOW, TEST_PROJECT.getUuid(), null, null);
 
-        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("CHILD-1", "Child", "Desc", TicketStatus.TO_DO,
-                TicketPriority.LOW, project.getUuid(), null, null);
-
-        when(ticketRepository.findById(parentTicket.getCode())).thenReturn(Optional.of(parentTicket));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
         when(ticketRepository.existsById(dependentTicketDTO.code())).thenReturn(false);
-        when(projectRepository.findById(dependentTicketDTO.projectUuid())).thenReturn(Optional.of(project));
-        doAnswer(invocation -> invocation.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
+        when(projectRepository.findById(dependentTicketDTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any());
 
-        service.addDependentTicketToTicket(parentTicket.getCode(), dependentTicketDTO);
+        service.addDependentTicketToTicket(TEST_TICKET.getCode(), dependentTicketDTO);
 
-        assertEquals(1, parentTicket.getDependentTickets().size());
-        assertEquals(dependentTicketDTO.code(), parentTicket.getDependentTickets().get(0).getCode());
-        verify(ticketRepository, times(1)).save(parentTicket);
+        assertEquals(1, TEST_TICKET.getDependentTickets().size());
+        assertEquals(dependentTicketDTO.code(), TEST_TICKET.getDependentTickets().get(0).getCode());
+        verify(ticketRepository, times(1)).save(TEST_TICKET);
+    }
+
+    @Test
+    void testChangeTicketAssignee_ThrowsWhenTicketNotFound() {
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.changeTicketAssignee(TEST_TICKET.getCode(), TEST_USER_2.getUsername()))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
+                .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testChangeTicketAssignee_ClearsAssignee() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project,
-                User.UserBuilder.newBuilder().username("assignee").password("pass").build(), new ArrayList<>());
-
+        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
+                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
         when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
 
         service.changeTicketAssignee(ticket.getCode(), null);
 
-        assertEquals(null, ticket.getAssignee());
+        assertNull(ticket.getAssignee());
         verify(ticketRepository, times(1)).save(ticket);
+        verify(userRepository, never()).findById(any());
     }
 
     @Test
     void testChangeTicketAssignee_ThrowsWhenAssigneeNotFound() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project, null, new ArrayList<>());
-
+        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
+                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
         when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
-        when(userRepository.findById("missing-assignee")).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.changeTicketAssignee(ticket.getCode(), "missing-assignee"))
+        assertThatThrownBy(() -> service.changeTicketAssignee(ticket.getCode(), TEST_USER.getUsername()))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     void testChangeTicketAssignee_Successfully() {
-        User assignee = User.UserBuilder.newBuilder().username("assignee").password("pass").build();
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project, null, new ArrayList<>());
-
+        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
+                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
         when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
-        when(userRepository.findById(assignee.getUsername())).thenReturn(Optional.of(assignee));
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
 
-        service.changeTicketAssignee(ticket.getCode(), assignee.getUsername());
+        service.changeTicketAssignee(ticket.getCode(), TEST_USER_2.getUsername());
 
-        assertEquals(assignee, ticket.getAssignee());
+        assertEquals(TEST_USER_2, ticket.getAssignee());
         verify(ticketRepository, times(1)).save(ticket);
     }
 
     @Test
     void testUpdateTicket_ThrowsWhenTicketNotFound() {
-        when(ticketRepository.findById("missing-ticket")).thenReturn(Optional.empty());
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateTicket("missing-ticket", new UpdateTicketDTO(null, null, null, null, null)))
+        assertThatThrownBy(() -> service.updateTicket(TEST_TICKET.getCode(), null))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testUpdateTicket_Successfully() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project, null, new ArrayList<>());
-        UpdateTicketDTO dto = new UpdateTicketDTO("New title", "New description", TicketStatus.IN_PROGRESS,
-                TicketPriority.HIGH, LocalDateTime.now().plusDays(10));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
 
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
+        UpdateTicketDTO dto = new UpdateTicketDTO(
+                "newTitle", "newDescription", null, null, null
+        );
+        service.updateTicket(TEST_TICKET.getCode(), dto);
 
-        service.updateTicket(ticket.getCode(), dto);
-
-        verify(ticketMapper, times(1)).patchTicketFromDTO(dto, ticket);
-        verify(ticketRepository, times(1)).save(ticket);
+        verify(ticketMapper, times(1)).patchTicketFromDTO(dto, TEST_TICKET);
+        verify(ticketRepository, times(1)).save(TEST_TICKET);
     }
 
     @Test
     void testDeleteTicket_ThrowsWhenNotFound() {
-        when(ticketRepository.findById("missing-ticket")).thenReturn(Optional.empty());
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.deleteTicket("missing-ticket"))
+        assertThatThrownBy(() -> service.deleteTicket(TEST_TICKET.getCode()))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testDeleteTicket_Successfully() {
-        Project project = new Project("Project A", null, new ArrayList<>());
-        setPrivateField(project, "uuid", "proj-1");
-        Ticket dependent = new Ticket("DEPENDENT-1", "Child", "Desc", TicketPriority.LOW,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(4), project, null, new ArrayList<>());
-        Ticket ticket = new Ticket("TICKET-1", "Title", "Description", TicketPriority.MEDIUM,
-                TicketStatus.TO_DO, LocalDateTime.now().plusDays(2), project, null, new ArrayList<>(List.of(dependent)));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
 
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
+        service.deleteTicket(TEST_TICKET.getCode());
 
-        service.deleteTicket(ticket.getCode());
-
-        verify(ticketRepository, times(1)).deleteAll(ticket.getDependentTickets());
-        verify(ticketRepository, times(1)).delete(ticket);
-    }
-
-    private void setPrivateField(Object target, String fieldName, Object value) {
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (ReflectiveOperationException ex) {
-            throw new RuntimeException(ex);
-        }
+        verify(ticketRepository, times(1)).deleteAll(TEST_TICKET.getDependentTickets());
+        verify(ticketRepository, times(1)).delete(TEST_TICKET);
     }
 }

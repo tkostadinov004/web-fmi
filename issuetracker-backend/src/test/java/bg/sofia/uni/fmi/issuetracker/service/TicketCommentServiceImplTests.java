@@ -7,13 +7,12 @@ import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.model.User;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketComment;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketCommentRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketCommentMapper;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,11 +23,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TICKET;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TICKET_COMMENT;
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,24 +56,20 @@ public class TicketCommentServiceImplTests {
     private TicketCommentServiceImpl service;
 
     @Test
-    void testGetAllCommentsForTicket_UsesDefaultPaginationWhenInvalidNumbers() {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
+    void testGetAllCommentsForTicket_UsesDefaultPaginationWhenInvalidPaginationDataIsPassed() {
+        Page<TicketComment> page = new PageImpl<>(List.of(TEST_TICKET_COMMENT));
 
-        TicketComment comment = new TicketComment(ticket, new User(), "Hello world", LocalDateTime.now());
-        Page<TicketComment> page = new PageImpl<>(List.of(comment));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
+        when(ticketCommentRepository.findAllByTicket(eq(TEST_TICKET), any(Pageable.class))).thenReturn(page);
 
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
-        when(ticketCommentRepository.findAllByTicket(eq(ticket), any(Pageable.class))).thenReturn(page);
-
-        Page<TicketCommentDetailsDTO> result = service.getAllCommentsForTicket(ticket.getCode(), 0, -5);
+        Page<TicketCommentDetailsDTO> result = service.getAllCommentsForTicket(TEST_TICKET.getCode(), 0, -5);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(comment.getContent(), result.getContent().get(0).content());
-        assertEquals(comment.getAuthor().getUsername(), result.getContent().get(0).authorUsername());
+        assertEquals(TEST_TICKET_COMMENT.getContent(), result.getContent().get(0).content());
+        assertEquals(TEST_TICKET_COMMENT.getAuthor().getUsername(), result.getContent().get(0).authorUsername());
 
         ArgumentCaptor<Pageable> pageableArgumentCaptor = ArgumentCaptor.captor();
-        verify(ticketCommentRepository, times(1)).findAllByTicket(eq(ticket), pageableArgumentCaptor.capture());
+        verify(ticketCommentRepository, times(1)).findAllByTicket(eq(TEST_TICKET), pageableArgumentCaptor.capture());
         Pageable pageable = pageableArgumentCaptor.getValue();
         assertEquals(0, pageable.getPageNumber());
         assertEquals(10, pageable.getPageSize());
@@ -81,164 +77,124 @@ public class TicketCommentServiceImplTests {
 
     @Test
     void testGetAllCommentsForTicket_ThrowsWhenTicketNotFound() {
-        String ticketCode = "missing-ticket";
-        when(ticketRepository.findById(ticketCode)).thenReturn(Optional.empty());
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getAllCommentsForTicket(ticketCode, 1, 10))
+        assertThatThrownBy(() -> service.getAllCommentsForTicket(TEST_TICKET.getCode(), 1, 10))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testGetTicketComment_ThrowsWhenNotFound() {
-        String commentUuid = "missing-comment";
-        when(ticketCommentRepository.findById(commentUuid)).thenReturn(Optional.empty());
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getTicketComment(commentUuid))
+        assertThatThrownBy(() -> service.getTicketComment(TEST_TICKET_COMMENT.getUuid()))
+                .hasMessage(ExceptionMessages.TicketComment.ticketCommentNotFound(TEST_TICKET_COMMENT.getUuid()))
                 .isExactlyInstanceOf(TicketCommentNotFoundException.class);
     }
 
     @Test
-    void testGetTicketComment_ReturnsDto() throws Exception {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        TicketComment comment = new TicketComment(ticket, author, "My comment", LocalDateTime.now());
-        setPrivateField(comment, "uuid", "comment-uuid");
+    void testGetTicketComment_ReturnsCorrectly() {
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.of(TEST_TICKET_COMMENT));
 
-        when(ticketCommentRepository.findById(comment.getUuid())).thenReturn(Optional.of(comment));
+        TicketCommentDetailsDTO expected = new TicketCommentDetailsDTO(TEST_TICKET_COMMENT.getUuid(),
+                TEST_TICKET_COMMENT.getContent(), TEST_TICKET_COMMENT.getCreatedAt(), TEST_TICKET.getCode(),
+                TEST_USER.getUsername());
+        TicketCommentDetailsDTO actual = service.getTicketComment(TEST_TICKET_COMMENT.getUuid());
 
-        TicketCommentDetailsDTO dto = service.getTicketComment(comment.getUuid());
-
-        assertEquals(comment.getUuid(), dto.uuid());
-        assertEquals(comment.getContent(), dto.content());
-        assertEquals(author.getUsername(), dto.authorUsername());
+        assertEquals(expected, actual);
     }
 
     @Test
     void testAddTicketComment_ThrowsWhenAuthorNotFound() {
-        String authorName = "not-found";
-        when(userRepository.findById(authorName)).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addTicketComment(authorName, "TICKET-1", new CreateTicketCommentDTO("text")))
+        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), "TICKET-1", new CreateTicketCommentDTO("text")))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     void testAddTicketComment_ThrowsWhenTicketNotFound() {
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        when(userRepository.findById(author.getUsername())).thenReturn(Optional.of(author));
-        when(ticketRepository.findById("missing-ticket")).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addTicketComment(author.getUsername(), "missing-ticket", new CreateTicketCommentDTO("text")))
+        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), TEST_TICKET.getCode(), new CreateTicketCommentDTO("text")))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testAddTicketComment_Successfully() {
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        CreateTicketCommentDTO dto = new CreateTicketCommentDTO("content");
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
+        doAnswer(_ -> null).when(ticketCommentRepository).save(any());
 
-        when(userRepository.findById(author.getUsername())).thenReturn(Optional.of(author));
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
-        doAnswer(invocation -> invocation.getArgument(0)).when(ticketCommentRepository).save(any(TicketComment.class));
-
-        service.addTicketComment(author.getUsername(), ticket.getCode(), dto);
+        CreateTicketCommentDTO dto = new CreateTicketCommentDTO("testContent");
+        service.addTicketComment(TEST_USER.getUsername(), TEST_TICKET.getCode(), dto);
 
         ArgumentCaptor<TicketComment> commentCaptor = ArgumentCaptor.captor();
         verify(ticketCommentRepository, times(1)).save(commentCaptor.capture());
         TicketComment savedComment = commentCaptor.getValue();
 
         assertEquals(dto.content(), savedComment.getContent());
-        assertEquals(author, savedComment.getAuthor());
-        assertEquals(ticket, savedComment.getTicket());
+        assertEquals(TEST_USER, savedComment.getAuthor());
+        assertEquals(TEST_TICKET, savedComment.getTicket());
     }
 
     @Test
     void testUpdateTicketComment_ThrowsWhenNotFound() {
-        String uuid = "missing-comment";
-        when(ticketCommentRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateTicketComment(uuid, new UpdateTicketCommentDTO("updated"), "author"))
+        assertThatThrownBy(() -> service.updateTicketComment(TEST_TICKET_COMMENT.getUuid(), new UpdateTicketCommentDTO("updated"), "author"))
+                .hasMessage(ExceptionMessages.TicketComment.ticketCommentNotFound(TEST_TICKET_COMMENT.getUuid()))
                 .isExactlyInstanceOf(TicketCommentNotFoundException.class);
     }
 
     @Test
     void testUpdateTicketComment_ThrowsOnOwnershipMismatch() {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        TicketComment comment = new TicketComment(ticket, author, "old", LocalDateTime.now());
-        setPrivateField(comment, "uuid", "comment-uuid");
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.of(TEST_TICKET_COMMENT));
 
-        when(ticketCommentRepository.findById(comment.getUuid())).thenReturn(Optional.of(comment));
-
-        assertThatThrownBy(() -> service.updateTicketComment(comment.getUuid(), new UpdateTicketCommentDTO("updated"), "other-user"))
+        assertThatThrownBy(() -> service.updateTicketComment(TEST_TICKET_COMMENT.getUuid(), new UpdateTicketCommentDTO("updated"), "other-user"))
+                .hasMessage(ExceptionMessages.TicketComment.allowedToModifyOnlyOwnComments())
                 .isExactlyInstanceOf(OwnershipMismatchException.class);
     }
 
     @Test
     void testUpdateTicketComment_Successfully() {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        TicketComment comment = new TicketComment(ticket, author, "old", LocalDateTime.now());
-        setPrivateField(comment, "uuid", "comment-uuid");
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.of(TEST_TICKET_COMMENT));
 
-        when(ticketCommentRepository.findById(comment.getUuid())).thenReturn(Optional.of(comment));
+        UpdateTicketCommentDTO dto = new UpdateTicketCommentDTO("updated");
+        service.updateTicketComment(TEST_TICKET_COMMENT.getUuid(), dto, TEST_TICKET_COMMENT.getAuthor().getUsername());
 
-        service.updateTicketComment(comment.getUuid(), new UpdateTicketCommentDTO("updated"), author.getUsername());
-
-        verify(mapper, times(1)).patchTicketCommentFromDTO(new UpdateTicketCommentDTO("updated"), comment);
-        verify(ticketCommentRepository, times(1)).save(comment);
+        verify(mapper, times(1)).patchTicketCommentFromDTO(dto, TEST_TICKET_COMMENT);
+        verify(ticketCommentRepository, times(1)).save(TEST_TICKET_COMMENT);
     }
 
     @Test
     void testDeleteTicketComment_ThrowsWhenNotFound() {
-        String uuid = "missing-comment";
-        when(ticketCommentRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.deleteTicketComment(uuid, "author"))
+        assertThatThrownBy(() -> service.deleteTicketComment(TEST_TICKET_COMMENT.getUuid(), "author"))
+                .hasMessage(ExceptionMessages.TicketComment.ticketCommentNotFound(TEST_TICKET_COMMENT.getUuid()))
                 .isExactlyInstanceOf(TicketCommentNotFoundException.class);
     }
 
     @Test
     void testDeleteTicketComment_ThrowsOnOwnershipMismatch() {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        TicketComment comment = new TicketComment(ticket, author, "old", LocalDateTime.now());
-        setPrivateField(comment, "uuid", "comment-uuid");
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.of(TEST_TICKET_COMMENT));
 
-        when(ticketCommentRepository.findById(comment.getUuid())).thenReturn(Optional.of(comment));
-
-        assertThatThrownBy(() -> service.deleteTicketComment(comment.getUuid(), "other-user"))
+        assertThatThrownBy(() -> service.deleteTicketComment(TEST_TICKET_COMMENT.getUuid(), "other-user"))
+                .hasMessage(ExceptionMessages.TicketComment.allowedToDeleteOnlyOwnComments())
                 .isExactlyInstanceOf(OwnershipMismatchException.class);
     }
 
     @Test
     void testDeleteTicketComment_Successfully() {
-        Ticket ticket = new Ticket();
-        ticket.setCode("TICKET-1");
-        User author = User.UserBuilder.newBuilder().username("author").password("pass").build();
-        TicketComment comment = new TicketComment(ticket, author, "old", LocalDateTime.now());
-        setPrivateField(comment, "uuid", "comment-uuid");
+        when(ticketCommentRepository.findById(TEST_TICKET_COMMENT.getUuid())).thenReturn(Optional.of(TEST_TICKET_COMMENT));
 
-        when(ticketCommentRepository.findById(comment.getUuid())).thenReturn(Optional.of(comment));
+        service.deleteTicketComment(TEST_TICKET_COMMENT.getUuid(), TEST_TICKET_COMMENT.getAuthor().getUsername());
 
-        service.deleteTicketComment(comment.getUuid(), author.getUsername());
-
-        verify(ticketCommentRepository, times(1)).delete(comment);
-    }
-
-    private void setPrivateField(Object target, String fieldName, Object value) {
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (Exception _) {
-
-        }
+        verify(ticketCommentRepository, times(1)).delete(TEST_TICKET_COMMENT);
     }
 }

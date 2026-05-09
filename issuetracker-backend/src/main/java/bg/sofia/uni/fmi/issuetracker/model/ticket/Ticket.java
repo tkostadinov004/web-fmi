@@ -15,6 +15,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -62,10 +63,10 @@ public class Ticket {
             joinColumns = @JoinColumn(name = "ticket_code"),
             inverseJoinColumns = @JoinColumn(name = "depends_on_ticket_code")
     )
-    private List<Ticket> dependentTickets;
+    private List<Ticket> dependentTickets = new ArrayList<>();
 
     @OneToMany(mappedBy = "ticket")
-    private List<TicketComment> ticketComments;
+    private List<TicketComment> ticketComments = new ArrayList<>();
 
     public Ticket() {
 
@@ -178,6 +179,10 @@ public class Ticket {
 
     public List<TicketComment> getTicketComments() {
         return ticketComments;
+    }
+
+    public void addTicketComment(TicketComment ticketComment) {
+        this.ticketComments.add(ticketComment);
     }
 
     @Override

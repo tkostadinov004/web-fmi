@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.model.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.model.User;
+import bg.sofia.uni.fmi.issuetracker.utils.VisibleForTesting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -44,6 +45,12 @@ public class TicketComment {
         this.author = author;
         this.content = content;
         this.createdAt = createdAt;
+    }
+
+    @VisibleForTesting
+    public TicketComment(String uuid, Ticket ticket, User author, String content, LocalDateTime createdAt) {
+        this(ticket, author, content, createdAt);
+        this.uuid = uuid;
     }
 
     public String getUuid() {

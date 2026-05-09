@@ -1,22 +1,28 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
+import bg.sofia.uni.fmi.issuetracker.controller.common.PaginationLinkHeader;
 import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
+import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @Tag(name = "User", description = "Endpoints for user profile and account management")
@@ -37,6 +45,35 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @Operation(summary = "List all users", description = "Returns a paginated list of users for admin review.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User list returned successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AdminOnlyOutputUserDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination or sorting parameters",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    @RequireAdmin
+    public ResponseEntity<List<AdminOnlyOutputUserDTO>> getAllUsers(@Parameter(description = "Page number to return, starting at 1", required = false) @RequestParam(name = "page_number", required = false, defaultValue = Constants.DEFAULT_PAGE_NUMBER) Integer pageNumber,
+                                                                    @Parameter(description = "Page size to return", required = false) @RequestParam(name = "page_size", required = false, defaultValue = Constants.DEFAULT_PAGE_SIZE) Integer pageSize,
+                                                                    @Parameter(description = "Field name to sort by", required = false) @RequestParam(name = "order_by", required = false, defaultValue = "username") String orderBy,
+                                                                    @Parameter(description = "Sort ascending when true, descending when false", required = false) @RequestParam(name = "asc", required = false, defaultValue = "true") Boolean ascending,
+                                                                    HttpServletRequest request) {
+        Page<AdminOnlyOutputUserDTO> resultPage = userService.getAllUsers(pageNumber, pageSize, orderBy, ascending);
+        PaginationLinkHeader linkHeader = new PaginationLinkHeader(resultPage, request.getRequestURL().toString());
+
+        return ResponseEntity
+                .ok()
+                .header("Link", linkHeader.toString())
+                .body(resultPage.toList());
     }
 
     @Operation(summary = "Delete a user", description = "Marks the specified user as deleted. This is an admin-only operation.")

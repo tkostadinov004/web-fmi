@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.issuetracker.controller.ticket;
+package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.controller.common.PaginationLinkHeader;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;

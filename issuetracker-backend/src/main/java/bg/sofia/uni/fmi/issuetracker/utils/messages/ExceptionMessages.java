@@ -158,8 +158,8 @@ public class ExceptionMessages {
         private static final String TICKET_PROJECT_MISMATCH =
                 "Ticket '%s' and parent ticket '%s' cannot be from different projects!";
 
-        public static String ticketProjectMismatch(String parentCode, String dependentCode) {
-            return TICKET_PROJECT_MISMATCH.formatted(parentCode, dependentCode);
+        public static String ticketProjectMismatch(String dependentCode, String parentCode) {
+            return TICKET_PROJECT_MISMATCH.formatted(dependentCode, parentCode);
         }
     }
 
