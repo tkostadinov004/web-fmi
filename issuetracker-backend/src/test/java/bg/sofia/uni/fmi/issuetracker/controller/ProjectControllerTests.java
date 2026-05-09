@@ -28,11 +28,11 @@ public class ProjectControllerTests extends BaseControllerTests {
     public void testGetAllTicketsByProject_ReturnsOk() throws Exception {
         TicketDetailsDTO dto = new TicketDetailsDTO("Ticket-1", "Title", "Description", TicketStatus.IN_PROGRESS,
                 TicketPriority.HIGH, LocalDateTime.now(), LocalDateTime.now(), null, "project-uuid", null, List.of());
-        when(ticketService.getAllTicketsByProject("project-uuid")).thenReturn(List.of(dto));
+        when(ticketService.getAllTicketsByProject(dto.projectUuid())).thenReturn(List.of(dto));
 
-        mockMvc.perform(get("/projects/%s/tickets".formatted(dto.code())))
+        mockMvc.perform(get("/projects/%s/tickets".formatted(dto.projectUuid())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].code").value("TICKET-1"));
+                .andExpect(jsonPath("$[0].code").value(dto.code()));
     }
 
     @Test
