@@ -2,9 +2,7 @@
   box-sizing: border-box;
   font-family: Arial, sans-serif;
 }
-body {
-  background-color: #A7C957;
-}
+
 .auth-container {
   min-height: 100vh;
   display: flex;
