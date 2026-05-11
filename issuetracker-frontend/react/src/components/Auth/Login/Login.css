@@ -1,0 +1,35 @@
+.login-extras {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.login-extras a {
+  color: var(--sage-green);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.login-extras a:hover {
+  color: var(--hunter-green);
+  text-decoration: underline;
+}
+
+.forgot-password-link {
+  font-size: 0.8125rem;
+  color: #666;
+  text-align: right;
+  display: block;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  color: var(--hunter-green);
+}
