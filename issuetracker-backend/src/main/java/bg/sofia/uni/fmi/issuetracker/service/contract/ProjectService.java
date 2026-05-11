@@ -33,4 +33,6 @@ public interface ProjectService {
      * @throws ProjectNotFoundException if the project cannot be found
      */
     boolean hasRoles(String username, String projectId, Collection<Role> roles, boolean strict);
+
+
 }
