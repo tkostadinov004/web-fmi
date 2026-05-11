@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './components/Auth/Login/Login';
+import ForgotPassword from './components/Auth/Login/ForgotPassword';
 import Register from './components/Auth/Register/Register';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -11,10 +12,10 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      {/* Тук е само списъкът с пътищата */}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route 
           path="/dashboard" 
