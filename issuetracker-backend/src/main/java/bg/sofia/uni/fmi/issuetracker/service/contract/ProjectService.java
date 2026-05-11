@@ -1,10 +1,15 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ProjectService {
     /**
@@ -34,5 +39,37 @@ public interface ProjectService {
      */
     boolean hasRoles(String username, String projectId, Collection<Role> roles, boolean strict);
 
+    /**
+     * Returns all projects
+     *
+     * @return {@link List<ProjectDetailsDTO>}
+     */
+    List<ProjectDetailsDTO> getAllProjects();
 
+    /**
+     * Returns a project by its id
+     *
+     * @param projectId the id of the project
+     * @return {@link ProjectDetailsDTO}
+     * @throws ProjectNotFoundException if the project cannot be found
+     */
+    ProjectDetailsDTO findProjectById(String projectId);
+
+    /**
+     * Returns a new project
+     *
+     * @param dto the {@link CreateProjectDTO} containing project creation data
+     * @return the created {@link ProjectDetailsDTO} entity
+     * @throws ProjectAlreadyExistsException if the project already exists
+     */
+    ProjectDetailsDTO addProject(CreateProjectDTO dto);
+
+    /**
+     * Updates project information
+     *
+     * @param projectId the id of the project
+     * @param dto       the {@link UpdateProjectDTO} containing updated project data
+     * @throws ProjectNotFoundException if the project cannot be found
+     */
+    void updateProject(String projectId, UpdateProjectDTO dto);
 }

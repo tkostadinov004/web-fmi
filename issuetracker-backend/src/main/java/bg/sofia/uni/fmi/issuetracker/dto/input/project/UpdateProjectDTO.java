@@ -9,6 +9,10 @@ public record UpdateProjectDTO(
     @Size(max = 500, message = ValidationConstants.Project.LENGTH_NAME)
     @Schema(description = "Updated name of the project. Optional, max 500 characters.",
         requiredMode = Schema.RequiredMode.NOT_REQUIRED, maxLength = 500)
-    String name
+    String name,
+    @Size(max = 2000, message = ValidationConstants.Project.LENGTH_NAME)
+    @Schema(description = "Updated description of the project. Optional, max 2000 characters.",
+    requiredMode = Schema.RequiredMode.NOT_REQUIRED, maxLength = 2000)
+    String description
 ) {
 }

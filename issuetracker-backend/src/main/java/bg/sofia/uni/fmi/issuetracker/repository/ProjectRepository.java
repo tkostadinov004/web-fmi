@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, String> {
     @Query("select exists(select pu.id from ProjectUser pu where pu.project = :project and pu.user = :user)")
@@ -28,4 +29,6 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
         """)
     boolean hasRolesStrict(@Param("user") User user, @Param("project") Project project,
                            @Param("roles") Collection<Role> roles);
+
+    boolean existsByName(@Param("name") String name);
 }
