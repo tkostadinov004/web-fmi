@@ -28,6 +28,4 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
         """)
     boolean hasRolesStrict(@Param("user") User user, @Param("project") Project project,
                            @Param("roles") Collection<Role> roles);
-
-
 }

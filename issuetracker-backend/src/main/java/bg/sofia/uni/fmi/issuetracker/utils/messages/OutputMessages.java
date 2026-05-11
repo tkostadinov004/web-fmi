@@ -23,4 +23,10 @@ public class OutputMessages {
         public static final String COMMENT_UPDATED = "Comment updated successfully!";
         public static final String COMMENT_DELETED = "Comment deleted successfully!";
     }
+
+    public static class Project {
+        public static final String PROJECT_CREATED = "Project created successfully!";
+        public static final String PROJECT_UPDATED = "Project updated successfully!";
+        public static final String PROJECT_DELETED = "Project deleted successfully!";
+    }
 }

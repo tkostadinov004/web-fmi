@@ -26,32 +26,34 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public boolean isMemberOf(String username, String projectId) {
-        Optional<User> user = userRepository.findById(username);
-        if (user.isEmpty()) {
-            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
-        }
+        User user = checkUser(username);
+        Project project = checkProject(projectId);
 
-        Optional<Project> project = projectRepository.findById(projectId);
-        if (project.isEmpty()) {
-            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
-        }
-
-        return projectRepository.isUserInProject(user.get(), project.get());
+        return projectRepository.isUserInProject(user, project);
     }
 
     @Override
     public boolean hasRoles(String username, String projectId, Collection<Role> roles, boolean strict) {
+        User user = checkUser(username);
+        Project project = checkProject(projectId);
+
+        return strict ? projectRepository.hasRolesStrict(user, project, roles) :
+                projectRepository.hasRoles(user, project, roles);
+    }
+
+    private User checkUser(String username) {
         Optional<User> user = userRepository.findById(username);
         if (user.isEmpty()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
+        return user.get();
+    }
 
+    private Project checkProject(String projectId) {
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isEmpty()) {
             throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
         }
-
-        return strict ? projectRepository.hasRolesStrict(user.get(), project.get(), roles) :
-                projectRepository.hasRoles(user.get(), project.get(), roles);
+        return project.get();
     }
 }

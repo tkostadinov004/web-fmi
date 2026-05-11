@@ -60,6 +60,7 @@ public class ExceptionMessages {
     public static class Project {
         private static final String PROJECT_NOT_FOUND = "Project with UUID %s is not found!";
         private static final String USER_NOT_IN_PROJECT = "User %s is not part of project %s!";
+        private static final String PROJECT_ALREADY_EXISTS = "Project with UUID %s already exists!";
 
         public static String projectNotFound(String projectId) {
             return PROJECT_NOT_FOUND.formatted(projectId);
@@ -67,6 +68,10 @@ public class ExceptionMessages {
 
         public static String userNotInProject(String username, String projectId) {
             return USER_NOT_IN_PROJECT.formatted(username, projectId);
+        }
+
+        public static String projectAlreadyExists(String projectId) {
+            return PROJECT_ALREADY_EXISTS.formatted(projectId);
         }
     }
 
