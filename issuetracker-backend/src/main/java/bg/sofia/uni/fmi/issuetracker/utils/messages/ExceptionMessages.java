@@ -239,4 +239,12 @@ public class ExceptionMessages {
             return USER_NOT_FOUND.formatted(username, projectId);
         }
     }
+
+    public static class Workflow {
+        private static final String INVALID_STATUS = "Invalid status '%s'!";
+
+        public static String invalidStatus(String status) {
+            return INVALID_STATUS.formatted(status);
+        }
+    }
 }

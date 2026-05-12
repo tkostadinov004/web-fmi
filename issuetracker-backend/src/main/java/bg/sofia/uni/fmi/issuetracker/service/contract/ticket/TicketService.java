@@ -10,6 +10,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
+import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 
 import java.util.List;
 
@@ -83,4 +84,13 @@ public interface TicketService {
      * @throws TicketNotFoundException if the ticket does not exist
      */
     void deleteTicket(String ticketCode);
+
+    /**
+     * Changes the status of a ticket
+     *
+     * @param ticketCode   the code of the ticket to change status
+     * @param ticketStatus the status to be changed to
+     * @throws TicketNotFoundException if the ticket does not exist
+     */
+    void changeTicketStatus(String ticketCode, TicketStatus ticketStatus);
 }
