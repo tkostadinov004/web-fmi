@@ -1,6 +1,17 @@
+import { useEffect } from "react";
 import "./Register.css";
+import { NavLink } from "react-router-dom";
 
-function Register() {
+const Register = () => {
+
+  useEffect(() => {
+    document.body.classList.add("register-body");
+
+    return () => {
+      document.body.classList.remove("register-body");
+    };
+  }, []);
+
   return (
     <>
       <div className="auth-container">
@@ -10,7 +21,11 @@ function Register() {
               <h1>Get Started</h1>
               <p>Already have an account?</p>
 
-              <button className="login-btn">Log in</button>
+
+              <NavLink to="login" className="login-btn">
+                Log in
+              </NavLink>
+
             </div>
           </div>
 
@@ -31,15 +46,15 @@ function Register() {
                   </div>
                 </div>
 
-                  <div className="input-group">
-                    <label>Username</label>
-                    <input type="text" name="username" />
-                  </div>
+                <div className="input-group">
+                  <label>Username</label>
+                  <input type="text" name="username" />
+                </div>
 
-                  <div className="input-group">
-                    <label>Company Name</label>
-                    <input type="text" name="companyName" />
-                  </div>
+                <div className="input-group">
+                  <label>Company Name</label>
+                  <input type="text" name="companyName" />
+                </div>
 
                 <div className="input-group">
                   <label>Email</label>
