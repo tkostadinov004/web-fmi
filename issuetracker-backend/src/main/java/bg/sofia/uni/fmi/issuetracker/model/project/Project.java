@@ -44,7 +44,6 @@ public class Project {
     @OneToMany(mappedBy = "project")
     private Set<ProjectUser> users = new HashSet<>();
 
-    // Is this correct ???
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
 
@@ -116,22 +115,6 @@ public class Project {
 
     public void setTickets(List<Ticket> tickets) {
         this.tickets = tickets;
-    }
-
-    public void addTicket(Ticket ticket) {
-        this.tickets.add(ticket);
-    }
-
-    public void removeTicket(Ticket ticket) {
-        this.tickets.remove(ticket);
-    }
-
-    public void addProjectUser(ProjectUser user) {
-        users.add(user);
-    }
-
-    public void removeProjectUser(ProjectUser user) {
-        users.remove(user);
     }
 
     @Override

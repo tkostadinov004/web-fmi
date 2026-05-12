@@ -185,4 +185,20 @@ public class ExceptionMessages {
             return FEATURE_FLAG_NOT_FOUND.formatted(name);
         }
     }
+
+    public static class ProjectUser {
+
+        private static final String USER_ALREADY_IN_PROJECT =
+            "User with username %s is already part of project %s!";
+
+        private static final String USER_NOT_FOUND = "User with username %s not found in project %s!";
+
+        public static String userAlreadyInProject(String username, String projectId) {
+            return USER_ALREADY_IN_PROJECT.formatted(username, projectId);
+        }
+
+        public static String userNotFound(String username, String projectId) {
+            return USER_NOT_FOUND.formatted(username, projectId);
+        }
+    }
 }

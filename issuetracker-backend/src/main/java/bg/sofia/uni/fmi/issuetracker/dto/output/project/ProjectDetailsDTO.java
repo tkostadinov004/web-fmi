@@ -19,16 +19,16 @@ public record ProjectDetailsDTO(
     @Schema(description = "Information about the creator of the project", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     ProjectDetailsCreatorDTO creator,
     @Schema(description = "List of assigned users to the project.", requiredMode = Schema.RequiredMode.REQUIRED)
-    List<ProjectDetailsAssignedUserDTO> users,
+    List<ProjectDetailsUserDTO> users,
     @Schema(description = "List of tickets added in the project", requiredMode = Schema.RequiredMode.REQUIRED)
     List<ProjectDetailsAddedTicketDTO> tickets
 ) {
 
     public static ProjectDetailsDTO from(Project project) {
 
-        List<ProjectDetailsAssignedUserDTO> users = project.getUsers()
+        List<ProjectDetailsUserDTO> users = project.getUsers()
             .stream()
-            .map(projectUser -> new ProjectDetailsAssignedUserDTO(
+            .map(projectUser -> new ProjectDetailsUserDTO(
                 projectUser.getUser().getProfilePicturePath(),
                 projectUser.getUser().getUsername()
             ))

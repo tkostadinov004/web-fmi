@@ -50,4 +50,10 @@ public class ValidationConstants {
         public static final String BLANK_NAME = "Project name should not be blank or empty!";
         public static final String LENGTH_NAME = "Project name must be at most 500 characters!";
     }
+
+    public static class User {
+        public static final String BLANK_NAME = "User name should not be blank!";
+        public static final String LENGTH_NAME = "User name must be at most 30 characters!";
+        public static final String NULL_VALUE = "User name should not be null!";
+    }
 }
