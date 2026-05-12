@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.controller.common;
 
 import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
 import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
@@ -48,7 +49,8 @@ public class ExceptionHandlers {
 
     @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
             UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
-            TicketCommentNotInTicketException.class, TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class})
+            TicketCommentNotInTicketException.class, TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
+            InvalidWorkflowTransitionException.class})
     public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);

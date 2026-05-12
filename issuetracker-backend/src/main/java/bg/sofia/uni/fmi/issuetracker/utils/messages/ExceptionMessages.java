@@ -241,10 +241,10 @@ public class ExceptionMessages {
     }
 
     public static class Workflow {
-        private static final String INVALID_STATUS = "Invalid status '%s'!";
+        private static final String INVALID_STATUS = "Invalid status transition from status '%s' to status '%s'!";
 
-        public static String invalidStatus(String status) {
-            return INVALID_STATUS.formatted(status);
+        public static String invalidStatus(String oldStatus, String newStatus) {
+            return INVALID_STATUS.formatted(oldStatus, newStatus);
         }
     }
 }

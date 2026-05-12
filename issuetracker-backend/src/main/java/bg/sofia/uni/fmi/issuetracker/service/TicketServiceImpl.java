@@ -13,7 +13,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
@@ -54,10 +53,10 @@ public class TicketServiceImpl implements TicketService {
         Project project = fetchProject(projectUuid);
 
         return project
-            .getTickets()
-            .stream()
-            .map(TicketDetailsDTO::from)
-            .toList();
+                .getTickets()
+                .stream()
+                .map(TicketDetailsDTO::from)
+                .toList();
     }
 
     @Override
@@ -77,11 +76,11 @@ public class TicketServiceImpl implements TicketService {
         Project project = fetchProject(dto.projectUuid());
         if (assignee.isPresent() && !projectRepository.isUserInProject(assignee.get(), project)) {
             throw new UserNotPartOfProjectException(
-                ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
+                    ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
         }
 
         Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), dto.ticketStatus(),
-            dto.dueDate(), project, assignee.orElse(null), List.of());
+                dto.dueDate(), project, assignee.orElse(null), List.of());
 
         return ticketRepository.save(ticket);
     }
@@ -92,7 +91,7 @@ public class TicketServiceImpl implements TicketService {
         Ticket parentTicket = getTicket(parentTicketCode);
         if (!parentTicket.getProject().getUuid().equals(ticket.projectUuid())) {
             throw new TicketNotInProjectException(
-                ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
+                    ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
         }
 
         Ticket dependentTicket = createTicket(ticket);
@@ -124,6 +123,10 @@ public class TicketServiceImpl implements TicketService {
     public void updateTicket(String code, UpdateTicketDTO dto) {
         Ticket ticket = getTicket(code);
 
+        if (dto.ticketStatus() != null && !TicketWorkflow.isTransitionAllowed(ticket.getTicketStatus(), dto.ticketStatus())) {
+            throw new InvalidWorkflowTransitionException(
+                    ExceptionMessages.Workflow.invalidStatus(ticket.getTicketStatus().toString(), dto.ticketStatus().toString()));
+        }
         ticketMapper.patchTicketFromDTO(dto, ticket);
         ticketRepository.save(ticket);
     }
@@ -135,16 +138,6 @@ public class TicketServiceImpl implements TicketService {
 
         ticketRepository.deleteAll(ticket.getDependentTickets());
         ticketRepository.delete(ticket);
-    }
-
-    @Override
-    public void changeTicketStatus(String ticketCode, TicketStatus ticketStatus) {
-        Ticket ticket = getTicket(ticketCode);
-        if (TicketWorkflow.isTransitionAllowed(ticket.getTicketStatus(), ticketStatus)) {
-            throw new InvalidWorkflowTransitionException(
-                ExceptionMessages.Workflow.invalidStatus(ticketStatus.toString()));
-        }
-        ticket.setTicketStatus(ticketStatus);
     }
 
     private Project fetchProject(String projectUuid) {

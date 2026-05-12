@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.service;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
@@ -17,10 +18,12 @@ import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
+import bg.sofia.uni.fmi.issuetracker.workflow.TicketWorkflow;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -35,7 +38,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -266,6 +271,20 @@ public class TicketServiceImplTests {
         assertThatThrownBy(() -> service.updateTicket(TEST_TICKET.getCode(), null))
                 .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
+    }
+
+    @Test
+    void testUpdateTicket_ThrowsWhenStatusTransitionIsNotAllowed() {
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
+
+        try (MockedStatic<TicketWorkflow> ticketWorkflowMockedStatic = mockStatic(TicketWorkflow.class)) {
+            ticketWorkflowMockedStatic.when(() -> TicketWorkflow.isTransitionAllowed(any(), eq(TicketStatus.DONE))).thenReturn(false);
+
+            UpdateTicketDTO dto = new UpdateTicketDTO(null, null, TicketStatus.DONE, null, null);
+            assertThatThrownBy(() -> service.updateTicket(TEST_TICKET.getCode(), dto))
+                    .hasMessage(ExceptionMessages.Workflow.invalidStatus(TEST_TICKET.getTicketStatus().toString(), dto.ticketStatus().toString()))
+                    .isExactlyInstanceOf(InvalidWorkflowTransitionException.class);
+        }
     }
 
     @Test

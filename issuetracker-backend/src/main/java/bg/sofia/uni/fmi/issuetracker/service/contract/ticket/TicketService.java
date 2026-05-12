@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.service.contract.ticket;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
@@ -10,7 +11,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 
 import java.util.List;
 
@@ -73,7 +73,8 @@ public interface TicketService {
      *
      * @param code the code of the ticket to update
      * @param dto  the {@link UpdateTicketDTO} containing updated ticket data
-     * @throws TicketNotFoundException if the ticket does not exist
+     * @throws TicketNotFoundException            if the ticket does not exist
+     * @throws InvalidWorkflowTransitionException if the status transition is not allowed by the workflow
      */
     void updateTicket(String code, UpdateTicketDTO dto);
 
@@ -84,13 +85,4 @@ public interface TicketService {
      * @throws TicketNotFoundException if the ticket does not exist
      */
     void deleteTicket(String ticketCode);
-
-    /**
-     * Changes the status of a ticket
-     *
-     * @param ticketCode   the code of the ticket to change status
-     * @param ticketStatus the status to be changed to
-     * @throws TicketNotFoundException if the ticket does not exist
-     */
-    void changeTicketStatus(String ticketCode, TicketStatus ticketStatus);
 }
