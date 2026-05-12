@@ -60,7 +60,8 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{code}")
-    public ResponseEntity<TicketDetailsDTO> getTicketByCode(@Parameter(description = "Unique code identifier of the ticket", required = true) @PathVariable String code) {
+    public ResponseEntity<TicketDetailsDTO> getTicketByCode(
+            @Parameter(description = "Unique code identifier of the ticket", required = true) @PathVariable String code) {
         return ResponseEntity.ok(ticketService.getTicketByCode(code));
     }
 
@@ -79,7 +80,9 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<Void> createTicket(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket creation data", required = true, content = @Content) @Valid @RequestBody CreateTicketDTO dto) {
+    public ResponseEntity<Void> createTicket(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket creation data", required = true, content = @Content)
+            @Valid @RequestBody CreateTicketDTO dto) {
         ticketService.createTicket(dto);
         return ResponseEntity.ok().build();
     }
@@ -99,8 +102,10 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/{parentCode}/dependents")
-    public ResponseEntity<Void> addDependentTicket(@Parameter(description = "Code of the parent ticket", required = true) @PathVariable String parentCode,
-                                                   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dependent ticket creation data", required = true, content = @Content) @Valid @RequestBody CreateTicketDTO dto) {
+    public ResponseEntity<Void> addDependentTicket(
+            @Parameter(description = "Code of the parent ticket", required = true) @PathVariable String parentCode,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dependent ticket creation data", required = true, content = @Content)
+            @Valid @RequestBody CreateTicketDTO dto) {
         ticketService.addDependentTicketToTicket(parentCode, dto);
         return ResponseEntity.ok().build();
     }
@@ -116,9 +121,28 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{code}/assignee")
-    public ResponseEntity<Void> changeAssignee(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
-                                               @Parameter(description = "Username of the new assignee", required = false) @RequestParam(required = false) String assigneeUsername) {
+    public ResponseEntity<Void> changeAssignee(
+            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
+            @Parameter(description = "Username of the new assignee", required = true) @RequestParam(required = true)
+            String assigneeUsername) {
         ticketService.changeTicketAssignee(code, assigneeUsername);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Change ticket assignee", description = "Removes the assignee of a ticket, effectively leaving it unassigned.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Assignee removed successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Ticket not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/{code}/assignee")
+    public ResponseEntity<Void> changeAssignee(
+            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code) {
+        ticketService.removeTicketAssignee(code);
         return ResponseEntity.noContent().build();
     }
 
@@ -135,8 +159,10 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{code}")
-    public ResponseEntity<Void> updateTicket(@Parameter(description = "Code of the ticket to update", required = true) @PathVariable String code,
-                                             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket update data", required = true, content = @Content) @Valid @RequestBody UpdateTicketDTO dto) {
+    public ResponseEntity<Void> updateTicket(
+            @Parameter(description = "Code of the ticket to update", required = true) @PathVariable String code,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket update data", required = true, content = @Content)
+            @Valid @RequestBody UpdateTicketDTO dto) {
         ticketService.updateTicket(code, dto);
         return ResponseEntity.noContent().build();
     }
@@ -152,7 +178,8 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{code}")
-    public ResponseEntity<Void> deleteTicket(@Parameter(description = "Code of the ticket to delete", required = true) @PathVariable String code) {
+    public ResponseEntity<Void> deleteTicket(
+            @Parameter(description = "Code of the ticket to delete", required = true) @PathVariable String code) {
         ticketService.deleteTicket(code);
         return ResponseEntity.noContent().build();
     }
@@ -169,12 +196,19 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{code}/comments")
-    public ResponseEntity<List<TicketCommentDetailsDTO>> getAllCommentsForTicket(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
-                                                                                 @Parameter(description = "Page number starting at 1", required = false) @RequestParam(name = "page_number", required = false, defaultValue = Constants.DEFAULT_PAGE_NUMBER) Integer pageNumber,
-                                                                                 @Parameter(description = "Number of comments per page", required = false) @RequestParam(name = "page_size", required = false, defaultValue = Constants.DEFAULT_PAGE_SIZE) Integer pageSize,
-                                                                                 HttpServletRequest request) {
-        Page<TicketCommentDetailsDTO> resultPage = ticketCommentService.getAllCommentsForTicket(code, pageNumber, pageSize);
-        PaginationLinkHeader linkHeader = new PaginationLinkHeader(resultPage, request.getRequestURL().toString(), false);
+    public ResponseEntity<List<TicketCommentDetailsDTO>> getAllCommentsForTicket(
+            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
+            @Parameter(description = "Page number starting at 1", required = false)
+            @RequestParam(name = "page_number", required = false, defaultValue = Constants.DEFAULT_PAGE_NUMBER)
+            Integer pageNumber,
+            @Parameter(description = "Number of comments per page", required = false)
+            @RequestParam(name = "page_size", required = false, defaultValue = Constants.DEFAULT_PAGE_SIZE)
+            Integer pageSize,
+            HttpServletRequest request) {
+        Page<TicketCommentDetailsDTO> resultPage =
+                ticketCommentService.getAllCommentsForTicket(code, pageNumber, pageSize);
+        PaginationLinkHeader linkHeader =
+                new PaginationLinkHeader(resultPage, request.getRequestURL().toString(), false);
 
         return ResponseEntity
                 .ok()
@@ -195,8 +229,10 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/{code}/comments")
-    public ResponseEntity<Void> addCommentToTicket(@Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
-                                                   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Comment creation data", required = true, content = @Content) @Valid @RequestBody CreateTicketCommentDTO dto) {
+    public ResponseEntity<Void> addCommentToTicket(
+            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Comment creation data", required = true, content = @Content)
+            @Valid @RequestBody CreateTicketCommentDTO dto) {
         String author = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         ticketCommentService.addTicketComment(author, code, dto);
 

@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
@@ -139,6 +140,30 @@ public class TicketControllerTests extends BaseControllerTests {
         mockMvc.perform(patch("/tickets/MISSING/assignee").param("assigneeUsername", "newuser"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
+    }
+
+    @Test
+    public void testRemoveAssignee_ReturnsNoContentWhenSuccessful() throws Exception {
+        mockMvc.perform(delete("/tickets/CODE-1/assignee"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testRemoveAssignee_ReturnsNotFoundWhenTicketMissing() throws Exception {
+        doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING"))).when(ticketService).removeTicketAssignee("MISSING");
+
+        mockMvc.perform(delete("/tickets/MISSING/assignee"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING")));
+    }
+
+    @Test
+    public void testRemoveAssignee_ReturnsNotFoundWhenTicketIsUnassigned() throws Exception {
+        doThrow(new UnassignedTicketException(ExceptionMessages.Ticket.unassignedTicket("MISSING"))).when(ticketService).removeTicketAssignee("MISSING");
+
+        mockMvc.perform(delete("/tickets/MISSING/assignee"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.unassignedTicket("MISSING")));
     }
 
     @Test

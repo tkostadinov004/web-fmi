@@ -9,9 +9,11 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
@@ -47,7 +49,8 @@ public class ExceptionHandlers {
 
     @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
             UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
-            TicketCommentNotInTicketException.class, TicketNotInProjectException.class})
+            TicketCommentNotInTicketException.class, TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
+            UnassignedTicketException.class})
     public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);

@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectExcep
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
@@ -36,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -222,19 +222,6 @@ public class TicketServiceImplTests {
     }
 
     @Test
-    void testChangeTicketAssignee_ClearsAssignee() {
-        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
-                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
-        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
-
-        service.changeTicketAssignee(ticket.getCode(), null);
-
-        assertNull(ticket.getAssignee());
-        verify(ticketRepository, times(1)).save(ticket);
-        verify(userRepository, never()).findById(any());
-    }
-
-    @Test
     void testChangeTicketAssignee_ThrowsWhenAssigneeNotFound() {
         Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
                 TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
@@ -256,6 +243,38 @@ public class TicketServiceImplTests {
         service.changeTicketAssignee(ticket.getCode(), TEST_USER_2.getUsername());
 
         assertEquals(TEST_USER_2, ticket.getAssignee());
+        verify(ticketRepository, times(1)).save(ticket);
+    }
+
+    @Test
+    void testRemoveTicketAssignee_ThrowsWhenTicketNotFound() {
+        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.removeTicketAssignee(TEST_TICKET.getCode()))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
+                .isExactlyInstanceOf(TicketNotFoundException.class);
+    }
+
+    @Test
+    void testRemoveTicketAssignee_ThrowsWhenTicketIsCurrentlyUnassigned() {
+        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
+                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, null, List.of());
+        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.removeTicketAssignee(ticket.getCode()))
+                .hasMessage(ExceptionMessages.Ticket.unassignedTicket(ticket.getCode()))
+                .isExactlyInstanceOf(UnassignedTicketException.class);
+    }
+
+    @Test
+    void testRemoveTicketAssignee_ClearsAssignee() {
+        Ticket ticket = new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
+                TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, List.of());
+        when(ticketRepository.findById(ticket.getCode())).thenReturn(Optional.of(ticket));
+
+        service.removeTicketAssignee(ticket.getCode());
+
+        assertNull(ticket.getAssignee());
         verify(ticketRepository, times(1)).save(ticket);
     }
 

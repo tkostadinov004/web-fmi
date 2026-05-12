@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.utils.messages;
 
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 
 public class ExceptionMessages {
@@ -62,6 +63,7 @@ public class ExceptionMessages {
     public static class Project {
         private static final String PROJECT_NOT_FOUND = "Project with UUID %s is not found!";
         private static final String USER_NOT_IN_PROJECT = "User %s is not part of project %s!";
+        private static final String PROJECT_ALREADY_EXISTS = "Project with UUID %s already exists!";
 
         public static String projectNotFound(String projectId) {
             return PROJECT_NOT_FOUND.formatted(projectId);
@@ -69,6 +71,10 @@ public class ExceptionMessages {
 
         public static String userNotInProject(String username, String projectId) {
             return USER_NOT_IN_PROJECT.formatted(username, projectId);
+        }
+
+        public static String projectAlreadyExists(String projectId) {
+            return PROJECT_ALREADY_EXISTS.formatted(projectId);
         }
     }
 
@@ -161,6 +167,13 @@ public class ExceptionMessages {
         public static String ticketProjectMismatch(String dependentCode, String parentCode) {
             return TICKET_PROJECT_MISMATCH.formatted(dependentCode, parentCode);
         }
+
+        private static final String UNASSIGNED_TICKET =
+                "Ticket '%s' is currently not assigned to anyone!";
+
+        public static String unassignedTicket(String ticketCode) {
+            return UNASSIGNED_TICKET.formatted(ticketCode);
+        }
     }
 
     public static class TicketComment {
@@ -208,6 +221,29 @@ public class ExceptionMessages {
 
         public static String featureFlagNotFound(String name) {
             return FEATURE_FLAG_NOT_FOUND.formatted(name);
+        }
+    }
+
+    public static class ProjectUser {
+
+        private static final String USER_ALREADY_IN_PROJECT_ROLE =
+                "User with username %s is already part of project %s with role %s!";
+
+        private static final String USER_ALREADY_IN_PROJECT =
+                "User with username %s is already part of project %s!";
+
+        private static final String USER_NOT_FOUND = "User with username %s not found in project %s!";
+
+        public static String userAlreadyInProject(String username, String projectId, Role role) {
+            return USER_ALREADY_IN_PROJECT_ROLE.formatted(username, projectId, role);
+        }
+
+        public static String userAlreadyInProject(String username, String projectId) {
+            return USER_ALREADY_IN_PROJECT.formatted(username, projectId);
+        }
+
+        public static String userNotFound(String username, String projectId) {
+            return USER_NOT_FOUND.formatted(username, projectId);
         }
     }
 }
