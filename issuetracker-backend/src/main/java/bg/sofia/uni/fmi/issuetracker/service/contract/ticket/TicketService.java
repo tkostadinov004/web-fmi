@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectExcep
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 
@@ -66,6 +67,15 @@ public interface TicketService {
      * @throws UserNotFoundException   if the assignee username does not exist
      */
     void changeTicketAssignee(String ticketCode, String assigneeUsername);
+
+    /**
+     * Removes the assignee of a ticket.
+     *
+     * @param ticketCode the code of the ticket to update
+     * @throws TicketNotFoundException   if the ticket does not exist
+     * @throws UnassignedTicketException if the ticket is currently unassigned
+     */
+    void removeTicketAssignee(String ticketCode);
 
     /**
      * Updates ticket information.

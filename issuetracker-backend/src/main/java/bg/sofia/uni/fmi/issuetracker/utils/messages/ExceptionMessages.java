@@ -167,6 +167,13 @@ public class ExceptionMessages {
         public static String ticketProjectMismatch(String dependentCode, String parentCode) {
             return TICKET_PROJECT_MISMATCH.formatted(dependentCode, parentCode);
         }
+
+        private static final String UNASSIGNED_TICKET =
+                "Ticket '%s' is currently not assigned to anyone!";
+
+        public static String unassignedTicket(String ticketCode) {
+            return UNASSIGNED_TICKET.formatted(ticketCode);
+        }
     }
 
     public static class TicketComment {

@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectExcep
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
@@ -101,18 +102,23 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void changeTicketAssignee(String ticketCode, String assigneeUsername) {
         Ticket ticket = getTicket(ticketCode);
-        if (assigneeUsername == null) {
-            ticket.setAssignee(null);
-            ticketRepository.save(ticket);
-            return;
-        }
-
         Optional<User> assignee = userRepository.findById(assigneeUsername);
         if (assignee.isEmpty()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
         }
 
         ticket.setAssignee(assignee.get());
+        ticketRepository.save(ticket);
+    }
+
+    @Override
+    public void removeTicketAssignee(String ticketCode) {
+        Ticket ticket = getTicket(ticketCode);
+        if (ticket.getAssignee() == null) {
+            throw new UnassignedTicketException(ExceptionMessages.Ticket.unassignedTicket(ticketCode));
+        }
+
+        ticket.setAssignee(null);
         ticketRepository.save(ticket);
     }
 
