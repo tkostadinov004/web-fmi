@@ -1,14 +1,14 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
-import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 
@@ -16,17 +16,6 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ProjectService {
-    /**
-     * Checks whether the given user is a member of the specified project.
-     *
-     * @param username  the username of the user
-     * @param projectId the ID of the project
-     * @return {@code true} if the user is a member of the project, {@code false} otherwise
-     * @throws UserNotFoundException    if the user cannot be found
-     * @throws ProjectNotFoundException if the project cannot be found
-     */
-    boolean isMemberOf(String username, String projectId);
-
     /**
      * Checks whether the user has the requested roles in the specified project.
      *
@@ -57,21 +46,20 @@ public interface ProjectService {
      *
      * @param projectId the id of the project
      * @param dto       the {@link CreateProjectUserDTO} containing project user creation data
-     * @param role      the role of the user
      * @return {@link ProjectDetailsUserDTO}
      * @throws ProjectNotFoundException             if the project cannot be found
      * @throws UserNotFoundException                if the user cannot be found
      * @throws ProjectUserAlreadyInProjectException if the user is already in the project
      */
-    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto, Role role);
+    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto);
 
     /**
      * Delete a project user
      *
      * @param projectId the id of the project
      * @param username  the username of the project user
-     * @throws ProjectNotFoundException if the project cannot be found
-     * @throws UserNotFoundException    if the user cannot be found
+     * @throws ProjectNotFoundException     if the project cannot be found
+     * @throws UserNotFoundException        if the user cannot be found
      * @throws ProjectUserNotFoundException if the project user is not found
      */
     void deleteProjectUser(String projectId, String username);
@@ -93,13 +81,14 @@ public interface ProjectService {
     ProjectDetailsDTO findProjectById(String projectId);
 
     /**
-     * Returns a new project
+     * Creates a new project
      *
-     * @param dto the {@link CreateProjectDTO} containing project creation data
-     * @return the created {@link ProjectDetailsDTO} entity
+     * @param dto      the {@link CreateProjectDTO} containing project creation data
+     * @param username the username of the project creator
      * @throws ProjectAlreadyExistsException if the project already exists
+     * @throws UserNotFoundException         if such a user does not exist
      */
-    ProjectDetailsDTO addProject(CreateProjectDTO dto);
+    void addProject(CreateProjectDTO dto, String username);
 
     /**
      * Updates project information

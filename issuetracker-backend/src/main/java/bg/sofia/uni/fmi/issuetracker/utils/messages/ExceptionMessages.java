@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.utils.messages;
 
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 
 public class ExceptionMessages {
@@ -218,10 +219,17 @@ public class ExceptionMessages {
 
     public static class ProjectUser {
 
+        private static final String USER_ALREADY_IN_PROJECT_ROLE =
+                "User with username %s is already part of project %s with role %s!";
+
         private static final String USER_ALREADY_IN_PROJECT =
-            "User with username %s is already part of project %s!";
+                "User with username %s is already part of project %s!";
 
         private static final String USER_NOT_FOUND = "User with username %s not found in project %s!";
+
+        public static String userAlreadyInProject(String username, String projectId, Role role) {
+            return USER_ALREADY_IN_PROJECT_ROLE.formatted(username, projectId, role);
+        }
 
         public static String userAlreadyInProject(String username, String projectId) {
             return USER_ALREADY_IN_PROJECT.formatted(username, projectId);
