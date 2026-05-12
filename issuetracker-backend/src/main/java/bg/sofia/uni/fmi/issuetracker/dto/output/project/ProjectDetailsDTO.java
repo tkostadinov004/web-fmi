@@ -1,10 +1,17 @@
 package bg.sofia.uni.fmi.issuetracker.dto.output.project;
 
+import bg.sofia.uni.fmi.issuetracker.model.User;
+import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
+import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Schema(description = "Response body with project details.")
 public record ProjectDetailsDTO(
@@ -25,11 +32,19 @@ public record ProjectDetailsDTO(
 ) {
 
     public static ProjectDetailsDTO from(Project project) {
-        List<ProjectDetailsUserDTO> users = project.getUsers()
+        Map<User, Set<Role>> userRoles = new HashMap<>();
+        for (ProjectUser pu : project.getUsers()) {
+            userRoles.putIfAbsent(pu.getUser(), new HashSet<>());
+            userRoles.get(pu.getUser()).add(pu.getRole());
+        }
+
+        List<ProjectDetailsUserDTO> users = userRoles
+                .entrySet()
                 .stream()
-                .map(projectUser -> new ProjectDetailsUserDTO(
-                        projectUser.getUser().getProfilePicturePath(),
-                        projectUser.getUser().getUsername()
+                .map(e -> new ProjectDetailsUserDTO(
+                        e.getKey().getProfilePicturePath(),
+                        e.getKey().getUsername(),
+                        e.getValue()
                 ))
                 .toList();
 

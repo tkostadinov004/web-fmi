@@ -17,17 +17,6 @@ import java.util.List;
 
 public interface ProjectService {
     /**
-     * Checks whether the given user is a member of the specified project.
-     *
-     * @param username  the username of the user
-     * @param projectId the ID of the project
-     * @return {@code true} if the user is a member of the project, {@code false} otherwise
-     * @throws UserNotFoundException    if the user cannot be found
-     * @throws ProjectNotFoundException if the project cannot be found
-     */
-    boolean isMemberOf(String username, String projectId);
-
-    /**
      * Checks whether the user has the requested roles in the specified project.
      *
      * <p>If {@code strict} is {@code true}, the user must have every role in the provided collection.
@@ -57,13 +46,12 @@ public interface ProjectService {
      *
      * @param projectId the id of the project
      * @param dto       the {@link CreateProjectUserDTO} containing project user creation data
-     * @param role      the role of the user
      * @return {@link ProjectDetailsUserDTO}
      * @throws ProjectNotFoundException             if the project cannot be found
      * @throws UserNotFoundException                if the user cannot be found
      * @throws ProjectUserAlreadyInProjectException if the user is already in the project
      */
-    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto, Role role);
+    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto);
 
     /**
      * Delete a project user
@@ -95,10 +83,12 @@ public interface ProjectService {
     /**
      * Creates a new project
      *
-     * @param dto the {@link CreateProjectDTO} containing project creation data
+     * @param dto      the {@link CreateProjectDTO} containing project creation data
+     * @param username the username of the project creator
      * @throws ProjectAlreadyExistsException if the project already exists
+     * @throws UserNotFoundException         if such a user does not exist
      */
-    void addProject(CreateProjectDTO dto);
+    void addProject(CreateProjectDTO dto, String username);
 
     /**
      * Updates project information

@@ -5,9 +5,8 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
@@ -17,14 +16,20 @@ import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectUserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.ProjectMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service("projectService")
 public class ProjectServiceImpl implements ProjectService {
@@ -32,21 +37,15 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectUserRepository projectUserRepository;
     private final ProjectMapper projectMapper;
+    private final TicketRepository ticketRepository;
 
     public ProjectServiceImpl(UserRepository userRepository, ProjectRepository projectRepository,
-                              ProjectUserRepository projectUserRepository, ProjectMapper projectMapper) {
+                              ProjectUserRepository projectUserRepository, ProjectMapper projectMapper, TicketRepository ticketRepository) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.projectUserRepository = projectUserRepository;
         this.projectMapper = projectMapper;
-    }
-
-    @Override
-    public boolean isMemberOf(String username, String projectId) {
-        User user = getUser(username);
-        Project project = getProject(projectId);
-
-        return projectRepository.isUserInProject(user, project);
+        this.ticketRepository = ticketRepository;
     }
 
     @Override
@@ -62,33 +61,49 @@ public class ProjectServiceImpl implements ProjectService {
     public List<ProjectDetailsUserDTO> getProjectUsers(String projectId) {
         Project project = getProject(projectId);
 
-        return projectUserRepository.findAllByProject(project).stream()
-                .map(projectUser -> new ProjectDetailsUserDTO(projectUser.getUser().getProfilePicturePath(),
-                        projectUser.getUser().getUsername()))
+        List<ProjectUser> users = projectUserRepository
+                .findAllByProject(project);
+        Map<User, Set<Role>> userRoles = new HashMap<>();
+        for (ProjectUser pu : users) {
+            userRoles.putIfAbsent(pu.getUser(), new HashSet<>());
+            userRoles.get(pu.getUser()).add(pu.getRole());
+        }
+
+        return userRoles
+                .entrySet()
+                .stream()
+                .map(e -> new ProjectDetailsUserDTO(e.getKey().getProfilePicturePath(),
+                        e.getKey().getUsername(), e.getValue()))
                 .toList();
     }
 
     @Override
-    public ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto,
-                                                Role role) {
+    public ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto) {
         Project project = getProject(projectId);
         User userToAdd = getUser(dto.username());
 
-        if (projectRepository.isUserInProject(userToAdd, project)) {
-            throw new UserNotPartOfProjectException(
-                    ExceptionMessages.ProjectUser.userAlreadyInProject(userToAdd.getUsername(), projectId));
+        if (projectRepository.isUserInProject(userToAdd, project, dto.role())) {
+            throw new ProjectUserAlreadyInProjectException(
+                    ExceptionMessages.ProjectUser.userAlreadyInProject(userToAdd.getUsername(), projectId, dto.role()));
         }
 
-        ProjectUser projectUser = projectUserRepository.save(new ProjectUser(project, userToAdd, role));
+        ProjectUser projectUser = projectUserRepository.save(new ProjectUser(project, userToAdd, dto.role()));
 
-        return new ProjectDetailsUserDTO(userToAdd.getProfilePicturePath(), projectUser.getUser().getUsername());
+        return new ProjectDetailsUserDTO(userToAdd.getProfilePicturePath(), projectUser.getUser().getUsername(), Set.of(projectUser.getRole()));
     }
 
     @Override
+    @Transactional
     public void deleteProjectUser(String projectId, String username) {
-        ProjectUser projectUser = getProjectUser(projectId, username);
+        Project project = getProject(projectId);
+        User user = getUser(username);
 
-        projectUserRepository.delete(projectUser);
+        if (!projectRepository.isUserInProject(user, project)) {
+            throw new UserNotPartOfProjectException(
+                    ExceptionMessages.ProjectUser.userNotFound(user.getUsername(), projectId));
+        }
+
+        projectUserRepository.deleteAllByProjectAndUser(project, user);
     }
 
     @Override
@@ -104,18 +119,16 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void addProject(CreateProjectDTO dto) {
-        if (projectRepository.existsByName(dto.name())) {
-            throw new ProjectAlreadyExistsException(ExceptionMessages.Project.projectAlreadyExists(dto.name())
-            );
-        }
-
+    public void addProject(CreateProjectDTO dto, String username) {
+        User creator = getUser(username);
         Project project = new Project(dto.name());
+        project.setCreatedBy(creator);
 
         projectRepository.save(project);
     }
 
     @Override
+    @Transactional
     public void updateProject(String projectId, UpdateProjectDTO dto) {
         Project project = getProject(projectId);
 
@@ -124,9 +137,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public void deleteProject(String projectId) {
         Project project = getProject(projectId);
 
+        ticketRepository.deleteAll(project.getTickets());
+        projectUserRepository.deleteAll(project.getUsers());
         projectRepository.delete(project);
     }
 
@@ -144,17 +160,5 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
         }
         return project.get();
-    }
-
-    private ProjectUser getProjectUser(String projectId, String username) {
-        Project project = getProject(projectId);
-        User userToDelete = getUser(username);
-
-        Optional<ProjectUser> projectUser = projectUserRepository.findByProjectAndUser(project, userToDelete);
-        if (projectUser.isEmpty()) {
-            throw new ProjectUserNotFoundException(ExceptionMessages.ProjectUser.userNotFound(username, projectId));
-        }
-
-        return projectUser.get();
     }
 }

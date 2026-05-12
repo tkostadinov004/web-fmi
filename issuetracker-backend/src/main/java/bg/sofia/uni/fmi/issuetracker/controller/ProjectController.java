@@ -6,8 +6,8 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
-import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,7 +29,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -37,13 +37,26 @@ import java.util.List;
 @RequestMapping("/projects")
 @Tag(name = "Project", description = "Endpoints for project-related operations")
 public class ProjectController {
-
     private final TicketService ticketService;
     private final ProjectService projectService;
 
     public ProjectController(TicketService ticketService, ProjectService projectService) {
         this.ticketService = ticketService;
         this.projectService = projectService;
+    }
+
+    @Operation(summary = "Get all projects", description = "Retrieve all projects")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    public ResponseEntity<List<ProjectDetailsDTO>> getAllProjects() {
+        return ResponseEntity.ok(projectService.getAllProjects());
     }
 
     @Operation(summary = "Get all tickets in a project", description = "Retrieves all tickets belonging to a specific project.")
@@ -61,20 +74,6 @@ public class ProjectController {
     public ResponseEntity<List<TicketDetailsDTO>> getAllTicketsByProject(
             @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
         return ResponseEntity.ok(ticketService.getAllTicketsByProject(projectId));
-    }
-
-    @Operation(summary = "Get all projects", description = "Retrieve all projects")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsDTO.class)))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @GetMapping
-    public ResponseEntity<List<ProjectDetailsDTO>> getAllProjects() {
-        return ResponseEntity.ok(projectService.getAllProjects());
     }
 
     @Operation(summary = "Get project by UUID", description = "Retrieves a project by its UUID.")
@@ -103,8 +102,8 @@ public class ProjectController {
             @ApiResponse(
                     responseCode = "201", description = "Project created successfully"),
             @ApiResponse(
-                    responseCode = "400", description = "Invalid request",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    responseCode = "400", description = "Invalid request data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -116,7 +115,8 @@ public class ProjectController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project creation data", required = true, content = @Content)
             @Valid @RequestBody
             CreateProjectDTO dto) {
-        projectService.addProject(dto);
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        projectService.addProject(dto, username);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -125,8 +125,8 @@ public class ProjectController {
             @ApiResponse(
                     responseCode = "204", description = "Project updated successfully"),
             @ApiResponse(
-                    responseCode = "400", description = "Invalid request",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    responseCode = "400", description = "Invalid request data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -190,13 +190,15 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getProjectUsers(projectId));
     }
 
-
     @Operation(summary = "Add user to project",
             description = "Adds a user to the specified project with a given role.")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201", description = "User added to project successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDetailsUserDTO.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid data",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -220,13 +222,11 @@ public class ProjectController {
             @Parameter(description = "UUID of the project", required = true)
             @PathVariable String projectId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project update data", required = true, content = @Content)
-            @Valid @RequestBody CreateProjectUserDTO dto,
-            @Parameter(description = "Role of the user in the project", required = true)
-            @RequestParam Role role
+            @Valid @RequestBody CreateProjectUserDTO dto
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(projectService.addProjectUser(projectId, dto, role));
+                .body(projectService.addProjectUser(projectId, dto));
     }
 
     @Operation(summary = "Remove user from project", description = "Removes a user from the specified project.")

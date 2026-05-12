@@ -19,10 +19,13 @@ import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static bg.sofia.uni.fmi.issuetracker.TestData.CREATE_PROJECT_DTO;
 import static bg.sofia.uni.fmi.issuetracker.TestData.CREATE_PROJECT_USER_DTO;
@@ -86,6 +89,7 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testCreateProject_ReturnsCreatedWhenSuccessful() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         mockMvc.perform(post("/projects")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(CREATE_PROJECT_DTO)))
@@ -105,8 +109,9 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testCreateProject_ReturnsConflictWhenProjectAlreadyExists() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         doThrow(new ProjectAlreadyExistsException(ExceptionMessages.Project.projectAlreadyExists(CREATE_PROJECT_DTO.name())))
-                .when(projectService).addProject(any());
+                .when(projectService).addProject(any(), any());
 
         mockMvc.perform(post("/projects")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -190,8 +195,8 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testGetAssignedUsers_ReturnsOk() throws Exception {
-        ProjectDetailsUserDTO userDto1 = new ProjectDetailsUserDTO(null, TEST_USER.getUsername());
-        ProjectDetailsUserDTO userDto2 = new ProjectDetailsUserDTO(null, TEST_USER_2.getUsername());
+        ProjectDetailsUserDTO userDto1 = new ProjectDetailsUserDTO(null, TEST_USER.getUsername(), Set.of(Role.TEAM_LEAD));
+        ProjectDetailsUserDTO userDto2 = new ProjectDetailsUserDTO(null, TEST_USER_2.getUsername(), Set.of(Role.TEAM_LEAD));
         when(projectService.getProjectUsers(TEST_PROJECT.getUuid()))
                 .thenReturn(List.of(userDto1, userDto2));
 
@@ -214,8 +219,8 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddUserToProject_ReturnsCreatedWhenSuccessful() throws Exception {
-        ProjectDetailsUserDTO resultDto = new ProjectDetailsUserDTO(null, TEST_USER_2.getUsername());
-        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class), eq(Role.DEVELOPER)))
+        ProjectDetailsUserDTO resultDto = new ProjectDetailsUserDTO(null, TEST_USER_2.getUsername(), Set.of(Role.TEAM_LEAD));
+        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class)))
                 .thenReturn(resultDto);
 
         mockMvc.perform(post("/projects/%s/users".formatted(TEST_PROJECT.getUuid()))
@@ -228,7 +233,7 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddUserToProject_ReturnsConflictWhenUserAlreadyInProject() throws Exception {
-        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class), eq(Role.DEVELOPER)))
+        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class)))
                 .thenThrow(new UserNotPartOfProjectException(
                         ExceptionMessages.ProjectUser.userAlreadyInProject(TEST_USER_2.getUsername(), TEST_PROJECT.getUuid())));
 

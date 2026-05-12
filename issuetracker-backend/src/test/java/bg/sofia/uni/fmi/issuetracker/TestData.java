@@ -58,7 +58,7 @@ public class TestData {
     public static final CreateProjectDTO CREATE_PROJECT_DTO = new CreateProjectDTO("New Test Project");
     public static final CreateProjectDTO CREATE_PROJECT_DTO_2 = new CreateProjectDTO("Another Test Project");
     public static final UpdateProjectDTO UPDATE_PROJECT_DTO = new UpdateProjectDTO("Updated Project Name", "Updated project description");
-    public static final CreateProjectUserDTO CREATE_PROJECT_USER_DTO = new CreateProjectUserDTO(TEST_USER_2.getUsername());
+    public static final CreateProjectUserDTO CREATE_PROJECT_USER_DTO = new CreateProjectUserDTO(TEST_USER_2.getUsername(), Role.DEVELOPER);
 
     // Project Users
     public static final ProjectUser PROJECT_USER = new ProjectUser(TEST_PROJECT, TEST_USER, Role.TEAM_LEAD);
