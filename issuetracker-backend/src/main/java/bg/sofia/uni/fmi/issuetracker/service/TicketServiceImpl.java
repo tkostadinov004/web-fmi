@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.service;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
@@ -19,6 +20,7 @@ import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
+import bg.sofia.uni.fmi.issuetracker.workflow.TicketWorkflow;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,8 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
 
-    public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository, UserRepository userRepository, TicketMapper ticketMapper) {
+    public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository,
+                             UserRepository userRepository, TicketMapper ticketMapper) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
@@ -41,12 +44,9 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public TicketDetailsDTO getTicketByCode(String code) {
-        Optional<Ticket> ticket = ticketRepository.findById(code);
-        if (ticket.isEmpty()) {
-            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
-        }
+        Ticket ticket = getTicket(code);
 
-        return TicketDetailsDTO.from(ticket.get());
+        return TicketDetailsDTO.from(ticket);
     }
 
     @Override
@@ -76,7 +76,8 @@ public class TicketServiceImpl implements TicketService {
 
         Project project = fetchProject(dto.projectUuid());
         if (assignee.isPresent() && !projectRepository.isUserInProject(assignee.get(), project)) {
-            throw new UserNotPartOfProjectException(ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
+            throw new UserNotPartOfProjectException(
+                    ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
         }
 
         Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), dto.ticketStatus(),
@@ -90,7 +91,8 @@ public class TicketServiceImpl implements TicketService {
     public void addDependentTicketToTicket(String parentTicketCode, CreateTicketDTO ticket) {
         Ticket parentTicket = getTicket(parentTicketCode);
         if (!parentTicket.getProject().getUuid().equals(ticket.projectUuid())) {
-            throw new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
+            throw new TicketNotInProjectException(
+                    ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
         }
 
         Ticket dependentTicket = createTicket(ticket);
@@ -127,6 +129,10 @@ public class TicketServiceImpl implements TicketService {
     public void updateTicket(String code, UpdateTicketDTO dto) {
         Ticket ticket = getTicket(code);
 
+        if (dto.ticketStatus() != null && !TicketWorkflow.isTransitionAllowed(ticket.getTicketStatus(), dto.ticketStatus())) {
+            throw new InvalidWorkflowTransitionException(
+                    ExceptionMessages.Workflow.invalidStatus(ticket.getTicketStatus().toString(), dto.ticketStatus().toString()));
+        }
         ticketMapper.patchTicketFromDTO(dto, ticket);
         ticketRepository.save(ticket);
     }
@@ -140,15 +146,6 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.delete(ticket);
     }
 
-    private Ticket getTicket(String code) {
-        Optional<Ticket> ticket = ticketRepository.findById(code);
-        if (ticket.isEmpty()) {
-            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
-        }
-
-        return ticket.get();
-    }
-
     private Project fetchProject(String projectUuid) {
         Optional<Project> project = projectRepository.findById(projectUuid);
         if (project.isEmpty()) {
@@ -156,5 +153,13 @@ public class TicketServiceImpl implements TicketService {
         }
 
         return project.get();
+    }
+
+    private Ticket getTicket(String code) {
+        Optional<Ticket> ticket = ticketRepository.findById(code);
+        if (ticket.isEmpty()) {
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
+        }
+        return ticket.get();
     }
 }
