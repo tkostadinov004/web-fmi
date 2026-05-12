@@ -8,6 +8,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Dashboard from './components/Dashboard/Dashboard';
 
 import './App.css';
+import TicketModal from './components/Tickets/TicketModal/TicketModal';
 
 function App() {
   return (
@@ -22,6 +23,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/ticket/:id" 
+          element={
+            <ProtectedRoute>
+              <TicketModal />
             </ProtectedRoute>
           } 
         />

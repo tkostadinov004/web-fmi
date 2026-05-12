@@ -34,83 +34,6 @@ const Dashboard = () => {
       priority: "Low",
       status: "DONE",
     },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
-    {
-      id: "KAN-3",
-      title: "Setup API integration",
-      assignee: "Alex Johnson",
-      priority: "Low",
-      status: "DONE",
-    },
   ];
 
   const users = ["John Doe", "Sarah Smith", "Alex Johnson", "Emily Brown"];
@@ -271,8 +194,10 @@ const Dashboard = () => {
               {filteredTickets.map((ticket) => (
                 <tr key={ticket.id}>
                   <td>
-                    <div className="ticket-id">{ticket.id}</div>
-                    <div className="ticket-title">{ticket.title}</div>
+                    <NavLink to={`/ticket/${ticket.id}`}>
+                      <div className="table-ticket-id">{ticket.id}</div>
+                      <div className="table-ticket-title">{ticket.title}</div>
+                    </NavLink>
                   </td>
 
                   <td>{ticket.assignee}</td>

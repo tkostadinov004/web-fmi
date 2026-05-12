@@ -153,12 +153,12 @@ tr:hover {
   background: #fafafa;
 }
 
-.ticket-id {
+.table-ticket-id {
   font-weight: bold;
   margin-bottom: 4px;
 }
 
-.ticket-title {
+.table-ticket-title {
   color: #666;
   font-size: 13px;
 }
