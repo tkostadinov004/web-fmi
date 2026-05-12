@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.project;
 
-public class ProjectAlreadyExistsException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.AlreadyExistsException;
+
+public class ProjectAlreadyExistsException extends AlreadyExistsException {
     public ProjectAlreadyExistsException(String message) {
         super(message);
     }

@@ -1,14 +1,14 @@
 package bg.sofia.uni.fmi.issuetracker.service.contract;
 
-import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 
@@ -70,8 +70,8 @@ public interface ProjectService {
      *
      * @param projectId the id of the project
      * @param username  the username of the project user
-     * @throws ProjectNotFoundException if the project cannot be found
-     * @throws UserNotFoundException    if the user cannot be found
+     * @throws ProjectNotFoundException     if the project cannot be found
+     * @throws UserNotFoundException        if the user cannot be found
      * @throws ProjectUserNotFoundException if the project user is not found
      */
     void deleteProjectUser(String projectId, String username);
@@ -93,13 +93,12 @@ public interface ProjectService {
     ProjectDetailsDTO findProjectById(String projectId);
 
     /**
-     * Returns a new project
+     * Creates a new project
      *
      * @param dto the {@link CreateProjectDTO} containing project creation data
-     * @return the created {@link ProjectDetailsDTO} entity
      * @throws ProjectAlreadyExistsException if the project already exists
      */
-    ProjectDetailsDTO addProject(CreateProjectDTO dto);
+    void addProject(CreateProjectDTO dto);
 
     /**
      * Updates project information

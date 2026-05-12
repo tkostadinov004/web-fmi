@@ -1,10 +1,10 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
-import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-//import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,27 +48,29 @@ public class ProjectController {
 
     @Operation(summary = "Get all tickets in a project", description = "Retrieves all tickets belonging to a specific project.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = TicketDetailsDTO.class)))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Project not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TicketDetailsDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{projectId}/tickets")
     public ResponseEntity<List<TicketDetailsDTO>> getAllTicketsByProject(
-        @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+            @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
         return ResponseEntity.ok(ticketService.getAllTicketsByProject(projectId));
     }
 
     @Operation(summary = "Get all projects", description = "Retrieve all projects")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsDTO.class)))),
-        @ApiResponse(responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
     public ResponseEntity<List<ProjectDetailsDTO>> getAllProjects() {
@@ -78,66 +79,69 @@ public class ProjectController {
 
     @Operation(summary = "Get project by UUID", description = "Retrieves a project by its UUID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
-            content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
-        @ApiResponse(
-            responseCode = "404", description = "Project not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{projectId}")
     public ResponseEntity<ProjectDetailsDTO> getProjectByProjectId(
-        @Parameter(description = "UUID of the project", required = true)
-        @PathVariable String projectId) {
+            @Parameter(description = "UUID of the project", required = true)
+            @PathVariable String projectId) {
 
         return ResponseEntity.ok(projectService.findProjectById(projectId));
     }
 
     @Operation(summary = "Create project", description = "Creates a new project.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "201", description = "Project created successfully",
-            content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
-        @ApiResponse(
-            responseCode = "400", description = "Invalid request",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "201", description = "Project created successfully"),
+            @ApiResponse(
+                    responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
     public ResponseEntity<ProjectDetailsDTO> createProject(
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project creation data", required = true, content = @Content)
-        @Valid @RequestBody
-        CreateProjectDTO dto) {
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(projectService.addProject(dto));
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project creation data", required = true, content = @Content)
+            @Valid @RequestBody
+            CreateProjectDTO dto) {
+        projectService.addProject(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Operation(summary = "Update project", description = "Updates an existing project.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "200", description = "Project updated successfully",
-            content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
-        @ApiResponse(
-            responseCode = "404", description = "Project not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "400", description = "Invalid request",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "204", description = "Project updated successfully"),
+            @ApiResponse(
+                    responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{projectId}")
-    public ResponseEntity<ProjectDetailsDTO> updateProject(
-        @Parameter(description = "UUID of the project", required = true)
-        @PathVariable String projectId,
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project update data", required = true, content = @Content)
-        @Valid @RequestBody UpdateProjectDTO dto
+    public ResponseEntity<Void> updateProject(
+            @Parameter(description = "UUID of the project", required = true)
+            @PathVariable String projectId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project update data", required = true, content = @Content)
+            @Valid @RequestBody UpdateProjectDTO dto
     ) {
         projectService.updateProject(projectId, dto);
         return ResponseEntity.noContent().build();
@@ -145,94 +149,105 @@ public class ProjectController {
 
     @Operation(summary = "Delete project", description = "Deletes a project by UUID.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "204", description = "Project deleted successfully"),
-        @ApiResponse(
-            responseCode = "404", description = "Project not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "204", description = "Project deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{projectId}")
     public ResponseEntity<Void> deleteProject(
-        @Parameter(description = "Code of the project to delete", required = true) @PathVariable String projectId) {
+            @Parameter(description = "Code of the project to delete", required = true) @PathVariable String projectId) {
 
         projectService.deleteProject(projectId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get all users in project",
-        description = "Retrieves all users that are part of the specified project.")
+            description = "Retrieves all users that are part of the specified project.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "200", description = "Project users retrieved successfully"),
-        @ApiResponse(
-            responseCode = "404", description = "Project not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "200", description = "Project users retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{projectId}/users")
     public ResponseEntity<List<ProjectDetailsUserDTO>> getAssignedUsers(
-        @Parameter(description = "UUID of the project", required = true)
-        @PathVariable String projectId) {
+            @Parameter(description = "UUID of the project", required = true)
+            @PathVariable String projectId) {
 
         return ResponseEntity.ok(projectService.getProjectUsers(projectId));
     }
 
 
     @Operation(summary = "Add user to project",
-        description = "Adds a user to the specified project with a given role.")
+            description = "Adds a user to the specified project with a given role.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "200", description = "User added to project successfully"
-        ),
-        @ApiResponse(
-            responseCode = "404", description = "Project or user not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-        ),
-        @ApiResponse(
-            responseCode = "409", description = "User already part of the project",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-        ),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-        )
+            @ApiResponse(
+                    responseCode = "201", description = "User added to project successfully",
+                    content = @Content(schema = @Schema(implementation = ProjectDetailsUserDTO.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404", description = "Project or user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409", description = "User already part of the project",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
     })
-    // Please check this ( and underneath ) ???
+
     @PostMapping("/{projectId}/users")
     public ResponseEntity<ProjectDetailsUserDTO> addUserToProject(
-        @Parameter(description = "UUID of the project", required = true)
-        @PathVariable String projectId,
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project update data", required = true, content = @Content)
-        @Valid @RequestBody CreateProjectUserDTO dto,
-        @Parameter(description = "Role of the user in the project", required = true)
-        @RequestParam Role role
-        ) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(projectService.addProjectUser(projectId, dto, role));
+            @Parameter(description = "UUID of the project", required = true)
+            @PathVariable String projectId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project update data", required = true, content = @Content)
+            @Valid @RequestBody CreateProjectUserDTO dto,
+            @Parameter(description = "Role of the user in the project", required = true)
+            @RequestParam Role role
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(projectService.addProjectUser(projectId, dto, role));
     }
 
     @Operation(summary = "Remove user from project", description = "Removes a user from the specified project.")
     @ApiResponses({
-        @ApiResponse(
-            responseCode = "204", description = "User removed from project successfully"),
-        @ApiResponse(
-            responseCode = "404", description = "Project or user not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(
-            responseCode = "500", description = "Unexpected server error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "204", description = "User removed from project successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "404", description = "Project or user not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping("/users/{username}")
+    @DeleteMapping("/{projectId}/users/{username}")
     public ResponseEntity<Void> removeUserFromProject(
-        @Parameter(description = "UUID of the project", required = true)
-        @PathVariable String projectId,
-        @Parameter(description = "Username of the user", required = true)
-        @PathVariable String username
+            @Parameter(description = "UUID of the project", required = true)
+            @PathVariable String projectId,
+            @Parameter(description = "Username of the user", required = true)
+            @PathVariable String username
     ) {
         projectService.deleteProjectUser(projectId, username);
         return ResponseEntity.noContent().build();

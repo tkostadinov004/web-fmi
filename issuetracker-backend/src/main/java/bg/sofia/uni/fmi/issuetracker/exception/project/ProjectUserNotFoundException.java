@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.exception.project;
 
-public class ProjectUserNotFoundException extends RuntimeException {
+import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
+
+public class ProjectUserNotFoundException extends NotFoundException {
     public ProjectUserNotFoundException(String message) {
         super(message);
     }

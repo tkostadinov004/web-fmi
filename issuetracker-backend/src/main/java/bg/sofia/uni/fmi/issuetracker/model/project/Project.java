@@ -124,6 +124,14 @@ public class Project {
         this.tickets = tickets;
     }
 
+    public void addTicket(Ticket ticket) {
+        this.tickets.add(ticket);
+    }
+
+    public void addUser(ProjectUser user) {
+        this.users.add(user);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (!(object instanceof Project project)) return false;
