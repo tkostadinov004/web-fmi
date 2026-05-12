@@ -46,6 +46,17 @@ public class ValidationConstants {
         public static final String LENGTH_NAME = "Feature flag name should be at most 255 characters long!";
     }
 
+    public static class Project {
+        public static final String BLANK_NAME = "Project name should not be blank or empty!";
+        public static final String LENGTH_NAME = "Project name must be at most 500 characters!";
+    }
+
+    public static class User {
+        public static final String BLANK_NAME = "User name should not be blank!";
+        public static final String LENGTH_NAME = "User name must be at most 30 characters!";
+        public static final String NULL_VALUE = "User name should not be null!";
+    }
+
     public static class File {
         public static final String BLANK_PATH = "Path should not be blank!";
     }

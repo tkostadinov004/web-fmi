@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.model.project;
 
+import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.utils.VisibleForTesting;
 import jakarta.persistence.CascadeType;
@@ -8,12 +9,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -24,8 +29,18 @@ public class Project {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "name", length = 500)
+    @Column(name = "name", nullable = false, length = 500)
     private String name;
+
+    @Column(name = "description", length = 2000)
+    private String description;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @OneToMany(mappedBy = "project")
     private Set<ProjectUser> users = new HashSet<>();
@@ -34,6 +49,15 @@ public class Project {
     private List<Ticket> tickets = new ArrayList<>();
 
     public Project() {
+    }
+
+    public Project(String name, String description, User createdBy, Set<ProjectUser> users,
+                   List<Ticket> tickets) {
+        this.name = name;
+        this.description = description;
+        this.createdBy = createdBy;
+        this.users = users;
+        this.tickets = tickets == null ? new ArrayList<>() : tickets;
     }
 
     public Project(String name) {
@@ -64,6 +88,26 @@ public class Project {
         this.name = name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public Set<ProjectUser> getUsers() {
         return users;
     }
@@ -80,11 +124,14 @@ public class Project {
         this.tickets = tickets;
     }
 
-    public void addTicket(Ticket ticket) {
-        this.tickets.add(ticket);
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof Project project)) return false;
+        return Objects.equals(uuid, project.uuid);
     }
 
-    public void removeTicket(Ticket ticket) {
-        this.tickets.remove(ticket);
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uuid);
     }
 }
