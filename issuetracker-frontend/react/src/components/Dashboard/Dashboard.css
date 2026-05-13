@@ -295,3 +295,29 @@ tr:hover {
     flex-direction: row;
     align-items: center
 }
+
+.logout-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.logout-button {
+  padding: 12px 20px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #dc2626;
+  color: white;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.logout-button:hover {
+  background: green;
+}

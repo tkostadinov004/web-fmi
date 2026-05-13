@@ -7,6 +7,7 @@ import { UserAvatarList } from "./UserAvatarList";
 import { FilterMenu } from "./FilterMenu";
 import { TicketTable } from "./TicketTable";
 import {useDashboardData} from "./useDashboardData";
+import LogoutButton from "./LogoutBtn";
 
 
 const Dashboard = () => {
@@ -80,6 +81,9 @@ const Dashboard = () => {
       />
  
       <main className="main-content">
+        <div>
+          <LogoutButton />
+        </div>
         <div className="top-header">
           <div>
             <h2 className="project-title">{selectedProject?.name ?? '—'}</h2>

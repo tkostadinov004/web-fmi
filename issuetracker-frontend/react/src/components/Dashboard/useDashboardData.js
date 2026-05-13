@@ -23,65 +23,66 @@ const MOCK_USERS = [
 ];
  
 export const useDashboardData = () => {
-  const [selectedProjectId, setSelectedProjectId] = useState(MOCK_PROJECTS[0].uuid);
+  // const [selectedProjectId, setSelectedProjectId] = useState(MOCK_PROJECTS[0].uuid);
 
-  const projects = MOCK_PROJECTS;
-  const tickets  = MOCK_TICKETS;
-  const users    = MOCK_USERS;
-  const isLoading    = false;
-  const errorMessage = '';
+  // const projects = MOCK_PROJECTS;
+  // const tickets  = MOCK_TICKETS;
+  // const users    = MOCK_USERS;
+  // const isLoading    = false;
+  // const errorMessage = '';
  
-  // const [projects, setProjects] = useState([]);
-  // const [selectedProjectId, setSelectedProjectId] = useState(null);
-  // const [tickets, setTickets] = useState([]);
-  // const [users, setUsers] = useState([]);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [errorMessage, setErrorMessage] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [tickets, setTickets] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
  
-  // useEffect(() => {
-  //   const loadProjects = async () => {
-  //     setIsLoading(true);
-  //     setErrorMessage('');
+  useEffect(() => {
+    const loadProjects = async () => {
+      setIsLoading(true);
+      setErrorMessage('');
  
-  //     try {
-  //       const data = await fetchProjects();
-  //       setProjects(data);
-  //       if (data.length > 0) {
-  //         setSelectedProjectId(data[0].uuid); 
-  //       }
-  //     } catch (error) {
-  //       setErrorMessage(error.message);
-  //       setIsLoading(false);
-  //     }
-  //   };
+      try {
+        const data = await fetchProjects();
+        setProjects(data);
+        if (data.length > 0) {
+          setSelectedProjectId(data[0].uuid); 
+        }
+      } catch (error) {
+        setErrorMessage(error.message);
+      } finally {  
+        setIsLoading(false);
+      }
+    };
  
-  //   loadProjects();
-  // }, []);
+    loadProjects();
+  }, []);
  
-  // useEffect(() => {
-  //   if (!selectedProjectId) return;
+  useEffect(() => {
+    if (!selectedProjectId) return;
  
-  //   const loadProjectData = async () => {
-  //     setIsLoading(true);
-  //     setErrorMessage('');
+    const loadProjectData = async () => {
+      setIsLoading(true);
+      setErrorMessage('');
  
-  //     try {
-  //       const [ticketsData, usersData] = await Promise.all([
-  //         fetchTickets(selectedProjectId),
-  //         fetchUsers(selectedProjectId),
-  //       ]);
+      try {
+        const [ticketsData, usersData] = await Promise.all([
+          fetchTickets(selectedProjectId),
+          fetchUsers(selectedProjectId),
+        ]);
  
-  //       setTickets(ticketsData);
-  //       setUsers(usersData);
-  //     } catch (error) {
-  //       setErrorMessage(error.message);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+        setTickets(ticketsData);
+        setUsers(usersData);
+      } catch (error) {
+        setErrorMessage(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
  
-  //   loadProjectData();
-  // }, [selectedProjectId]);
+    loadProjectData();
+  }, [selectedProjectId]);
  
   return {
     projects,
