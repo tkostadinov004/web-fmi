@@ -3,6 +3,10 @@
   font-family: Arial, sans-serif;
 }
 
+body.register-body {
+  background-color: #A7C957;
+}
+
 .auth-container {
   min-height: 100vh;
   display: flex;
@@ -50,6 +54,8 @@
   color: white;
   border-radius: 20px;
   cursor: pointer;
+  text-decoration: none;
+
 }
 
 .auth-right {
@@ -74,17 +80,17 @@
   color: #6A994E;
 }
 
-form {
+/* form {
   display: flex;
   flex-direction: column;
-}
+} */
 
-label {
+.form-card label {
   font-size: 14px;
   margin-bottom: 5px;
 }
 
-input {
+.form-card input {
   padding: 10px;
   margin-bottom: 15px;
   border-radius: 5px;
