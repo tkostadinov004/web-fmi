@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../AuthShared.css'; // Зареждаме общия фон и кутия
+import '../AuthShared.css';
 
 const ForgotPassword = () => {
   return (
@@ -11,7 +11,6 @@ const ForgotPassword = () => {
           ⚙️ Страницата е в процес на разработка.
         </p>
         
-        {/* Удобен линк за връщане назад */}
         <Link 
           to="/login" 
           style={{ 
