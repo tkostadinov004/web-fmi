@@ -1,40 +1,68 @@
-import { NavLink } from "react-router-dom";
+import React from 'react';
+import { useSearchParams } from "react-router-dom"; 
 import { StatusBadge, PriorityBadge } from "./Badge";
+import TicketModal from '../Tickets/TicketModal/TicketModal';
 
-export const TicketTable = ({ tickets }) => (
-  <div className="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Ticket</th>
-          <th>Assignee</th>
-          <th>Priority</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+export const TicketTable = ({ tickets }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
 
-      <tbody>
-        {tickets.map((ticket) => (
-          <tr key={ticket.code}>
-            <td>
-              <NavLink to={`/ticket/${ticket.code}`}>
-                <div className="table-ticket-id">{ticket.code}</div>
-                <div className="table-ticket-title">{ticket.title}</div>
-              </NavLink>
-            </td>
+  const selectedTicketCode = searchParams.get('ticket');
 
-            <td>{ticket.assignee?.username ?? '—'}</td>
+  const handleOpenModal = (code) => {
+    setSearchParams({ ticket: code });
+  };
 
-            <td>
-              <PriorityBadge priority={ticket.ticketPriority} />
-            </td>
+  const handleCloseModal = () => {
+    setSearchParams({});
+  };
 
-            <td>
-              <StatusBadge status={ticket.ticketStatus} />
-            </td>
+  return (
+    <div className="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Assignee</th>
+            <th>Priority</th>
+            <th>Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+
+        <tbody>
+          {tickets.map((ticket) => (
+            <tr key={ticket.code}>
+              <td>
+                <div 
+                  onClick={() => handleOpenModal(ticket.code)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="table-ticket-id" style={{ color: 'var(--hunter-green)', textDecoration: 'underline' }}>
+                    {ticket.code}
+                  </div>
+                  <div className="table-ticket-title">{ticket.title}</div>
+                </div>
+              </td>
+
+              <td>{ticket.assignee?.username ?? '—'}</td>
+
+              <td>
+                <PriorityBadge priority={ticket.ticketPriority} />
+              </td>
+
+              <td>
+                <StatusBadge status={ticket.ticketStatus} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {selectedTicketCode && (
+        <TicketModal 
+          ticketCode={selectedTicketCode} 
+          onClose={handleCloseModal} 
+        />
+      )}
+    </div>
+  );
+};
