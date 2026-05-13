@@ -3,22 +3,27 @@ import { fetchProjects, fetchTickets, fetchUsers } from './dashboardServices';
 
 
 const MOCK_PROJECTS = [
-  { id: 0, name: 'Project Issue Tracker' },
-  { id: 1, name: 'Marketing Platform' },
-  { id: 2, name: 'Company CRM' },
-  { id: 3, name: 'Internal Dashboard' },
+  { uuid: 'proj-1', name: 'Project Issue Tracker' },
+  { uuid: 'proj-2', name: 'Marketing Platform' },
+  { uuid: 'proj-3', name: 'Company CRM' },
+  { uuid: 'proj-4', name: 'Internal Dashboard' },
 ];
  
 const MOCK_TICKETS = [
-  { id: 'KAN-1', title: 'Create login page',      assignee: 'John Doe',    priority: 'Medium', status: 'TODO'        },
-  { id: 'KAN-2', title: 'Implement auth service', assignee: 'Sarah Smith', priority: 'High',   status: 'IN PROGRESS' },
-  { id: 'KAN-3', title: 'Setup API integration',  assignee: 'Alex Johnson',priority: 'Low',    status: 'DONE'        },
+  { code: 'KAN-1', title: 'Create login page',      assignee: { username: 'John Doe'},    ticketPriority: 'Medium', ticketStatus: 'TODO'        },
+  { code: 'KAN-2', title: 'Implement auth service', assignee: { username: 'Sarah Smith'}, ticketPriority: 'High',   ticketStatus: 'IN PROGRESS' },
+  { code: 'KAN-3', title: 'Setup API integration',  assignee: { username: 'Alex Johnson'},ticketPriority: 'Low',    ticketStatus: 'DONE'        },
 ];
  
-const MOCK_USERS = ['John Doe', 'Sarah Smith', 'Alex Johnson', 'Emily Brown'];
+const MOCK_USERS = [
+  { username: 'John Doe',    roles: ['DEVELOPER'], profilePicturePath: '' },
+  { username: 'Sarah Smith', roles: ['DEVELOPER'], profilePicturePath: '' },
+  { username: 'Alex Johnson',roles: ['DEVELOPER'], profilePicturePath: '' },
+  { username: 'Emily Brown', roles: ['DEVELOPER'], profilePicturePath: '' },
+];
  
 export const useDashboardData = () => {
-  const [selectedProjectId, setSelectedProjectId] = useState(0);
+  const [selectedProjectId, setSelectedProjectId] = useState(MOCK_PROJECTS[0].uuid);
 
   const projects = MOCK_PROJECTS;
   const tickets  = MOCK_TICKETS;

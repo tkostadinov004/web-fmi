@@ -24,20 +24,20 @@ const Dashboard = () => {
  
   const filterOptions =
     activeFilter === 'assignee'
-      ? [...new Set(tickets.map((t) => t.assignee))]
-      : [...new Set(tickets.map((t) => t.status))];
+      ? [...new Set(tickets.map((t) => t.assignee?.username).filter(Boolean))]
+      : [...new Set(tickets.map((t) => t.ticketStatus).filter(Boolean))];
  
   const visibleTickets = tickets.filter((ticket) => {
     const matchesSearch =
       searchQuery.trim() === '' ||
       ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.id.toLowerCase().includes(searchQuery.toLowerCase());
+      ticket.code.toLowerCase().includes(searchQuery.toLowerCase());
  
     const matchesFilter =
       selectedFilters.length === 0 ||
       (activeFilter === 'assignee'
-        ? selectedFilters.includes(ticket.assignee)
-        : selectedFilters.includes(ticket.status));
+        ? selectedFilters.includes(ticket.assignee?.username)
+        : selectedFilters.includes(ticket.ticketStatus));
  
     return matchesSearch && matchesFilter;
   });
@@ -54,13 +54,13 @@ const Dashboard = () => {
   };
  
   // При смяна на проект — нулираме търсенето и филтрите
-  const handleProjectSelect = (projectId) => {
-    setSelectedProjectId(projectId);
+  const handleProjectSelect = (uuid) => {
+    setSelectedProjectId(uuid);
     setSearchQuery('');
     setSelectedFilters([]);
   };
  
-  const selectedProject = projects.find((p) => p.id === selectedProjectId);
+  const selectedProject = projects.find((p) => p.uuid === selectedProjectId);
  
   if (isLoading) {
     return <div className="dashboard-loading">Loading...</div>;

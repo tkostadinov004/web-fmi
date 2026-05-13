@@ -15,22 +15,22 @@ export const TicketTable = ({ tickets }) => (
 
       <tbody>
         {tickets.map((ticket) => (
-          <tr key={ticket.id}>
+          <tr key={ticket.code}>
             <td>
-              <NavLink to={`/ticket/${ticket.id}`}>
-                <div className="table-ticket-id">{ticket.id}</div>
+              <NavLink to={`/ticket/${ticket.code}`}>
+                <div className="table-ticket-id">{ticket.code}</div>
                 <div className="table-ticket-title">{ticket.title}</div>
               </NavLink>
             </td>
 
-            <td>{ticket.assignee}</td>
+            <td>{ticket.assignee?.username ?? '—'}</td>
 
             <td>
-              <PriorityBadge priority={ticket.priority} />
+              <PriorityBadge priority={ticket.ticketPriority} />
             </td>
 
             <td>
-              <StatusBadge status={ticket.status} />
+              <StatusBadge status={ticket.ticketStatus} />
             </td>
           </tr>
         ))}

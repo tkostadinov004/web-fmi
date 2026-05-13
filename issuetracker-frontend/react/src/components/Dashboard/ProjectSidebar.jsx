@@ -53,9 +53,9 @@ export const ProjectSidebar = ({
       <nav className="projects-list">
         {visibleProjects.map((project) => (
           <button
-            key={project.id}
-            className={`project-button ${project.id === selectedProjectId ? 'active-project' : ''}`}
-            onClick={() => onProjectSelect(project.id)}
+            key={project.uuid}
+            className={`project-button ${project.uuid === selectedProjectId ? 'active-project' : ''}`}
+            onClick={() => onProjectSelect(project.uuid)}
           >
             {project.name}
           </button>
