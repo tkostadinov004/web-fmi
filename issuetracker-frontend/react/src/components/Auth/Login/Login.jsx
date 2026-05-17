@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../AuthShared.css';
 import './Login.css';
+import { authService } from '../../../services/authService';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -18,22 +19,14 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
+            const data = await authService.login(username, password);
 
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('authToken', data.token);
-                navigate('/dashboard');
-            } else {
-                setErrorMessage(data.error || 'An error occurred during login.');
-            }
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('currentUsername', username);
+            navigate('/dashboard');
+            
         } catch (error) {
-            setErrorMessage('Server connection problem.');
+            setErrorMessage(error.message || 'Проблем с връзката към сървъра.');
         } finally {
             setIsLoading(false);
         }
