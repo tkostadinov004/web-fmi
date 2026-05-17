@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ticketService } from '../../services/ticketService';
 
 const CommentItem = ({ comment, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -7,9 +8,9 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('bg-BG', { 
-      day: 'numeric', month: 'short', year: 'numeric', 
-      hour: '2-digit', minute: '2-digit' 
+    return date.toLocaleString('bg-BG', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
   };
 
@@ -21,22 +22,10 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8080/comments/${comment.uuid}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ content: editText })
-      });
+      await ticketService.updateComment(comment.uuid, editText);
 
-      if (response.ok) {
-        setIsEditing(false);
-        onUpdate();
-      } else {
-        alert('Грешка при редактиране на коментара.');
-      }
+      setIsEditing(false);
+      onUpdate();
     } catch (error) {
       console.error(error);
     } finally {
@@ -49,21 +38,15 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8080/comments/${comment.uuid}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        onDelete();
-      } else if (response.status === 403) {
+      await ticketService.deleteComment(comment.uuid);
+      onDelete();
+    } catch (error) {
+      console.error(error);
+      if (error.status === 403) {
         alert('Нямате права да изтриете чужд коментар.');
       } else {
         alert('Възникна грешка при изтриването.');
       }
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -72,12 +55,12 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
       <div className="comment-avatar">
         {(comment.authorUsername || 'U').charAt(0).toUpperCase()}
       </div>
-      
+
       <div className="comment-content-area">
         <div className="comment-header">
           <span className="comment-author">{comment.authorUsername}</span>
           <span className="comment-date">{formatDateTime(comment.createDate)}</span>
-          
+
           {!isEditing && (
             <div className="comment-item-actions">
               <button onClick={() => setIsEditing(true)}>Редактирай</button>
@@ -97,15 +80,15 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
                 autoFocus
               />
               <div className="editable-actions">
-                <button 
-                  className="save-btn" 
+                <button
+                  className="save-btn"
                   onClick={handleSaveEdit}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Запазване...' : 'Запази'}
                 </button>
-                <button 
-                  className="cancel-btn" 
+                <button
+                  className="cancel-btn"
                   onClick={() => {
                     setEditText(comment.content);
                     setIsEditing(false);

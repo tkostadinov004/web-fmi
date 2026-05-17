@@ -1,18 +1,25 @@
 import React from 'react';
 import EditableDescription from './EditableDescription';
 import TicketComments from './TicketComments';
+import EditableTitle from './EditableTitle';
 
 const TicketContent = ({ ticket, onUpdate }) => {
   return (
     <div className="modal-main">
-      
-      <h1 className="ticket-title">{ticket.title}</h1>
+
+      <EditableTitle
+        ticketCode={ticket.code}
+        initialTitle={ticket.title}
+        onTitleUpdate={(newTitle) => {
+          onUpdate({ ...ticket, title: newTitle });
+        }}
+      />
 
       <div className="section">
         <h3>Описание</h3>
-        <EditableDescription 
-          ticketCode={ticket.code} 
-          initialDescription={ticket.description} 
+        <EditableDescription
+          ticketCode={ticket.code}
+          initialDescription={ticket.description}
           onDescriptionUpdate={(newDescription) => {
             onUpdate({ ...ticket, description: newDescription });
           }}

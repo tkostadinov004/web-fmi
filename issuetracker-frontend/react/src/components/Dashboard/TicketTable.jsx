@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSearchParams } from "react-router-dom"; 
 import { StatusBadge, PriorityBadge } from "./Badge";
-import TicketModal from '../Tickets/TicketModal/TicketModal';
+import TicketModal from '../TicketDetail/TicketModal';
 
 export const TicketTable = ({ tickets }) => {
   const [searchParams, setSearchParams] = useSearchParams();

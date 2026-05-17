@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ticketService } from '../../services/ticketService';
 
 const EditableDescription = ({ ticketCode, initialDescription, onDescriptionUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -18,20 +19,7 @@ const EditableDescription = ({ ticketCode, initialDescription, onDescriptionUpda
         setIsSaving(true);
 
         try {
-            const token = localStorage.getItem('authToken');
-            const response = await fetch(`http://localhost:8080/tickets/${ticketCode}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ description: text })
-            });
-
-            if (!response.ok) {
-                throw new Error('Грешка при запазване на описанието');
-            }
-
+            await ticketService.updateTicket(ticketCode, { description: text });
             onDescriptionUpdate(text);
             setIsEditing(false);
         } catch (error) {

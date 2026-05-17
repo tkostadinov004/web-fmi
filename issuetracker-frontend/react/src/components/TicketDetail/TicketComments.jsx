@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CommentItem from './CommentItem';
+import { ticketService } from '../../services/ticketService';
 
 const TicketComments = ({ ticketCode }) => {
   const [comments, setComments] = useState([]);
@@ -10,17 +11,8 @@ const TicketComments = ({ ticketCode }) => {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8080/tickets/${ticketCode}/comments?page_number=1&page_size=50`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data);
-      } else {
-        console.error('Грешка при изтегляне на коментарите');
-      }
+      const data = await ticketService.getComments(ticketCode);
+      setComments(data);
     } catch (error) {
       console.error('Сървърна грешка:', error);
     } finally {
@@ -39,22 +31,9 @@ const TicketComments = ({ ticketCode }) => {
 
     setIsPosting(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8080/tickets/${ticketCode}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ content: newCommentText })
-      });
-
-      if (response.ok) {
-        setNewCommentText('');
-        fetchComments();
-      } else {
-        alert('Не успяхме да добавим коментара.');
-      }
+      await ticketService.addComment(ticketCode, newCommentText);
+      setNewCommentText('');
+      fetchComments();
     } catch (error) {
       console.error('Грешка при добавяне:', error);
     } finally {

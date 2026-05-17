@@ -505,3 +505,181 @@
   line-height: 1.5;
   white-space: pre-wrap;
 }
+
+/* =========================================
+   11. INLINE EDITING (Заглавие)
+   ========================================= */
+
+.title-display {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #172B4D;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.title-display:hover {
+  background-color: var(--vanilla-cream);
+}
+
+.editable-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.title-input {
+  flex: 1;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #172B4D;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--sage-green);
+  border-radius: 0.25rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.title-input:focus {
+  box-shadow: 0 0 0 3px rgba(106, 153, 78, 0.2);
+}
+
+.editable-title-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.icon-save-btn, .icon-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.icon-save-btn {
+  background-color: var(--hunter-green);
+  color: white;
+}
+
+.icon-save-btn:hover:not(:disabled) {
+  background-color: var(--sage-green);
+}
+
+.icon-cancel-btn {
+  background-color: transparent;
+  color: #5E6C84;
+}
+
+.icon-cancel-btn:hover:not(:disabled) {
+  background-color: var(--vanilla-cream);
+  color: var(--hunter-green);
+}
+
+/* =========================================
+   12. WORKFLOW EDITOR MODAL
+   ========================================= */
+
+.workflow-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(9, 30, 66, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.workflow-modal-content {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 95%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.workflow-subtitle {
+  color: #5E6C84;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.workflow-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.workflow-matrix th, 
+.workflow-matrix td {
+  border: 1px solid #DFE1E6;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.workflow-matrix th {
+  background-color: var(--vanilla-cream);
+  color: var(--hunter-green);
+  font-size: 0.8rem;
+}
+
+.row-header {
+  text-align: left !important;
+  color: var(--text-dark);
+}
+
+.checkbox-cell input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  accent-color: var(--sage-green);
+}
+
+.checkbox-cell input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.workflow-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* --- СТИЛОВЕ ЗА НОВИЯ БУТОН EDIT --- */
+.edit-workflow-btn {
+  background-color: var(--vanilla-cream);
+  color: var(--hunter-green);
+  border: 1px solid var(--hunter-green);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-workflow-btn:hover:not(:disabled) {
+  background-color: var(--hunter-green);
+  color: white;
+}
+
+.edit-workflow-btn:disabled {
+  background-color: #F4F5F7;
+  color: #A5ADBA;
+  border: 1px solid #DFE1E6;
+  cursor: not-allowed;
+}
