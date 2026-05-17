@@ -328,22 +328,69 @@
   background-color: var(--hunter-green);
 }
 
+/* =========================================
+   DATES GROUP (Дати и Краен срок)
+   ========================================= */
+
 .dates-group {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   border-top: 1px solid #DFE1E6;
   padding-top: 1rem;
-}
-
-.dates-group p {
-  margin: 0.35rem 0;
-  font-size: 1.2rem;
+  font-size: 0.85rem;
   color: #5E6C84;
 }
 
-.dates-group span {
+/* Стил за обикновените дати (Създаден и Обновен) */
+.dates-group p {
+  margin: 0.4rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dates-group p span {
   color: var(--text-dark);
   font-weight: 500;
-  font-size: 1.2rem;
+}
+
+/* Контейнер за реда с редактируемия краен срок */
+.editable-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+/* Магията за Jira-стил инпута (календара) */
+.sidebar-date-input {
+  border: 1px solid transparent; 
+  background-color: transparent;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  margin-right: -0.4rem; 
+  text-align: right; 
+}
+
+.sidebar-date-input:hover:not(:disabled) {
+  background-color: #F4F5F7;
+}
+
+.sidebar-date-input:focus {
+  background-color: #fff;
+  border-color: var(--sage-green);
+  box-shadow: 0 0 0 2px rgba(106, 153, 78, 0.2);
+}
+
+.sidebar-date-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* =========================================

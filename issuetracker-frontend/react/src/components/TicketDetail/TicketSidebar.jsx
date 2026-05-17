@@ -89,6 +89,8 @@ const TicketSidebar = ({ ticket, onUpdate }) => {
         createDate={ticket.createDate}
         updateDate={ticket.updateDate}
         dueDate={ticket.dueDate}
+        onDueDateChange={(newDate) => handleGeneralUpdate('dueDate', newDate)}
+        isUpdating={isUpdating}
       />
 
     </div>
