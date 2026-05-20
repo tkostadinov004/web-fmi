@@ -10,8 +10,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.CannotAddUserToProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
@@ -82,8 +82,8 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(buildErrorResponse(OutputMessages.System.ACCESS_DENIED), HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(CannotAddUserToProjectException.class)
-    public ResponseEntity<ErrorResponse> handleCannotAddUserToProjectException(CannotAddUserToProjectException ex) {
+    @ExceptionHandler(UnauthorizedProjectModificationException.class)
+    public ResponseEntity<ErrorResponse> handleCannotAddUserToProjectException(UnauthorizedProjectModificationException ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ex.getMessage()), HttpStatus.FORBIDDEN);
     }
