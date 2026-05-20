@@ -4,8 +4,11 @@ import bg.sofia.uni.fmi.issuetracker.controller.common.AuthorizationAspect;
 import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.auditlog.OutputAuditLogDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.auditlog.OutputAuditLogUserDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.service.contract.AuditLogService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
@@ -24,6 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -47,6 +51,9 @@ public class UserControllerTests extends BaseControllerTests {
 
     @MockitoBean
     private ProjectService projectService;
+
+    @MockitoBean
+    private AuditLogService auditLogService;
 
     @Test
     public void testGetAllUsers_ReturnsOk() throws Exception {
@@ -131,6 +138,32 @@ public class UserControllerTests extends BaseControllerTests {
         when(userService.getUser("missing")).thenThrow(new UserNotFoundException(ExceptionMessages.User.userNotFound("missing")));
 
         mockMvc.perform(get("/users/missing"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.User.userNotFound("missing")));
+    }
+
+    @Test
+    public void testGetAuditLogs_ReturnsOk() throws Exception {
+        List<OutputAuditLogDTO> content = List.of(
+                new OutputAuditLogDTO("a1b2c3", "User logged in", null, LocalDateTime.of(2026, 5, 20, 12, 0),
+                        new OutputAuditLogUserDTO("user", "/files/user/profile.png")));
+        Page<OutputAuditLogDTO> page = new PageImpl<>(content);
+        when(auditLogService.getAll("user", 1, 10)).thenReturn(page);
+
+        mockMvc.perform(get("/users/user/auditLogs"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Link", containsString("rel=")))
+                .andExpect(jsonPath("$[0].uuid").value("a1b2c3"))
+                .andExpect(jsonPath("$[0].message").value("User logged in"))
+                .andExpect(jsonPath("$[0].user.username").value("user"));
+    }
+
+    @Test
+    public void testGetAuditLogs_ReturnsNotFoundWhenUserMissing() throws Exception {
+        when(auditLogService.getAll("missing", 1, 10))
+                .thenThrow(new UserNotFoundException(ExceptionMessages.User.userNotFound("missing")));
+
+        mockMvc.perform(get("/users/missing/auditLogs"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.User.userNotFound("missing")));
     }

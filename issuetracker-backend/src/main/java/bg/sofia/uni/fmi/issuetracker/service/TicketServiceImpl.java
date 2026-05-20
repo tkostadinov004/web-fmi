@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.auditlog.AuditLog;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
@@ -12,6 +13,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectExceptio
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
+import bg.sofia.uni.fmi.issuetracker.model.auditlog.AuditLogType;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
@@ -61,6 +63,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @AuditLog(message = "Created ticket", type = AuditLogType.CREATE)
     public Ticket createTicket(CreateTicketDTO dto) {
         if (ticketRepository.existsById(dto.code())) {
             throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code()));

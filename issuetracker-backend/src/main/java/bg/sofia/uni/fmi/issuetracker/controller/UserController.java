@@ -5,9 +5,11 @@ import bg.sofia.uni.fmi.issuetracker.controller.common.RequireAdmin;
 import bg.sofia.uni.fmi.issuetracker.dto.input.UpdateUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.AdminOnlyOutputUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.UserDetailsDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.auditlog.OutputAuditLogDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.service.contract.AuditLogService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -42,9 +44,11 @@ import java.util.List;
 @Tag(name = "User", description = "Endpoints for user profile and account management")
 public class UserController {
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuditLogService auditLogService) {
         this.userService = userService;
+        this.auditLogService = auditLogService;
     }
 
     @Operation(summary = "List all users", description = "Returns a paginated list of users for admin review.")
@@ -153,5 +157,27 @@ public class UserController {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.updateUser(username, dto);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get audit logs for a user", description = "Retrieves paginated audit log entries related to a user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OutputAuditLogDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/{username}/auditLogs")
+    public ResponseEntity<List<OutputAuditLogDTO>> getAuditLogs(@Parameter(description = "Username of the user whose audit logs should be returned", required = true) @PathVariable String username,
+                                                                @Parameter(description = "Page number to return, starting at 1", required = false) @RequestParam(name = "page_number", required = false, defaultValue = Constants.DEFAULT_PAGE_NUMBER) Integer pageNumber,
+                                                                @Parameter(description = "Page size to return", required = false) @RequestParam(name = "page_size", required = false, defaultValue = Constants.DEFAULT_PAGE_SIZE) Integer pageSize,
+                                                                HttpServletRequest request) {
+        Page<OutputAuditLogDTO> page = auditLogService.getAll(username, pageNumber, pageSize);
+        PaginationLinkHeader linkHeader = new PaginationLinkHeader(page, request.getRequestURL().toString(), false);
+        return ResponseEntity
+                .ok()
+                .header("Link", linkHeader.toString())
+                .body(page.toList());
     }
 }
