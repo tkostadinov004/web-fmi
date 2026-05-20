@@ -30,6 +30,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -89,8 +90,7 @@ public class AuthControllerTests extends BaseControllerTests {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER))
-                .andExpect(jsonPath("$.token").value("token"));
+                .andExpect(header().string("Authorization", "token"));
     }
 
     @Test
