@@ -42,7 +42,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -107,17 +106,7 @@ public class TicketServiceImplTests {
     }
 
     @Test
-    void testCreateTicket_ThrowsWhenTicketAlreadyExists() {
-        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(true);
-
-        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
-                .hasMessage(ExceptionMessages.Ticket.ticketAlreadyExists(CREATE_TICKET_DTO.code()))
-                .isExactlyInstanceOf(TicketAlreadyExistsException.class);
-    }
-
-    @Test
     void testCreateTicket_ThrowsWhenAssigneeNotFound() {
-        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
@@ -127,7 +116,6 @@ public class TicketServiceImplTests {
 
     @Test
     void testCreateTicket_ThrowsWhenProjectNotFound() {
-        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.empty());
 
@@ -137,8 +125,19 @@ public class TicketServiceImplTests {
     }
 
     @Test
+    void testCreateTicket_ThrowsWhenTicketAlreadyExists() {
+        when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
+        when(ticketRepository.existsByProjectAndCode(TEST_PROJECT, CREATE_TICKET_DTO.code())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.createTicket(CREATE_TICKET_DTO))
+                .hasMessage(ExceptionMessages.Ticket.ticketAlreadyExists(CREATE_TICKET_DTO.code(), TEST_PROJECT.getUuid()))
+                .isExactlyInstanceOf(TicketAlreadyExistsException.class);
+    }
+
+    @Test
     void testCreateTicket_ThrowsWhenAssigneeNotInProject() {
-        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
         when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(false);
@@ -151,9 +150,9 @@ public class TicketServiceImplTests {
     @Test
     void testCreateTicket_SuccessWithoutAssignee() {
         CreateTicketDTO dtoWithoutAssignee = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription", TicketStatus.TO_DO,
-                TicketPriority.HIGH, "proj-1", LocalDateTime.now().plusDays(2), null);
-        when(ticketRepository.existsById(dtoWithoutAssignee.code())).thenReturn(false);
+                TicketPriority.HIGH, TEST_PROJECT.getUuid(), LocalDateTime.now().plusDays(2), null);
         when(projectRepository.findById(dtoWithoutAssignee.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.existsByProjectAndCode(TEST_PROJECT, dtoWithoutAssignee.code())).thenReturn(false);
         doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
 
         Ticket created = service.createTicket(dtoWithoutAssignee);
@@ -166,7 +165,7 @@ public class TicketServiceImplTests {
 
     @Test
     void testCreateTicket_SuccessWithAssignee() {
-        when(ticketRepository.existsById(CREATE_TICKET_DTO.code())).thenReturn(false);
+        when(ticketRepository.existsByProjectAndCode(TEST_PROJECT, CREATE_TICKET_DTO.code())).thenReturn(false);
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.findById(CREATE_TICKET_DTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
         when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
@@ -207,8 +206,8 @@ public class TicketServiceImplTests {
                 TicketPriority.LOW, TEST_PROJECT.getUuid(), null, null);
 
         when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
-        when(ticketRepository.existsById(dependentTicketDTO.code())).thenReturn(false);
         when(projectRepository.findById(dependentTicketDTO.projectUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.existsByProjectAndCode(TEST_PROJECT, dependentTicketDTO.code())).thenReturn(false);
         doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any());
 
         service.addDependentTicketToTicket(TEST_TICKET.getCode(), dependentTicketDTO);

@@ -19,12 +19,11 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const data = await authService.login(username, password);
+            const token = await authService.login(username, password);
 
-            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('authToken', token);
             localStorage.setItem('currentUsername', username);
             navigate('/dashboard');
-            
         } catch (error) {
             setErrorMessage(error.message || 'Проблем с връзката към сървъра.');
         } finally {

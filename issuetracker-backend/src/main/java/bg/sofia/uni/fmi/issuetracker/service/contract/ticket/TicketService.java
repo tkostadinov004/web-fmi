@@ -39,7 +39,7 @@ public interface TicketService {
      *
      * @param dto the {@link CreateTicketDTO} containing ticket creation data
      * @return the created {@link Ticket} entity
-     * @throws TicketAlreadyExistsException  if a ticket with the given code already exists
+     * @throws TicketAlreadyExistsException  if a ticket with the given code already exists in the project
      * @throws UserNotFoundException         if the assignee username does not exist
      * @throws ProjectNotFoundException      if the project does not exist
      * @throws UserNotPartOfProjectException if the assignee is not a member of the project

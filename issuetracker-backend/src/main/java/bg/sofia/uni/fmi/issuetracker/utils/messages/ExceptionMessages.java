@@ -149,10 +149,10 @@ public class ExceptionMessages {
     }
 
     public static class Ticket {
-        private static final String TICKET_ALREADY_EXISTS = "Ticket named '%s' already exists!";
+        private static final String TICKET_ALREADY_EXISTS = "Ticket named '%s' already exists in project '%s'!";
 
-        public static String ticketAlreadyExists(String code) {
-            return TICKET_ALREADY_EXISTS.formatted(code);
+        public static String ticketAlreadyExists(String code, String projectUuid) {
+            return TICKET_ALREADY_EXISTS.formatted(code, projectUuid);
         }
 
         private static final String TICKET_NOT_FOUND = "Ticket '%s' not found!";
