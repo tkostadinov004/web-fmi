@@ -9,7 +9,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
@@ -255,9 +254,10 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testRemoveUserFromProject_ReturnsNotFoundWhenProjectOrUserMissing() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         String projectId = "non-existent";
         doThrow(new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId)))
-                .when(projectService).deleteProjectUser(projectId, TEST_USER.getUsername());
+                .when(projectService).deleteProjectUser(projectId, TEST_USER.getUsername(), "user");
 
         mockMvc.perform(delete("/projects/%s/users/%s".formatted(projectId, TEST_USER.getUsername())))
                 .andExpect(status().isNotFound())

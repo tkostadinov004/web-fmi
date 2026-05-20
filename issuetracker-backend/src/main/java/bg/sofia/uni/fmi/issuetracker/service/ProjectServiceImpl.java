@@ -5,9 +5,9 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
-import bg.sofia.uni.fmi.issuetracker.exception.project.CannotAddUserToProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
@@ -83,7 +83,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = getProject(projectId);
         User initiator = getUser(addInitiatorUsername);
         if (!projectRepository.isUserInProject(initiator, project, Role.TEAM_LEAD)) {
-            throw new CannotAddUserToProjectException(ExceptionMessages.ProjectUser.cannotAddUserToProject(project.getUuid(), addInitiatorUsername));
+            throw new UnauthorizedProjectModificationException(ExceptionMessages.ProjectUser.cannotAddUserToProject(project.getUuid(), addInitiatorUsername));
         }
         User userToAdd = getUser(dto.username());
 
@@ -99,8 +99,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public void deleteProjectUser(String projectId, String username) {
+    public void deleteProjectUser(String projectId, String username, String actionInitiatorUsername) {
         Project project = getProject(projectId);
+        User initiator = getUser(actionInitiatorUsername);
+        if (!projectRepository.isUserInProject(initiator, project, Role.TEAM_LEAD)) {
+            throw new UnauthorizedProjectModificationException(ExceptionMessages.ProjectUser.cannotRemoveUserFromProject(project.getUuid(), actionInitiatorUsername));
+        }
         User user = getUser(username);
 
         if (!projectRepository.isUserInProject(user, project)) {

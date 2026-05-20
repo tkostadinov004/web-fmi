@@ -9,6 +9,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsExcep
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 
@@ -44,25 +45,29 @@ public interface ProjectService {
     /**
      * Returns the newly assigned user of the project
      *
-     * @param projectId the id of the project
-     * @param dto       the {@link CreateProjectUserDTO} containing project user creation data
+     * @param projectId            the id of the project
+     * @param dto                  the {@link CreateProjectUserDTO} containing project user creation data
+     * @param addInitiatorUsername the username of the user who initiated the task
      * @return {@link ProjectDetailsUserDTO}
-     * @throws ProjectNotFoundException             if the project cannot be found
-     * @throws UserNotFoundException                if the user cannot be found
-     * @throws ProjectUserAlreadyInProjectException if the user is already in the project
+     * @throws ProjectNotFoundException                 if the project cannot be found
+     * @throws UserNotFoundException                    if the user cannot be found
+     * @throws UnauthorizedProjectModificationException if the initiator is not a team leader (therefore unauthorized to perform the task) in the given project
+     * @throws ProjectUserAlreadyInProjectException     if the user is already in the project
      */
     ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto, String addInitiatorUsername);
 
     /**
      * Delete a project user
      *
-     * @param projectId the id of the project
-     * @param username  the username of the project user
-     * @throws ProjectNotFoundException     if the project cannot be found
-     * @throws UserNotFoundException        if the user cannot be found
-     * @throws ProjectUserNotFoundException if the project user is not found
+     * @param projectId               the id of the project
+     * @param username                the username of the project user
+     * @param actionInitiatorUsername the username of the user who initiated the task
+     * @throws ProjectNotFoundException                 if the project cannot be found
+     * @throws UserNotFoundException                    if the user cannot be found
+     * @throws UnauthorizedProjectModificationException if the initiator is not a team leader (therefore unauthorized to perform the task) in the given project
+     * @throws ProjectUserNotFoundException             if the project user is not found
      */
-    void deleteProjectUser(String projectId, String username);
+    void deleteProjectUser(String projectId, String username, String actionInitiatorUsername);
 
     /**
      * Returns all projects

@@ -235,6 +235,7 @@ public class ExceptionMessages {
         private static final String USER_NOT_FOUND = "User with username %s not found in project %s!";
 
         private static final String CANNOT_ADD_USER_TO_PROJECT = "Cannot add user to project '%s' because initiator '%s' is not a team lead in the project!";
+        private static final String CANNOT_REMOVE_USER_FROM_PROJECT = "Cannot remove user from project '%s' because initiator '%s' is not a team lead in the project!";
 
         public static String userAlreadyInProject(String username, String projectId, Role role) {
             return USER_ALREADY_IN_PROJECT_ROLE.formatted(username, projectId, role);
@@ -250,6 +251,10 @@ public class ExceptionMessages {
 
         public static String cannotAddUserToProject(String projectId, String initiatorUsername) {
             return CANNOT_ADD_USER_TO_PROJECT.formatted(projectId, initiatorUsername);
+        }
+
+        public static String cannotRemoveUserFromProject(String projectId, String initiatorUsername) {
+            return CANNOT_REMOVE_USER_FROM_PROJECT.formatted(projectId, initiatorUsername);
         }
     }
 

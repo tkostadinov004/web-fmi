@@ -279,7 +279,8 @@ public class ProjectController {
             @Parameter(description = "Username of the user", required = true)
             @PathVariable String username
     ) {
-        projectService.deleteProjectUser(projectId, username);
+        String initiatorUsername = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        projectService.deleteProjectUser(projectId, username, initiatorUsername);
         return ResponseEntity.noContent().build();
     }
 }

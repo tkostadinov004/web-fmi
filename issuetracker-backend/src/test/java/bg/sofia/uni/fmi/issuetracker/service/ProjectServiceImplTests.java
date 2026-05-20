@@ -1,8 +1,8 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
-import bg.sofia.uni.fmi.issuetracker.exception.project.CannotAddUserToProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
@@ -159,7 +159,7 @@ public class ProjectServiceImplTests {
 
         assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO, TEST_USER.getUsername()))
                 .hasMessage(ExceptionMessages.ProjectUser.cannotAddUserToProject(TEST_PROJECT.getUuid(), TEST_USER.getUsername()))
-                .isExactlyInstanceOf(CannotAddUserToProjectException.class);
+                .isExactlyInstanceOf(UnauthorizedProjectModificationException.class);
     }
 
     @Test
@@ -196,27 +196,54 @@ public class ProjectServiceImplTests {
         String projectId = "non-existent";
         when(projectRepository.findById(projectId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> projectService.deleteProjectUser(projectId, TEST_USER.getUsername()))
+        assertThatThrownBy(() -> projectService.deleteProjectUser(projectId, TEST_USER.getUsername(), TEST_USER_2.getUsername()))
                 .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
                 .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test
-    void testDeleteProjectUser_ThrowsOnNonexistentUser() {
+    void testDeleteProjectUser_ThrowsOnNonexistentInitiator() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername()))
-                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
+        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername(), TEST_USER_2.getUsername()))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER_2.getUsername()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
+    void testDeleteProjectUser_ThrowsIfInitiatorIsNotTeamLead() {
+        when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
+        when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(false);
+
+        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername(), TEST_USER_2.getUsername()))
+                .hasMessage(ExceptionMessages.ProjectUser.cannotRemoveUserFromProject(TEST_PROJECT.getUuid(), TEST_USER_2.getUsername()))
+                .isExactlyInstanceOf(UnauthorizedProjectModificationException.class);
+    }
+
+    @Test
+    void testDeleteProjectUser_ThrowsOnNonexistentUser() {
+        when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
+        when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername(), TEST_USER_2.getUsername()))
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
+                .isExactlyInstanceOf(UserNotFoundException.class);
+    }
+
+
+    @Test
     void testDeleteProjectUser_ThrowsOnUserNotInProject() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
+        when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(false);
 
-        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername()))
+        assertThatThrownBy(() -> projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername(), TEST_USER_2.getUsername()))
                 .hasMessage(ExceptionMessages.ProjectUser.userNotFound(TEST_USER.getUsername(), TEST_PROJECT.getUuid()))
                 .isExactlyInstanceOf(UserNotPartOfProjectException.class);
     }
@@ -224,10 +251,12 @@ public class ProjectServiceImplTests {
     @Test
     void testDeleteProjectUser_SuccessfullyDeletesUser() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
+        when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
 
-        projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername());
+        projectService.deleteProjectUser(TEST_PROJECT.getUuid(), TEST_USER.getUsername(), TEST_USER_2.getUsername());
 
         verify(projectUserRepository, times(1)).deleteAllByProjectAndUser(TEST_PROJECT, TEST_USER);
     }
