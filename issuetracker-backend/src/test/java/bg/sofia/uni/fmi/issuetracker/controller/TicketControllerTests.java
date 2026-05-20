@@ -93,13 +93,13 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testCreateTicket_ReturnsConflictWhenAlreadyExists() throws Exception {
         CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", TicketStatus.IN_PROGRESS,
                 TicketPriority.HIGH, "project-uuid", LocalDateTime.now().plusDays(2), null);
-        when(ticketService.createTicket(dto)).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code())));
+        when(ticketService.createTicket(dto)).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), dto.projectUuid())));
 
         mockMvc.perform(post("/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code())));
+                .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), dto.projectUuid())));
     }
 
     @Test

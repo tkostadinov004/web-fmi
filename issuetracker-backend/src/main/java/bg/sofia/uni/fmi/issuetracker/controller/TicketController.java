@@ -74,7 +74,7 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Project or assignee user not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists, or assignee is not part of the project",
+            @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists in the project, or assignee is not part of the project",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

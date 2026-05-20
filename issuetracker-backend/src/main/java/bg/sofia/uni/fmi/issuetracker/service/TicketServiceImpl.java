@@ -65,10 +65,6 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @AuditLog(message = "Created ticket", type = AuditLogType.CREATE)
     public Ticket createTicket(CreateTicketDTO dto) {
-        if (ticketRepository.existsById(dto.code())) {
-            throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code()));
-        }
-
         Optional<User> assignee = Optional.empty();
         if (dto.assigneeUsername() != null) {
             assignee = userRepository.findById(dto.assigneeUsername());
@@ -81,6 +77,10 @@ public class TicketServiceImpl implements TicketService {
         if (assignee.isPresent() && !projectRepository.isUserInProject(assignee.get(), project)) {
             throw new UserNotPartOfProjectException(
                     ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
+        }
+
+        if (ticketRepository.existsByProjectAndCode(project, dto.code())) {
+            throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), project.getUuid()));
         }
 
         Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), dto.ticketStatus(),
