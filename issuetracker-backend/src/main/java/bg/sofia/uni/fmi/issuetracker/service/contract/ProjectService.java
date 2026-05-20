@@ -51,7 +51,7 @@ public interface ProjectService {
      * @throws UserNotFoundException                if the user cannot be found
      * @throws ProjectUserAlreadyInProjectException if the user is already in the project
      */
-    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto);
+    ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto, String addInitiatorUsername);
 
     /**
      * Delete a project user

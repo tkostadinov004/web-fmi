@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.exception.project.CannotAddUserToProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
@@ -133,7 +134,7 @@ public class ProjectServiceImplTests {
         String projectId = "non-existent";
         when(projectRepository.findById(projectId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> projectService.addProjectUser(projectId, CREATE_PROJECT_USER_DTO))
+        assertThatThrownBy(() -> projectService.addProjectUser(projectId, CREATE_PROJECT_USER_DTO, TEST_USER.getUsername()))
                 .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
                 .isExactlyInstanceOf(ProjectNotFoundException.class);
     }
@@ -141,20 +142,35 @@ public class ProjectServiceImplTests {
     @Test
     void testAddProjectUser_ThrowsOnNonexistentUser() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
         when(userRepository.findById(CREATE_PROJECT_USER_DTO.username())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO))
+        assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO, TEST_USER.getUsername()))
                 .hasMessage(ExceptionMessages.User.userNotFound(CREATE_PROJECT_USER_DTO.username()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
+    void testAddProjectUser_ThrowsOnAddingInitiatorIsNotTeamLead() {
+        when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(false);
+
+        assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO, TEST_USER.getUsername()))
+                .hasMessage(ExceptionMessages.ProjectUser.cannotAddUserToProject(TEST_PROJECT.getUuid(), TEST_USER.getUsername()))
+                .isExactlyInstanceOf(CannotAddUserToProjectException.class);
+    }
+
+    @Test
     void testAddProjectUser_ThrowsWhenUserAlreadyInProject() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
         when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
         when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, CREATE_PROJECT_USER_DTO.role())).thenReturn(true);
 
-        assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO))
+        assertThatThrownBy(() -> projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO, TEST_USER.getUsername()))
                 .hasMessage(ExceptionMessages.ProjectUser.userAlreadyInProject(TEST_USER_2.getUsername(), TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO.role()))
                 .isExactlyInstanceOf(ProjectUserAlreadyInProjectException.class);
     }
@@ -162,11 +178,13 @@ public class ProjectServiceImplTests {
     @Test
     void testAddProjectUser_SuccessfullyAddsUserToProject() {
         when(projectRepository.findById(TEST_PROJECT.getUuid())).thenReturn(Optional.of(TEST_PROJECT));
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT, Role.TEAM_LEAD)).thenReturn(true);
         when(userRepository.findById(TEST_USER_2.getUsername())).thenReturn(Optional.of(TEST_USER_2));
         when(projectRepository.isUserInProject(TEST_USER_2, TEST_PROJECT, CREATE_PROJECT_USER_DTO.role())).thenReturn(false);
 
         doReturn(new ProjectUser(TEST_PROJECT, TEST_USER_2, CREATE_PROJECT_USER_DTO.role())).when(projectUserRepository).save(any());
-        var result = projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO);
+        var result = projectService.addProjectUser(TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO, TEST_USER.getUsername());
 
         assertNotNull(result);
         assertEquals(TEST_USER_2.getUsername(), result.username());

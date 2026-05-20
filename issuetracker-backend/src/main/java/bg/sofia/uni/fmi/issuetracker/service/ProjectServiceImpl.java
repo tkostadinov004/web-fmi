@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.CannotAddUserToProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
@@ -78,8 +79,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto) {
+    public ProjectDetailsUserDTO addProjectUser(String projectId, CreateProjectUserDTO dto, String addInitiatorUsername) {
         Project project = getProject(projectId);
+        User initiator = getUser(addInitiatorUsername);
+        if (!projectRepository.isUserInProject(initiator, project, Role.TEAM_LEAD)) {
+            throw new CannotAddUserToProjectException(ExceptionMessages.ProjectUser.cannotAddUserToProject(project.getUuid(), addInitiatorUsername));
+        }
         User userToAdd = getUser(dto.username());
 
         if (projectRepository.isUserInProject(userToAdd, project, dto.role())) {

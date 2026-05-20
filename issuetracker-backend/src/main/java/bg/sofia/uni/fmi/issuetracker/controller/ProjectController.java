@@ -33,6 +33,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * REST controller for project management operations.
+ *
+ * <p>Provides endpoints to list projects, query tickets, manage project membership,
+ * and perform create, update, and delete operations for project entities.</p>
+ */
 @RestController
 @RequestMapping("/projects")
 @Tag(name = "Project", description = "Endpoints for project-related operations")
@@ -106,7 +112,8 @@ public class ProjectController {
     @Operation(summary = "Create project", description = "Creates a new project.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "201", description = "Project created successfully"),
+                    responseCode = "201", description = "Project created successfully",
+                    content = @Content),
             @ApiResponse(
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
@@ -131,7 +138,8 @@ public class ProjectController {
     @Operation(summary = "Update project", description = "Updates an existing project.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "204", description = "Project updated successfully"),
+                    responseCode = "204", description = "Project updated successfully",
+                    content = @Content),
             @ApiResponse(
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
@@ -160,7 +168,8 @@ public class ProjectController {
     @Operation(summary = "Delete project", description = "Deletes a project by UUID.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "204", description = "Project deleted successfully"),
+                    responseCode = "204", description = "Project deleted successfully",
+                    content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
@@ -183,8 +192,8 @@ public class ProjectController {
     @Operation(summary = "Get all users in project",
             description = "Retrieves all users that are part of the specified project.")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200", description = "Project users retrieved successfully"),
+            @ApiResponse(responseCode = "200", description = "Project users retrieved successfully",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsUserDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
@@ -241,15 +250,17 @@ public class ProjectController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project user creation data", required = true, content = @Content)
             @Valid @RequestBody CreateProjectUserDTO dto
     ) {
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(projectService.addProjectUser(projectId, dto));
+                .body(projectService.addProjectUser(projectId, dto, username));
     }
 
     @Operation(summary = "Remove user from project", description = "Removes a user from the specified project.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "204", description = "User removed from project successfully"),
+                    responseCode = "204", description = "User removed from project successfully",
+                    content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
