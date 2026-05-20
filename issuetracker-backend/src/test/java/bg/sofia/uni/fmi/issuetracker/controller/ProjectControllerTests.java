@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
@@ -35,6 +36,7 @@ import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER_2;
 import static bg.sofia.uni.fmi.issuetracker.TestData.UPDATE_PROJECT_DTO;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -219,12 +221,12 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddUserToProject_ReturnsCreatedWhenSuccessful() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         ProjectDetailsUserDTO resultDto = new ProjectDetailsUserDTO(null, TEST_USER_2.getUsername(), Set.of(Role.TEAM_LEAD));
-        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class)))
+        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class), anyString()))
                 .thenReturn(resultDto);
 
         mockMvc.perform(post("/projects/%s/users".formatted(TEST_PROJECT.getUuid()))
-                        .param("role", "DEVELOPER")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(CREATE_PROJECT_USER_DTO)))
                 .andExpect(status().isCreated())
@@ -233,12 +235,12 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddUserToProject_ReturnsConflictWhenUserAlreadyInProject() throws Exception {
-        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class)))
-                .thenThrow(new UserNotPartOfProjectException(
-                        ExceptionMessages.ProjectUser.userAlreadyInProject(TEST_USER_2.getUsername(), TEST_PROJECT.getUuid())));
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
+        when(projectService.addProjectUser(eq(TEST_PROJECT.getUuid()), any(CreateProjectUserDTO.class), anyString()))
+                .thenThrow(new ProjectUserAlreadyInProjectException(
+                        ExceptionMessages.ProjectUser.userAlreadyInProject(TEST_USER_2.getUsername(), TEST_PROJECT.getUuid(), CREATE_PROJECT_USER_DTO.role())));
 
         mockMvc.perform(post("/projects/%s/users".formatted(TEST_PROJECT.getUuid()))
-                        .param("role", "DEVELOPER")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(CREATE_PROJECT_USER_DTO)))
                 .andExpect(status().isConflict())
