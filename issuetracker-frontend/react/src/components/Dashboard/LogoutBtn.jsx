@@ -1,16 +1,24 @@
 import { useNavigate } from "react-router-dom";
 
+const getHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+};
+
 function LogoutButton() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:8080/logout", {
+      await fetch("http://localhost:8080/auth/logout", {
         method: "POST",
-        credentials: "include",
+        headers: getHeaders()
       });
 
-    //   navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
