@@ -83,7 +83,7 @@ public class AuthControllerTests extends BaseControllerTests {
     @Test
     public void testLogin_ReturnsOkWhenSuccessful() throws Exception {
         UserLoginDTO dto = new UserLoginDTO("User", "pass");
-        when(authService.login(dto)).thenReturn(new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER, "token"));
+        when(authService.login(dto)).thenReturn("token");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)

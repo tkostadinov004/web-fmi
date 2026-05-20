@@ -151,9 +151,8 @@ public class AuthServiceImplTests {
         Token token = new Token("testToken", TEST_USER);
         doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.AUTH), any(Long.class));
 
-        AuthResponse response = authService.login(LOGIN_USER);
-        assertEquals(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER, response.message());
-        assertEquals(token.getTokenValue(), response.token());
+        String response = authService.login(LOGIN_USER);
+        assertEquals(token.getTokenValue(), response);
 
         verify(jwtUtils, times(1)).isTokenExpired(any());
         verify(tokenRepository, times(1)).deleteAll(any());

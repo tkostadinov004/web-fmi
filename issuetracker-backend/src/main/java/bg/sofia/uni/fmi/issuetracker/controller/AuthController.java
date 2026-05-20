@@ -67,8 +67,12 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody UserLoginDTO user) {
-        return ResponseEntity.ok(authService.login(user));
+    public ResponseEntity<Void> login(@RequestBody UserLoginDTO user) {
+        String token = authService.login(user);
+        return ResponseEntity
+                .ok()
+                .header("Authorization", token)
+                .build();
     }
 
     @Operation(summary = "Logout current user", description = "Invalidates authentication tokens for the currently authenticated user.")

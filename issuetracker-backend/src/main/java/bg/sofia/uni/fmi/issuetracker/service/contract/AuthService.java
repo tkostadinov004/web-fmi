@@ -34,11 +34,11 @@ public interface AuthService {
      * a new auth token is created.</p>
      *
      * @param user the login credentials
-     * @return an {@link AuthResponse} containing a success message and the new access token
+     * @return an {@link String} containing the new access token
      * @throws WrongCredentialsException  if the username does not exist or the password is incorrect
      * @throws UserAlreadyLoggedException if the user already has a valid active auth token
      */
-    AuthResponse login(UserLoginDTO user);
+    String login(UserLoginDTO user);
 
     /**
      * Logs the user out by deleting all authentication tokens for the given user.

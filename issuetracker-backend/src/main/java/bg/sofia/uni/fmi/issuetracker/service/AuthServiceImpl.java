@@ -72,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse login(UserLoginDTO user) {
+    public String login(UserLoginDTO user) {
         Optional<User> foundUser = userRepository.findById(user.username());
         if (foundUser.isEmpty() || !passwordEncoder.matches(user.password(), foundUser.get().getPassword())) {
             throw new WrongCredentialsException(ExceptionMessages.Auth.wrongCredentials());
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.deleteAll(tokens);
 
         Token token = createToken(foundUser.get(), TokenType.AUTH, Constants.DEFAULT_AUTH_TOKEN_VALIDITY);
-        return new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_LOGGED_USER, token.getTokenValue());
+        return token.getTokenValue();
     }
 
     @Override
