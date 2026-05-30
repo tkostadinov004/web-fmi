@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.dto.output.ticket;
 
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Response body containing basic information about a dependent ticket.")
@@ -12,5 +11,5 @@ public record DependentTicketDTO(
         @Schema(description = "Description of the dependent ticket.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         String description,
         @Schema(description = "Current status of the dependent ticket.", requiredMode = Schema.RequiredMode.REQUIRED)
-        TicketStatus status) {
+        String status) {
 }

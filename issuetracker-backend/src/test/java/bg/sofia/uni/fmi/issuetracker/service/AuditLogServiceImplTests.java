@@ -82,6 +82,15 @@ public class AuditLogServiceImplTests {
     }
 
     @Test
+    void testGetAll_ThrowsWhenUserNotFound() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> auditLogService.getAll(TEST_USER.getUsername(), 1, 5))
+                .isExactlyInstanceOf(UserNotFoundException.class)
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()));
+    }
+
+    @Test
     void testAddAuditLog_SavesEntryWhenUserFound() {
         User user = new User();
         user.setUsername(TEST_USER.getUsername());

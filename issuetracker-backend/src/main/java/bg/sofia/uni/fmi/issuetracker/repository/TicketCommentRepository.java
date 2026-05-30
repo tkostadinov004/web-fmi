@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.issuetracker.repository.ticket;
+package bg.sofia.uni.fmi.issuetracker.repository;
 
 import bg.sofia.uni.fmi.issuetracker.model.User;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;

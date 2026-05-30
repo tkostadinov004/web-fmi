@@ -3,8 +3,11 @@ package bg.sofia.uni.fmi.issuetracker.service;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
@@ -16,8 +19,10 @@ import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectUserRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.neo.NeoProjectRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.neo.WorkflowRepository;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.ProjectMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
@@ -32,21 +37,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@Service("projectService")
+@Service
 public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final ProjectUserRepository projectUserRepository;
     private final ProjectMapper projectMapper;
     private final TicketRepository ticketRepository;
+    private final NeoProjectRepository neoProjectRepository;
+    private final WorkflowRepository workflowRepository;
 
     public ProjectServiceImpl(UserRepository userRepository, ProjectRepository projectRepository,
-                              ProjectUserRepository projectUserRepository, ProjectMapper projectMapper, TicketRepository ticketRepository) {
+                              ProjectUserRepository projectUserRepository, ProjectMapper projectMapper, TicketRepository ticketRepository, NeoProjectRepository neoProjectRepository, WorkflowRepository workflowRepository) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.projectUserRepository = projectUserRepository;
         this.projectMapper = projectMapper;
         this.ticketRepository = ticketRepository;
+        this.neoProjectRepository = neoProjectRepository;
+        this.workflowRepository = workflowRepository;
     }
 
     @Override
@@ -133,7 +142,8 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = new Project(dto.name());
         project.setCreatedBy(creator);
 
-        projectRepository.save(project);
+        project = projectRepository.save(project);
+        neoProjectRepository.addProject(project.getUuid());
     }
 
     @Override
@@ -153,6 +163,38 @@ public class ProjectServiceImpl implements ProjectService {
         ticketRepository.deleteAll(project.getTickets());
         projectUserRepository.deleteAll(project.getUsers());
         projectRepository.delete(project);
+        workflowRepository.deleteWorkflow(projectId);
+        neoProjectRepository.deleteProject(projectId);
+    }
+
+    @Override
+    public void addProjectWorkflow(String projectId, ProjectWorkflowDTO dto) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
+        }
+
+        for (WorkflowTransitionDTO transition : dto.transitions()) {
+            if (!dto.workflowStatuses().contains(transition.source())) {
+                throw new InvalidWorkflowException(ExceptionMessages.Project.invalidSourceStatus(dto.workflowStatuses()));
+            }
+            if (!dto.workflowStatuses().contains(transition.target())) {
+                throw new InvalidWorkflowException(ExceptionMessages.Project.invalidTargetStatus(dto.workflowStatuses()));
+            }
+            if (transition.source().equals(transition.target())) {
+                throw new InvalidWorkflowException(ExceptionMessages.Project.transitionBuckle());
+            }
+        }
+
+        workflowRepository.createWorkflow(projectId, dto);
+    }
+    
+    @Override
+    public void deleteProjectWorkflow(String projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
+        }
+
+        workflowRepository.deleteWorkflow(projectId);
     }
 
     private User getUser(String username) {

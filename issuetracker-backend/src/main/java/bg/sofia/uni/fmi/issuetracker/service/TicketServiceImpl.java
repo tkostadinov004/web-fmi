@@ -3,13 +3,14 @@ package bg.sofia.uni.fmi.issuetracker.service;
 import bg.sofia.uni.fmi.issuetracker.auditlog.AuditLog;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.User;
@@ -17,12 +18,12 @@ import bg.sofia.uni.fmi.issuetracker.model.auditlog.AuditLogType;
 import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.repository.neo.WorkflowRepository;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import bg.sofia.uni.fmi.issuetracker.workflow.TicketWorkflow;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,18 +36,20 @@ public class TicketServiceImpl implements TicketService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
+    private final WorkflowRepository workflowRepository;
 
     public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository,
-                             UserRepository userRepository, TicketMapper ticketMapper) {
+                             UserRepository userRepository, TicketMapper ticketMapper, WorkflowRepository workflowRepository) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.ticketMapper = ticketMapper;
+        this.workflowRepository = workflowRepository;
     }
 
     @Override
-    public TicketDetailsDTO getTicketByCode(String code) {
-        Ticket ticket = getTicket(code);
+    public TicketDetailsDTO getTicketByCode(String projectId, String code) {
+        Ticket ticket = getTicket(projectId, code);
 
         return TicketDetailsDTO.from(ticket);
     }
@@ -64,7 +67,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @AuditLog(message = "Created ticket", type = AuditLogType.CREATE)
-    public Ticket createTicket(CreateTicketDTO dto) {
+    public Ticket createTicket(String projectId, CreateTicketDTO dto) {
         Optional<User> assignee = Optional.empty();
         if (dto.assigneeUsername() != null) {
             assignee = userRepository.findById(dto.assigneeUsername());
@@ -73,14 +76,17 @@ public class TicketServiceImpl implements TicketService {
             }
         }
 
-        Project project = fetchProject(dto.projectUuid());
+        Project project = fetchProject(projectId);
         if (assignee.isPresent() && !projectRepository.isUserInProject(assignee.get(), project)) {
             throw new UserNotPartOfProjectException(
-                    ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), dto.projectUuid()));
+                    ExceptionMessages.Project.userNotInProject(dto.assigneeUsername(), projectId));
         }
-
-        if (ticketRepository.existsByProjectAndCode(project, dto.code())) {
+        if (ticketRepository.existsById_CodeAndProject(dto.code(), project)) {
             throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), project.getUuid()));
+        }
+        List<String> workflowStatuses = workflowRepository.getStatuses(project.getUuid());
+        if (!workflowStatuses.contains(dto.ticketStatus())) {
+            throw new InvalidWorkflowException(ExceptionMessages.Ticket.invalidStatus(workflowStatuses));
         }
 
         Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), dto.ticketStatus(),
@@ -90,23 +96,29 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    @Transactional
-    public void addDependentTicketToTicket(String parentTicketCode, CreateTicketDTO ticket) {
-        Ticket parentTicket = getTicket(parentTicketCode);
-        if (!parentTicket.getProject().getUuid().equals(ticket.projectUuid())) {
-            throw new TicketNotInProjectException(
-                    ExceptionMessages.Ticket.ticketProjectMismatch(ticket.code(), parentTicketCode));
-        }
+    public List<DependentTicketDTO> getDependentTickets(String projectId, String code) {
+        Ticket ticket = getTicket(projectId, code);
 
-        Ticket dependentTicket = createTicket(ticket);
+        return ticket
+                .getDependentTickets()
+                .stream()
+                .map(t -> new DependentTicketDTO(t.getCode(), t.getTitle(), t.getDescription(), t.getTicketStatus()))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void addDependentTicketToTicket(String parentTicketProjectId, String parentTicketCode, CreateTicketDTO ticket) {
+        Ticket parentTicket = getTicket(parentTicketProjectId, parentTicketCode);
+        Ticket dependentTicket = createTicket(parentTicketProjectId, ticket);
 
         parentTicket.addDependentTicket(dependentTicket);
         ticketRepository.save(parentTicket);
     }
 
     @Override
-    public void changeTicketAssignee(String ticketCode, String assigneeUsername) {
-        Ticket ticket = getTicket(ticketCode);
+    public void changeTicketAssignee(String projectId, String ticketCode, String assigneeUsername) {
+        Ticket ticket = getTicket(projectId, ticketCode);
         Optional<User> assignee = userRepository.findById(assigneeUsername);
         if (assignee.isEmpty()) {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(assigneeUsername));
@@ -117,8 +129,8 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public void removeTicketAssignee(String ticketCode) {
-        Ticket ticket = getTicket(ticketCode);
+    public void removeTicketAssignee(String projectId, String ticketCode) {
+        Ticket ticket = getTicket(projectId, ticketCode);
         if (ticket.getAssignee() == null) {
             throw new UnassignedTicketException(ExceptionMessages.Ticket.unassignedTicket(ticketCode));
         }
@@ -129,12 +141,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public void updateTicket(String code, UpdateTicketDTO dto) {
-        Ticket ticket = getTicket(code);
+    public void updateTicket(String projectId, String code, UpdateTicketDTO dto) {
+        Ticket ticket = getTicket(projectId, code);
 
-        if (dto.ticketStatus() != null && !TicketWorkflow.isTransitionAllowed(ticket.getTicketStatus(), dto.ticketStatus())) {
+        if (dto.ticketStatus() != null && !workflowRepository.isTransitionPossible(ticket.getProject().getUuid(), ticket.getTicketStatus(), dto.ticketStatus())) {
             throw new InvalidWorkflowTransitionException(
-                    ExceptionMessages.Workflow.invalidStatus(ticket.getTicketStatus().toString(), dto.ticketStatus().toString()));
+                    ExceptionMessages.Workflow.invalidStatus(ticket.getTicketStatus(), dto.ticketStatus()));
         }
         ticketMapper.patchTicketFromDTO(dto, ticket);
         ticketRepository.save(ticket);
@@ -142,8 +154,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public void deleteTicket(String ticketCode) {
-        Ticket ticket = getTicket(ticketCode);
+    public void deleteTicket(String projectId, String ticketCode) {
+        Ticket ticket = getTicket(projectId, ticketCode);
 
         ticketRepository.deleteAll(ticket.getDependentTickets());
         ticketRepository.delete(ticket);
@@ -158,10 +170,12 @@ public class TicketServiceImpl implements TicketService {
         return project.get();
     }
 
-    private Ticket getTicket(String code) {
-        Optional<Ticket> ticket = ticketRepository.findById(code);
+    private Ticket getTicket(String projectId, String code) {
+        Project project = fetchProject(projectId);
+
+        Optional<Ticket> ticket = ticketRepository.findById_CodeAndProject(code, project);
         if (ticket.isEmpty()) {
-            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code));
+            throw new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound(code, projectId));
         }
         return ticket.get();
     }

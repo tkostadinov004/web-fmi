@@ -1,9 +1,10 @@
-package bg.sofia.uni.fmi.issuetracker.service.contract.ticket;
+package bg.sofia.uni.fmi.issuetracker.service.contract;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
@@ -13,13 +14,15 @@ public interface TicketCommentService {
     /**
      * Retrieves paginated comments for a specific ticket.
      *
-     * @param ticketCode the code of the ticket to retrieve comments for
-     * @param pageNumber the page number (1-indexed), defaults to 1 if less than or equal to 0
-     * @param pageSize   the number of comments per page, defaults to a default page size if less than or equal to 0
+        * @param projectId the UUID of the project the ticket belongs to
+        * @param ticketCode the code of the ticket to retrieve comments for (scoped to the project)
+        * @param pageNumber the page number (1-indexed), defaults to 1 if less than or equal to 0
+        * @param pageSize   the number of comments per page, defaults to a default page size if less than or equal to 0
      * @return a {@link Page} of {@link TicketCommentDetailsDTO} containing paginated ticket comments
-     * @throws TicketNotFoundException if no ticket with the given code exists
+        * @throws ProjectNotFoundException if the project does not exist
+        * @throws TicketNotFoundException if no ticket with the given code exists in the given project
      */
-    Page<TicketCommentDetailsDTO> getAllCommentsForTicket(String ticketCode, int pageNumber, int pageSize);
+        Page<TicketCommentDetailsDTO> getAllCommentsForTicket(String projectId, String ticketCode, int pageNumber, int pageSize);
 
     /**
      * Retrieves a specific ticket comment by its UUID.
@@ -33,13 +36,15 @@ public interface TicketCommentService {
     /**
      * Adds a new comment to a ticket.
      *
-     * @param authorUsername the username of the comment author
-     * @param ticketCode     the code of the ticket to add the comment to
-     * @param dto            the {@link CreateTicketCommentDTO} containing comment data
-     * @throws UserNotFoundException   if the author username does not exist
-     * @throws TicketNotFoundException if no ticket with the given code exists
+        * @param authorUsername the username of the comment author
+        * @param projectId the UUID of the project the ticket belongs to
+        * @param ticketCode     the code of the ticket to add the comment to (scoped to the project)
+        * @param dto            the {@link CreateTicketCommentDTO} containing comment data
+        * @throws UserNotFoundException   if the author username does not exist
+        * @throws ProjectNotFoundException if the project does not exist
+        * @throws TicketNotFoundException if no ticket with the given code exists in the given project
      */
-    void addTicketComment(String authorUsername, String ticketCode, CreateTicketCommentDTO dto);
+        void addTicketComment(String authorUsername, String projectId, String ticketCode, CreateTicketCommentDTO dto);
 
     /**
      * Updates an existing ticket comment.

@@ -4,13 +4,16 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketComment;
+import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.TicketCommentRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketCommentRepository;
-import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.TicketCommentMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_PROJECT;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TICKET;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TICKET_COMMENT;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
@@ -40,6 +44,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TicketCommentServiceImplTests {
+    private static final String PROJECT_UUID = TEST_TICKET.getProject().getUuid();
+    private static final Ticket.TicketKey TEST_TICKET_KEY = new Ticket.TicketKey(TEST_TICKET.getCode(), PROJECT_UUID);
+
     @Mock
     private TicketCommentRepository ticketCommentRepository;
 
@@ -52,6 +59,9 @@ public class TicketCommentServiceImplTests {
     @Mock
     private TicketCommentMapper mapper;
 
+    @Mock
+    private ProjectRepository projectRepository;
+
     @InjectMocks
     private TicketCommentServiceImpl service;
 
@@ -59,10 +69,11 @@ public class TicketCommentServiceImplTests {
     void testGetAllCommentsForTicket_UsesDefaultPaginationWhenInvalidPaginationDataIsPassed() {
         Page<TicketComment> page = new PageImpl<>(List.of(TEST_TICKET_COMMENT));
 
-        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.of(TEST_TICKET));
         when(ticketCommentRepository.findAllByTicket(eq(TEST_TICKET), any(Pageable.class))).thenReturn(page);
 
-        Page<TicketCommentDetailsDTO> result = service.getAllCommentsForTicket(TEST_TICKET.getCode(), 0, -5);
+        Page<TicketCommentDetailsDTO> result = service.getAllCommentsForTicket(PROJECT_UUID, TEST_TICKET.getCode(), 0, -5);
 
         assertEquals(1, result.getContent().size());
         assertEquals(TEST_TICKET_COMMENT.getContent(), result.getContent().get(0).content());
@@ -77,10 +88,11 @@ public class TicketCommentServiceImplTests {
 
     @Test
     void testGetAllCommentsForTicket_ThrowsWhenTicketNotFound() {
-        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getAllCommentsForTicket(TEST_TICKET.getCode(), 1, 10))
-                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
+        assertThatThrownBy(() -> service.getAllCommentsForTicket(PROJECT_UUID, TEST_TICKET.getCode(), 1, 10))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode(), PROJECT_UUID))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
@@ -109,29 +121,41 @@ public class TicketCommentServiceImplTests {
     void testAddTicketComment_ThrowsWhenAuthorNotFound() {
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), "TICKET-1", new CreateTicketCommentDTO("text")))
+        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), PROJECT_UUID, "TICKET-1", new CreateTicketCommentDTO("text")))
                 .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
+    void testAddTicketComment_ThrowsWhenProjectNotFound() {
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), PROJECT_UUID, TEST_TICKET.getCode(), new CreateTicketCommentDTO("text")))
+                .hasMessage(ExceptionMessages.Project.projectNotFound(PROJECT_UUID))
+                .isExactlyInstanceOf(ProjectNotFoundException.class);
+    }
+
+    @Test
     void testAddTicketComment_ThrowsWhenTicketNotFound() {
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
-        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.empty());
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), TEST_TICKET.getCode(), new CreateTicketCommentDTO("text")))
-                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode()))
+        assertThatThrownBy(() -> service.addTicketComment(TEST_USER.getUsername(), PROJECT_UUID, TEST_TICKET.getCode(), new CreateTicketCommentDTO("text")))
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode(), PROJECT_UUID))
                 .isExactlyInstanceOf(TicketNotFoundException.class);
     }
 
     @Test
     void testAddTicketComment_Successfully() {
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
-        when(ticketRepository.findById(TEST_TICKET.getCode())).thenReturn(Optional.of(TEST_TICKET));
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.of(TEST_TICKET));
         doAnswer(_ -> null).when(ticketCommentRepository).save(any());
 
         CreateTicketCommentDTO dto = new CreateTicketCommentDTO("testContent");
-        service.addTicketComment(TEST_USER.getUsername(), TEST_TICKET.getCode(), dto);
+        service.addTicketComment(TEST_USER.getUsername(), PROJECT_UUID, TEST_TICKET.getCode(), dto);
 
         ArgumentCaptor<TicketComment> commentCaptor = ArgumentCaptor.captor();
         verify(ticketCommentRepository, times(1)).save(commentCaptor.capture());

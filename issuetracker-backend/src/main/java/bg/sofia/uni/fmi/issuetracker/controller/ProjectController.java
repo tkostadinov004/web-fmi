@@ -3,13 +3,14 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -27,18 +28,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * REST controller for project management operations.
- *
- * <p>Provides endpoints to list projects, query tickets, manage project membership,
- * and perform create, update, and delete operations for project entities.</p>
- */
 @RestController
 @RequestMapping("/projects")
 @Tag(name = "Project", description = "Endpoints for project-related operations")
@@ -281,6 +277,53 @@ public class ProjectController {
     ) {
         String initiatorUsername = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         projectService.deleteProjectUser(projectId, username, initiatorUsername);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{projectId}/workflow")
+    @Operation(summary = "Create or replace project workflow", description = "Creates a new workflow for the project. Validates statuses and transitions.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Workflow created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid workflow definition",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> createWorkflow(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId, @RequestBody ProjectWorkflowDTO dto) {
+        projectService.addProjectWorkflow(projectId, dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{projectId}/workflow")
+    @Operation(summary = "Replace project workflow", description = "Replaces the existing workflow for the project with the provided definition.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Workflow replaced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid workflow definition",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> replaceWorkflow(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId, @RequestBody ProjectWorkflowDTO dto) {
+        projectService.deleteProjectWorkflow(projectId);
+        projectService.addProjectWorkflow(projectId, dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{projectId}/workflow")
+    @Operation(summary = "Delete project workflow", description = "Deletes the workflow associated with the project.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Workflow deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> deleteWorkflow(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        projectService.deleteProjectWorkflow(projectId);
         return ResponseEntity.noContent().build();
     }
 }

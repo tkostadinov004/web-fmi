@@ -12,7 +12,6 @@ import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketComment;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ public class TestData {
 
     public static final Ticket TEST_TICKET =
             new Ticket("Ticket-1", "testTicket", "testDescription", TicketPriority.HIGH,
-                    TicketStatus.IN_PROGRESS, LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, new ArrayList<>());
+                    "In progress", LocalDateTime.now().plusDays(1), TEST_PROJECT, TEST_USER, new ArrayList<>());
 
     public static final TicketComment TEST_TICKET_COMMENT =
             new TicketComment(UUID.randomUUID().toString(), TEST_TICKET, TEST_USER, "content", LocalDateTime.now().minusHours(2));

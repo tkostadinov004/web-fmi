@@ -4,12 +4,13 @@ import bg.sofia.uni.fmi.issuetracker.controller.common.PaginationLinkHeader;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketCommentService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tickets")
+@RequestMapping("/projects/{projectId}/tickets")
 @Tag(name = "Ticket", description = "Endpoints for ticket management")
 public class TicketController {
     private final TicketService ticketService;
@@ -48,7 +49,7 @@ public class TicketController {
         this.ticketCommentService = ticketCommentService;
     }
 
-    @Operation(summary = "Get ticket details", description = "Retrieves detailed information for a specific ticket by its code.")
+    @Operation(summary = "Get a ticket", description = "Retrieves a ticket by project and code.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ticket retrieved successfully",
                     content = @Content(schema = @Schema(implementation = TicketDetailsDTO.class))),
@@ -60,9 +61,8 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{code}")
-    public ResponseEntity<TicketDetailsDTO> getTicketByCode(
-            @Parameter(description = "Unique code identifier of the ticket", required = true) @PathVariable String code) {
-        return ResponseEntity.ok(ticketService.getTicketByCode(code));
+    public ResponseEntity<TicketDetailsDTO> getTicket(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId, @PathVariable String code) {
+        return ResponseEntity.ok(ticketService.getTicketByCode(projectId, code));
     }
 
     @Operation(summary = "Create a new ticket", description = "Creates a new ticket in the specified project with the provided details.")
@@ -82,12 +82,28 @@ public class TicketController {
     @PostMapping
     public ResponseEntity<Void> createTicket(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket creation data", required = true, content = @Content)
-            @Valid @RequestBody CreateTicketDTO dto) {
-        ticketService.createTicket(dto);
+            @Valid @RequestBody CreateTicketDTO dto, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.createTicket(projectId, dto);
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "Add dependent ticket", description = "Adds a new ticket as a dependent of a parent ticket. Both tickets must belong to the same project.")
+    @Operation(summary = "Get dependent tickets of a ticket", description = "Returns the dependent tickets of a given ticket")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Parent ticket not found in project",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/{parentCode}/dependents")
+    public ResponseEntity<List<DependentTicketDTO>> getDependentTickets(
+            @Parameter(description = "Code of the parent ticket", required = true) @PathVariable String parentCode,
+            @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        return ResponseEntity.ok(ticketService.getDependentTickets(projectId, parentCode));
+    }
+
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dependent ticket created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid ticket data",
@@ -105,8 +121,8 @@ public class TicketController {
     public ResponseEntity<Void> addDependentTicket(
             @Parameter(description = "Code of the parent ticket", required = true) @PathVariable String parentCode,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dependent ticket creation data", required = true, content = @Content)
-            @Valid @RequestBody CreateTicketDTO dto) {
-        ticketService.addDependentTicketToTicket(parentCode, dto);
+            @Valid @RequestBody CreateTicketDTO dto, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.addDependentTicketToTicket(projectId, parentCode, dto);
         return ResponseEntity.ok().build();
     }
 
@@ -124,8 +140,8 @@ public class TicketController {
     public ResponseEntity<Void> changeAssignee(
             @Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
             @Parameter(description = "Username of the new assignee", required = true) @RequestParam(required = true)
-            String assigneeUsername) {
-        ticketService.changeTicketAssignee(code, assigneeUsername);
+            String assigneeUsername, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.changeTicketAssignee(projectId, code, assigneeUsername);
         return ResponseEntity.noContent().build();
     }
 
@@ -141,8 +157,8 @@ public class TicketController {
     })
     @DeleteMapping("/{code}/assignee")
     public ResponseEntity<Void> changeAssignee(
-            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code) {
-        ticketService.removeTicketAssignee(code);
+            @Parameter(description = "Code of the ticket", required = true) @PathVariable String code, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.removeTicketAssignee(projectId, code);
         return ResponseEntity.noContent().build();
     }
 
@@ -164,8 +180,8 @@ public class TicketController {
     public ResponseEntity<Void> updateTicket(
             @Parameter(description = "Code of the ticket to update", required = true) @PathVariable String code,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Ticket update data", required = true, content = @Content)
-            @Valid @RequestBody UpdateTicketDTO dto) {
-        ticketService.updateTicket(code, dto);
+            @Valid @RequestBody UpdateTicketDTO dto, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.updateTicket(projectId, code, dto);
         return ResponseEntity.noContent().build();
     }
 
@@ -181,8 +197,8 @@ public class TicketController {
     })
     @DeleteMapping("/{code}")
     public ResponseEntity<Void> deleteTicket(
-            @Parameter(description = "Code of the ticket to delete", required = true) @PathVariable String code) {
-        ticketService.deleteTicket(code);
+            @Parameter(description = "Code of the ticket to delete", required = true) @PathVariable String code, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        ticketService.deleteTicket(projectId, code);
         return ResponseEntity.noContent().build();
     }
 
@@ -206,9 +222,9 @@ public class TicketController {
             @Parameter(description = "Number of comments per page", required = false)
             @RequestParam(name = "page_size", required = false, defaultValue = Constants.DEFAULT_PAGE_SIZE)
             Integer pageSize,
-            HttpServletRequest request) {
+            HttpServletRequest request, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
         Page<TicketCommentDetailsDTO> resultPage =
-                ticketCommentService.getAllCommentsForTicket(code, pageNumber, pageSize);
+                ticketCommentService.getAllCommentsForTicket(projectId, code, pageNumber, pageSize);
         PaginationLinkHeader linkHeader =
                 new PaginationLinkHeader(resultPage, request.getRequestURL().toString(), false);
 
@@ -234,9 +250,9 @@ public class TicketController {
     public ResponseEntity<Void> addCommentToTicket(
             @Parameter(description = "Code of the ticket", required = true) @PathVariable String code,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Comment creation data", required = true, content = @Content)
-            @Valid @RequestBody CreateTicketCommentDTO dto) {
+            @Valid @RequestBody CreateTicketCommentDTO dto, @Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
         String author = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        ticketCommentService.addTicketComment(author, code, dto);
+        ticketCommentService.addTicketComment(author, projectId, code, dto);
 
         return ResponseEntity.noContent().build();
     }
