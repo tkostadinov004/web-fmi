@@ -51,7 +51,7 @@ public class TicketControllerTests extends BaseControllerTests {
                 TicketPriority.MEDIUM, LocalDateTime.now(), LocalDateTime.now(), null, PROJECT_ID, null, List.of());
         when(ticketService.getTicketByCode(PROJECT_ID, "TICKET-1")).thenReturn(dto);
 
-        mockMvc.perform(get("/" + PROJECT_ID + "/tickets/TICKET-1"))
+        mockMvc.perform(get("/projects/" + PROJECT_ID + "/tickets/TICKET-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("TICKET-1"))
                 .andExpect(jsonPath("$.title").value("Title"));
@@ -61,7 +61,7 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testGetTicketByCode_ReturnsNotFoundWhenMissing() throws Exception {
         when(ticketService.getTicketByCode(PROJECT_ID, "MISSING")).thenThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)));
 
-        mockMvc.perform(get("/" + PROJECT_ID + "/tickets/MISSING"))
+        mockMvc.perform(get("/projects/" + PROJECT_ID + "/tickets/MISSING"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)));
     }
@@ -71,7 +71,7 @@ public class TicketControllerTests extends BaseControllerTests {
         CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", "In progress",
                 TicketPriority.HIGH, LocalDateTime.now().plusDays(2), "assignee");
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isOk());
@@ -81,7 +81,7 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testCreateTicket_ReturnsBadRequestOnInvalidData() throws Exception {
         CreateTicketDTO invalid = new CreateTicketDTO("", "", null, null, null, LocalDateTime.now().minusDays(1), null);
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest())
@@ -96,7 +96,7 @@ public class TicketControllerTests extends BaseControllerTests {
                 TicketPriority.HIGH, LocalDateTime.now().plusDays(2), null);
         when(ticketService.createTicket(PROJECT_ID, dto)).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), PROJECT_ID)));
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isConflict())
@@ -108,7 +108,7 @@ public class TicketControllerTests extends BaseControllerTests {
         CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details", "In progress",
                 TicketPriority.LOW, LocalDateTime.now().plusDays(2), null);
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isOk());
@@ -121,7 +121,7 @@ public class TicketControllerTests extends BaseControllerTests {
         doThrow(new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(dto.code(), "PARENT-1")))
                 .when(ticketService).addDependentTicketToTicket(PROJECT_ID, "PARENT-1", dto);
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isConflict())
@@ -130,7 +130,7 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testChangeAssignee_ReturnsNoContentWhenSuccessful() throws Exception {
-        mockMvc.perform(patch("/" + PROJECT_ID + "/tickets/CODE-1/assignee").param("assigneeUsername", "newuser"))
+        mockMvc.perform(patch("/projects/" + PROJECT_ID + "/tickets/CODE-1/assignee").param("assigneeUsername", "newuser"))
                 .andExpect(status().isNoContent());
     }
 
@@ -139,14 +139,14 @@ public class TicketControllerTests extends BaseControllerTests {
         doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)))
                 .when(ticketService).changeTicketAssignee(PROJECT_ID, "MISSING", "newuser");
 
-        mockMvc.perform(patch("/" + PROJECT_ID + "/tickets/MISSING/assignee").param("assigneeUsername", "newuser"))
+        mockMvc.perform(patch("/projects/" + PROJECT_ID + "/tickets/MISSING/assignee").param("assigneeUsername", "newuser"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)));
     }
 
     @Test
     public void testRemoveAssignee_ReturnsNoContentWhenSuccessful() throws Exception {
-        mockMvc.perform(delete("/" + PROJECT_ID + "/tickets/CODE-1/assignee"))
+        mockMvc.perform(delete("/projects/" + PROJECT_ID + "/tickets/CODE-1/assignee"))
                 .andExpect(status().isNoContent());
     }
 
@@ -155,7 +155,7 @@ public class TicketControllerTests extends BaseControllerTests {
         doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)))
                 .when(ticketService).removeTicketAssignee(PROJECT_ID, "MISSING");
 
-        mockMvc.perform(delete("/" + PROJECT_ID + "/tickets/MISSING/assignee"))
+        mockMvc.perform(delete("/projects/" + PROJECT_ID + "/tickets/MISSING/assignee"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)));
     }
@@ -165,7 +165,7 @@ public class TicketControllerTests extends BaseControllerTests {
         doThrow(new UnassignedTicketException(ExceptionMessages.Ticket.unassignedTicket("MISSING")))
                 .when(ticketService).removeTicketAssignee(PROJECT_ID, "MISSING");
 
-        mockMvc.perform(delete("/" + PROJECT_ID + "/tickets/MISSING/assignee"))
+        mockMvc.perform(delete("/projects/" + PROJECT_ID + "/tickets/MISSING/assignee"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.unassignedTicket("MISSING")));
     }
@@ -174,7 +174,7 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testUpdateTicket_ReturnsNoContentWhenSuccessful() throws Exception {
         UpdateTicketDTO dto = new UpdateTicketDTO("Updated Title", null, "In progress", TicketPriority.HIGHEST, LocalDateTime.now().plusDays(5));
 
-        mockMvc.perform(patch("/" + PROJECT_ID + "/tickets/CODE-1")
+        mockMvc.perform(patch("/projects/" + PROJECT_ID + "/tickets/CODE-1")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isNoContent());
@@ -184,7 +184,7 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testUpdateTicket_ReturnsBadRequestOnInvalidData() throws Exception {
         UpdateTicketDTO invalid = new UpdateTicketDTO("", null, null, null, LocalDateTime.now().minusDays(1));
 
-        mockMvc.perform(patch("/" + PROJECT_ID + "/tickets/CODE-1")
+        mockMvc.perform(patch("/projects/" + PROJECT_ID + "/tickets/CODE-1")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest())
@@ -193,7 +193,7 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testDeleteTicket_ReturnsNoContentWhenSuccessful() throws Exception {
-        mockMvc.perform(delete("/" + PROJECT_ID + "/tickets/CODE-1"))
+        mockMvc.perform(delete("/projects/" + PROJECT_ID + "/tickets/CODE-1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -202,7 +202,7 @@ public class TicketControllerTests extends BaseControllerTests {
         doThrow(new TicketNotFoundException(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)))
                 .when(ticketService).deleteTicket(PROJECT_ID, "MISSING");
 
-        mockMvc.perform(delete("/" + PROJECT_ID + "/tickets/MISSING"))
+        mockMvc.perform(delete("/projects/" + PROJECT_ID + "/tickets/MISSING"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(ExceptionMessages.Ticket.ticketNotFound("MISSING", PROJECT_ID)));
     }
@@ -213,7 +213,7 @@ public class TicketControllerTests extends BaseControllerTests {
         when(ticketCommentService.getAllCommentsForTicket(PROJECT_ID, "TICKET-1", 1, 10))
                 .thenReturn(new PageImpl<>(List.of(comment)));
 
-        mockMvc.perform(get("/" + PROJECT_ID + "/tickets/TICKET-1/comments"))
+        mockMvc.perform(get("/projects/" + PROJECT_ID + "/tickets/TICKET-1/comments"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Link", containsString("rel=")))
                 .andExpect(jsonPath("$[0].uuid").value("UUID-1"));
@@ -224,7 +224,7 @@ public class TicketControllerTests extends BaseControllerTests {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("author", null));
         CreateTicketCommentDTO dto = new CreateTicketCommentDTO("New comment");
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets/TICKET-1/comments")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/TICKET-1/comments")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isNoContent());
@@ -234,7 +234,7 @@ public class TicketControllerTests extends BaseControllerTests {
     public void testAddCommentToTicket_ReturnsBadRequestWhenInvalidData() throws Exception {
         CreateTicketCommentDTO invalid = new CreateTicketCommentDTO("");
 
-        mockMvc.perform(post("/" + PROJECT_ID + "/tickets/TICKET-1/comments")
+        mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/TICKET-1/comments")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest())
@@ -243,6 +243,6 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testUnauthorizedRequest_ReturnsUnauthorized() throws Exception {
-        super.unauthorizedRequest(get("/" + PROJECT_ID + "/tickets/TICKET-1"));
+        super.unauthorizedRequest(get("/projects/" + PROJECT_ID + "/tickets/TICKET-1"));
     }
 }
