@@ -2,7 +2,6 @@ package bg.sofia.uni.fmi.issuetracker.dto.output.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.model.ticket.Ticket;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ public record TicketDetailsDTO(
         @Schema(description = "Detailed description of the ticket.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         String description,
         @Schema(description = "Current status of the ticket (e.g., OPEN, IN_PROGRESS, CLOSED).", requiredMode = Schema.RequiredMode.REQUIRED)
-        TicketStatus ticketStatus,
+        String ticketStatus,
         @Schema(description = "Priority level of the ticket (e.g., LOW, MEDIUM, HIGH, CRITICAL).", requiredMode = Schema.RequiredMode.REQUIRED)
         TicketPriority ticketPriority,
         @Schema(description = "Timestamp when the ticket was created. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.REQUIRED, type = "string", format = "date-time")

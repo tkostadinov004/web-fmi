@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.issuetracker.service.contract;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.CreateProjectUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
@@ -111,4 +112,21 @@ public interface ProjectService {
      * @throws ProjectNotFoundException if the project cannot be found
      */
     void deleteProject(String projectId);
+    /**
+     * Adds a workflow definition for the specified project.
+     *
+     * @param projectId the UUID of the project
+     * @param dto the workflow definition DTO containing statuses and transitions
+     * @throws ProjectNotFoundException when the project does not exist
+     * @throws IllegalArgumentException when the provided workflow is invalid
+     */
+    void addProjectWorkflow(String projectId, ProjectWorkflowDTO dto);
+
+    /**
+     * Deletes the workflow associated with the specified project.
+     *
+     * @param projectId the UUID of the project
+     * @throws ProjectNotFoundException when the project does not exist
+     */
+    void deleteProjectWorkflow(String projectId);
 }

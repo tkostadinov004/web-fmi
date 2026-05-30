@@ -10,6 +10,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
@@ -157,6 +158,12 @@ public class ExceptionHandlers {
 
     @ExceptionHandler({InvalidFileFormatException.class})
     public ResponseEntity<ErrorResponse> handleInvalidFileFormat(InvalidFileFormatException ex) {
+        LOGGER.error(ex.getMessage());
+        return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler({InvalidWorkflowException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidWorkflow(InvalidWorkflowException ex) {
         LOGGER.error(ex.getMessage());
         return ResponseEntity.badRequest().body(buildErrorResponse(ex.getMessage()));
     }

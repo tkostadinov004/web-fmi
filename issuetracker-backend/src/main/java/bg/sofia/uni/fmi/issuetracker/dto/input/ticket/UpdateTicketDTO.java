@@ -1,7 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.dto.input.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
@@ -17,7 +16,7 @@ public record UpdateTicketDTO(@Size(max = 100, message = ValidationConstants.Tic
                               @Schema(description = "Updated description of the ticket. Optional, maximum 500 characters.", requiredMode = Schema.RequiredMode.NOT_REQUIRED, maxLength = 500)
                               String description,
                               @Schema(description = "Updated status of the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-                              TicketStatus ticketStatus,
+                              String ticketStatus,
                               @Schema(description = "Updated priority level of the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
                               TicketPriority ticketPriority,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)

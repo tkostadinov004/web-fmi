@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -23,7 +24,10 @@ public class TicketComment {
     private String uuid;
 
     @ManyToOne
-    @JoinColumn(name = "ticket_code")
+    @JoinColumns({
+            @JoinColumn(name = "ticket_code"),
+            @JoinColumn(name = "ticket_project_uuid")
+    })
     private Ticket ticket;
 
     @ManyToOne

@@ -3,6 +3,8 @@ package bg.sofia.uni.fmi.issuetracker.utils.messages;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 
+import java.util.List;
+
 public class ExceptionMessages {
     private static final String INVALID_URL = "Invalid URL!";
 
@@ -64,6 +66,9 @@ public class ExceptionMessages {
         private static final String PROJECT_NOT_FOUND = "Project with UUID %s is not found!";
         private static final String USER_NOT_IN_PROJECT = "User %s is not part of project %s!";
         private static final String PROJECT_ALREADY_EXISTS = "Project with UUID %s already exists!";
+        private static final String INVALID_SOURCE_STATUS = "Invalid source status! Possible statuses are: %s";
+        private static final String INVALID_TARGET_STATUS = "Invalid target status! Possible statuses are: %s";
+        private static final String TRANSITION_BUCKLE = "Source and target cannot be equal!";
 
         public static String projectNotFound(String projectId) {
             return PROJECT_NOT_FOUND.formatted(projectId);
@@ -75,6 +80,18 @@ public class ExceptionMessages {
 
         public static String projectAlreadyExists(String projectId) {
             return PROJECT_ALREADY_EXISTS.formatted(projectId);
+        }
+
+        public static String invalidSourceStatus(List<String> statuses) {
+            return INVALID_SOURCE_STATUS.formatted(String.join(", ", statuses));
+        }
+
+        public static String invalidTargetStatus(List<String> statuses) {
+            return INVALID_TARGET_STATUS.formatted(String.join(", ", statuses));
+        }
+
+        public static String transitionBuckle() {
+            return TRANSITION_BUCKLE;
         }
     }
 
@@ -155,10 +172,10 @@ public class ExceptionMessages {
             return TICKET_ALREADY_EXISTS.formatted(code, projectUuid);
         }
 
-        private static final String TICKET_NOT_FOUND = "Ticket '%s' not found!";
+        private static final String TICKET_NOT_FOUND = "Ticket '%s' not found in project '%s'!";
 
-        public static String ticketNotFound(String code) {
-            return TICKET_NOT_FOUND.formatted(code);
+        public static String ticketNotFound(String code, String projectId) {
+            return TICKET_NOT_FOUND.formatted(code, projectId);
         }
 
         private static final String TICKET_PROJECT_MISMATCH =
@@ -173,6 +190,13 @@ public class ExceptionMessages {
 
         public static String unassignedTicket(String ticketCode) {
             return UNASSIGNED_TICKET.formatted(ticketCode);
+        }
+
+        private static final String INVALID_STATUS =
+                "Invalid ticket status! Possible ticket statuses are: %s";
+
+        public static String invalidStatus(List<String> validStatuses) {
+            return INVALID_STATUS.formatted(String.join(", ", validStatuses));
         }
     }
 

@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketCommentDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketCommentService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketCommentService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

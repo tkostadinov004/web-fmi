@@ -12,9 +12,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProje
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
-import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketStatus;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
-import bg.sofia.uni.fmi.issuetracker.service.contract.ticket.TicketService;
+import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -175,7 +174,7 @@ public class ProjectControllerTests extends BaseControllerTests {
 
     @Test
     public void testGetAllTicketsByProject_ReturnsOk() throws Exception {
-        TicketDetailsDTO dto = new TicketDetailsDTO("Ticket-1", "Title", "Description", TicketStatus.IN_PROGRESS,
+        TicketDetailsDTO dto = new TicketDetailsDTO("Ticket-1", "Title", "Description", "In progress",
                 TicketPriority.HIGH, LocalDateTime.now(), LocalDateTime.now(), null, "project-uuid", null, List.of());
         when(ticketService.getAllTicketsByProject(dto.projectUuid())).thenReturn(List.of(dto));
 

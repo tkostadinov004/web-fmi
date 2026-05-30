@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
@@ -10,8 +11,12 @@ import bg.sofia.uni.fmi.issuetracker.model.project.Project;
 import bg.sofia.uni.fmi.issuetracker.model.project.ProjectUser;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectUserRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.repository.ticket.TicketRepository;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
+import bg.sofia.uni.fmi.issuetracker.repository.neo.NeoProjectRepository;
+import bg.sofia.uni.fmi.issuetracker.repository.neo.WorkflowRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.ProjectMapper;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.junit.jupiter.api.Test;
@@ -54,6 +59,10 @@ public class ProjectServiceImplTests {
     private ProjectUserRepository projectUserRepository;
     @Mock
     private TicketRepository ticketRepository;
+    @Mock
+    private NeoProjectRepository neoProjectRepository;
+    @Mock
+    private WorkflowRepository workflowRepository;
     @Mock
     private ProjectMapper projectMapper;
 
@@ -331,6 +340,86 @@ public class ProjectServiceImplTests {
 
         verify(projectMapper, times(1)).patchProjectFromDTO(UPDATE_PROJECT_DTO, TEST_PROJECT);
         verify(projectRepository, times(1)).save(TEST_PROJECT);
+    }
+
+    @Test
+    void testAddProjectWorkflow_ThrowsOnNonexistentProject() {
+        String projectId = "non-existent";
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("To do", "Done")));
+
+        when(projectRepository.existsById(projectId)).thenReturn(false);
+
+        assertThatThrownBy(() -> projectService.addProjectWorkflow(projectId, dto))
+                .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
+                .isExactlyInstanceOf(ProjectNotFoundException.class);
+    }
+
+    @Test
+    void testAddProjectWorkflow_ThrowsWhenTransitionSourceIsInvalid() {
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("Backlog", "Done")));
+
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+
+        assertThatThrownBy(() -> projectService.addProjectWorkflow(TEST_PROJECT.getUuid(), dto))
+                .hasMessage(ExceptionMessages.Project.invalidSourceStatus(dto.workflowStatuses()))
+                .isExactlyInstanceOf(InvalidWorkflowException.class);
+    }
+
+    @Test
+    void testAddProjectWorkflow_ThrowsWhenTransitionTargetIsInvalid() {
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("To do", "Blocked")));
+
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+
+        assertThatThrownBy(() -> projectService.addProjectWorkflow(TEST_PROJECT.getUuid(), dto))
+                .hasMessage(ExceptionMessages.Project.invalidTargetStatus(dto.workflowStatuses()))
+                .isExactlyInstanceOf(InvalidWorkflowException.class);
+    }
+
+    @Test
+    void testAddProjectWorkflow_ThrowsWhenSourceAndTargetMatch() {
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("To do", "To do")));
+
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+
+        assertThatThrownBy(() -> projectService.addProjectWorkflow(TEST_PROJECT.getUuid(), dto))
+                .hasMessage(ExceptionMessages.Project.transitionBuckle())
+                .isExactlyInstanceOf(InvalidWorkflowException.class);
+    }
+
+    @Test
+    void testAddProjectWorkflow_SuccessfullyCreatesWorkflow() {
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("To do", "Done")));
+
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+
+        projectService.addProjectWorkflow(TEST_PROJECT.getUuid(), dto);
+
+        verify(workflowRepository, times(1)).createWorkflow(TEST_PROJECT.getUuid(), dto);
+    }
+
+    @Test
+    void testDeleteProjectWorkflow_ThrowsOnNonexistentProject() {
+        String projectId = "non-existent";
+        when(projectRepository.existsById(projectId)).thenReturn(false);
+
+        assertThatThrownBy(() -> projectService.deleteProjectWorkflow(projectId))
+                .hasMessage(ExceptionMessages.Project.projectNotFound(projectId))
+                .isExactlyInstanceOf(ProjectNotFoundException.class);
+    }
+
+    @Test
+    void testDeleteProjectWorkflow_SuccessfullyDeletesWorkflow() {
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+
+        projectService.deleteProjectWorkflow(TEST_PROJECT.getUuid());
+
+        verify(workflowRepository, times(1)).deleteWorkflow(TEST_PROJECT.getUuid());
     }
 
     @Test
