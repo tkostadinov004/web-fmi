@@ -283,7 +283,8 @@ public class ProjectController {
     @GetMapping("/{projectId}/workflow")
     @Operation(summary = "Get project workflow", description = "Gets the workflow for a project.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Workflow returned successfully"),
+            @ApiResponse(responseCode = "200", description = "Workflow returned successfully",
+                    content = @Content(schema = @Schema(implementation = ProjectWorkflowDTO.class))),
             @ApiResponse(responseCode = "404", description = "Project not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
