@@ -6,6 +6,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.UpdateProjectDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
@@ -112,15 +113,24 @@ public interface ProjectService {
      * @throws ProjectNotFoundException if the project cannot be found
      */
     void deleteProject(String projectId);
+
     /**
      * Adds a workflow definition for the specified project.
      *
      * @param projectId the UUID of the project
-     * @param dto the workflow definition DTO containing statuses and transitions
+     * @param dto       the workflow definition DTO containing statuses and transitions
      * @throws ProjectNotFoundException when the project does not exist
-     * @throws IllegalArgumentException when the provided workflow is invalid
+     * @throws InvalidWorkflowException when the provided workflow is invalid
      */
     void addProjectWorkflow(String projectId, ProjectWorkflowDTO dto);
+
+    /**
+     * Returns the workflow of a project.
+     *
+     * @param projectId the UUID of the project
+     * @throws ProjectNotFoundException when the project does not exist
+     */
+    ProjectWorkflowDTO getProjectWorkflow(String projectId);
 
     /**
      * Deletes the workflow associated with the specified project.

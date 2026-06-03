@@ -5,6 +5,8 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowD
 import java.util.List;
 
 public interface WorkflowRepository {
+    ProjectWorkflowDTO getWorkflow(String projectId);
+
     void createWorkflow(String projectId, ProjectWorkflowDTO dto);
 
     void deleteWorkflow(String projectId);

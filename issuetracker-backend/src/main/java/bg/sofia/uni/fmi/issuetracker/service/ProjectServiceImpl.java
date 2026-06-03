@@ -187,7 +187,16 @@ public class ProjectServiceImpl implements ProjectService {
 
         workflowRepository.createWorkflow(projectId, dto);
     }
-    
+
+    @Override
+    public ProjectWorkflowDTO getProjectWorkflow(String projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new ProjectNotFoundException(ExceptionMessages.Project.projectNotFound(projectId));
+        }
+
+        return workflowRepository.getWorkflow(projectId);
+    }
+
     @Override
     public void deleteProjectWorkflow(String projectId) {
         if (!projectRepository.existsById(projectId)) {
