@@ -280,6 +280,19 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{projectId}/workflow")
+    @Operation(summary = "Get project workflow", description = "Gets the workflow for a project.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Workflow returned successfully"),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<ProjectWorkflowDTO> getWorkflow(@Parameter(description = "UUID of the project", required = true) @PathVariable String projectId) {
+        return ResponseEntity.ok(projectService.getProjectWorkflow(projectId));
+    }
+
     @PostMapping("/{projectId}/workflow")
     @Operation(summary = "Create or replace project workflow", description = "Creates a new workflow for the project. Validates statuses and transitions.")
     @ApiResponses({

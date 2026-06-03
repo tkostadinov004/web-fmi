@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransiti
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
+import org.neo4j.driver.Value;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,6 +19,35 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
     public WorkflowRepositoryImpl(Driver driver, SessionConfig sessionConfig) {
         this.driver = driver;
         this.sessionConfig = sessionConfig;
+    }
+
+    @Override
+    public ProjectWorkflowDTO getWorkflow(String projectId) {
+        try (Session session = driver.session(sessionConfig)) {
+            org.neo4j.driver.Record query = session.executeRead(tx ->
+                    tx.run("""
+                            MATCH (p:Project {id: $projectId})-[:WORKFLOW]->(initial:Status)
+                            MATCH (initial)-[:TRANSITION*0..]->(s:Status)
+                            WITH initial, collect(DISTINCT s) AS allStatuses
+                            
+                            UNWIND allStatuses AS statusNode
+                            MATCH (statusNode)-[r:TRANSITION]->(:Status)
+                            WITH initial, allStatuses, collect(DISTINCT r) AS relationships
+                            
+                            RETURN
+                              [status IN allStatuses | status.name] AS workflowStatuses,
+                              initial.name AS initialStatus,
+                              [rel IN relationships | {
+                                source: startNode(rel).name,
+                                target: endNode(rel).name
+                              }] AS transitions
+                            """, Map.of("projectId", projectId)).single());
+            return new ProjectWorkflowDTO(
+                    query.get("workflowStatuses").asList(Value::asString),
+                    query.get("initialStatus").asString(),
+                    query.get("transitions").asList(v -> v.as(WorkflowTransitionDTO.class))
+            );
+        }
     }
 
     @Override
