@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ticketService } from '../../services/ticketService';
 
-const AssigneeSelect = ({ ticket, onUpdate }) => {
+const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
   const [users, setUsers] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -21,7 +21,7 @@ const AssigneeSelect = ({ ticket, onUpdate }) => {
     setIsUpdating(true);
     try {
       // Подаваме кода на билета и новото име (или празен низ) към сървиса
-      await ticketService.updateAssignee(ticket.code, newUsername);
+      await ticketService.updateAssignee(projectId, ticket.code, newUsername);
 
       // Обновяваме локалния стейт на модала
       if (newUsername === "") {

@@ -12,8 +12,8 @@ const getHeaders = () => {
 };
 
 export const ticketService = {
-    getTicket: async (ticketCode) => {
-        const response = await fetch(`${API_BASE}/tickets/${ticketCode}`, {
+    getTicket: async (projectId, ticketCode) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/tickets/${ticketCode}`, {
             method: 'GET',
             headers: getHeaders()
         });
@@ -25,8 +25,8 @@ export const ticketService = {
         return response.json();
     },
 
-    updateTicket: async (ticketCode, data) => {
-        const response = await fetch(`${API_BASE}/tickets/${ticketCode}`, {
+    updateTicket: async (projectId, ticketCode, data) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/tickets/${ticketCode}`, {
             method: 'PATCH',
             headers: getHeaders(),
             body: JSON.stringify(data)
@@ -36,12 +36,11 @@ export const ticketService = {
             throw new Error('Грешка при обновяване на билета.');
         }
 
-        // Често PATCH заявките не връщат JSON, затова просто връщаме response
         return response; 
     },
 
-    getComments: async (ticketCode) => {
-        const response = await fetch(`${API_BASE}/tickets/${ticketCode}/comments?page_number=1&page_size=50`, {
+    getComments: async (projectId, ticketCode) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/tickets/${ticketCode}/comments?page_number=1&page_size=50`, {
             method: 'GET',
             headers: getHeaders()
         });
@@ -53,8 +52,8 @@ export const ticketService = {
         return response.json();
     },
 
-    addComment: async (ticketCode, content) => {
-        const response = await fetch(`${API_BASE}/tickets/${ticketCode}/comments`, {
+    addComment: async (projectId, ticketCode, content) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/tickets/${ticketCode}/comments`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({ content })
@@ -62,6 +61,24 @@ export const ticketService = {
 
         if (!response.ok) {
             throw new Error('Не успяхме да добавим коментара.');
+        }
+
+        return response;
+    },
+    
+    updateAssignee: async (projectId, ticketCode, username) => {
+        const method = username === "" ? 'DELETE' : 'PATCH';
+        const url = username === "" 
+            ? `${API_BASE}/projects/${projectId}/tickets/${ticketCode}/assignee`
+            : `${API_BASE}/projects/${projectId}/tickets/${ticketCode}/assignee?assigneeUsername=${username}`;
+
+        const response = await fetch(url, { 
+            method, 
+            headers: getHeaders() 
+        });
+
+        if (!response.ok) {
+            throw new Error('Грешка при промяна на изпълнител');
         }
 
         return response;
@@ -107,23 +124,5 @@ export const ticketService = {
         }
 
         return response.json();
-    },
-
-    updateAssignee: async (ticketCode, username) => {
-        const method = username === "" ? 'DELETE' : 'PATCH';
-        const url = username === "" 
-            ? `${API_BASE}/tickets/${ticketCode}/assignee`
-            : `${API_BASE}/tickets/${ticketCode}/assignee?assigneeUsername=${username}`;
-
-        const response = await fetch(url, { 
-            method, 
-            headers: getHeaders() 
-        });
-
-        if (!response.ok) {
-            throw new Error('Грешка при промяна на изпълнител');
-        }
-
-        return response;
     }
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ticketService } from '../../services/ticketService';
 
-const EditableDescription = ({ ticketCode, initialDescription, onDescriptionUpdate }) => {
+const EditableDescription = ({ projectId, ticketCode, initialDescription, onDescriptionUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [text, setText] = useState(initialDescription || '');
     const [isSaving, setIsSaving] = useState(false);
@@ -19,7 +19,7 @@ const EditableDescription = ({ ticketCode, initialDescription, onDescriptionUpda
         setIsSaving(true);
 
         try {
-            await ticketService.updateTicket(ticketCode, { description: text });
+            await ticketService.updateTicket(projectId, ticketCode, { description: text });
             onDescriptionUpdate(text);
             setIsEditing(false);
         } catch (error) {

@@ -1,55 +1,135 @@
 import React, { useState, useEffect } from 'react';
-import { workflowService } from '../../services/WorkflowService';
+import { workflowService } from '../../services/workflowService';
+import WorkflowMatrix from './WorkflowMatrix';
 
-const STATUS_OPTIONS = ['TO_DO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
-
-const WorkflowEditor = ({ canEdit, onClose }) => {
+const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
   const [workflow, setWorkflow] = useState(null);
   const [originalWorkflow, setOriginalWorkflow] = useState(null);
+  const [isNewWorkflow, setIsNewWorkflow] = useState(false); 
   
+  const [newStatusText, setNewStatusText] = useState(''); 
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    workflowService.getWorkflow().then((data) => {
-      setWorkflow(data);
-      setOriginalWorkflow(data);
-      setIsLoading(false);
-    });
-  }, []);
+    const fetchWorkflow = async () => {
+      setIsLoading(true);
+      try {
+        const data = await workflowService.getWorkflow(projectId);
+        setWorkflow(data);
+        setOriginalWorkflow(data);
+        setIsNewWorkflow(false);
+      } catch (error) {
+        console.warn("Проектът няма workflow, създаваме нов по подразбиране.");
+        const defaultWf = {
+          workflowStatuses: ['TO_DO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'],
+          initialStatus: 'TO_DO',
+          transitions: []
+        };
+        setWorkflow(defaultWf);
+        setOriginalWorkflow(defaultWf);
+        setIsNewWorkflow(true); 
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleCheckboxChange = (fromStatus, toStatus, isChecked) => {
-    setWorkflow((prevWorkflow) => {
-      const currentDestinations = prevWorkflow[fromStatus] || [];
-      let newDestinations;
+    if (projectId) {
+      fetchWorkflow();
+    }
+  }, [projectId]);
+
+  const handleCheckboxChange = (sourceStatus, targetStatus, isChecked) => {
+    setWorkflow((prev) => {
+      let updatedTransitions = [...prev.transitions];
       
       if (isChecked) {
-        newDestinations = [...currentDestinations, toStatus];
+        updatedTransitions.push({ source: sourceStatus, target: targetStatus });
       } else {
-        newDestinations = currentDestinations.filter((status) => status !== toStatus);
+        updatedTransitions = updatedTransitions.filter(
+          (t) => !(t.source === sourceStatus && t.target === targetStatus)
+        );
       }
 
-      return { ...prevWorkflow, [fromStatus]: newDestinations };
+      return { ...prev, transitions: updatedTransitions };
+    });
+  };
+
+  const handleAddCustomStatus = () => {
+    if (!newStatusText.trim()) return;
+    
+    const formattedStatus = newStatusText.trim().toUpperCase().replace(/\s+/g, '_');
+    
+    if (!workflow.workflowStatuses.includes(formattedStatus)) {
+      setWorkflow((prev) => ({
+        ...prev,
+        workflowStatuses: [...prev.workflowStatuses, formattedStatus]
+      }));
+    }
+    setNewStatusText('');
+  };
+
+  const handleDeleteStatus = (statusToDelete) => {
+    if (statusToDelete === workflow.initialStatus) {
+      alert("Не можете да изтриете началния статус. Първо изберете друг от падащото меню.");
+      return;
+    }
+
+    const isConfirmed = window.confirm(`Сигурни ли сте, че искате да изтриете статус "${statusToDelete.replace(/_/g, ' ')}"? Това ще премахне и всички връзки към него.`);
+    if (!isConfirmed) return;
+
+    setWorkflow((prev) => {
+      // Махаме го от списъка със статуси
+      const updatedStatuses = prev.workflowStatuses.filter(s => s !== statusToDelete);
+      
+      // Махаме всички преходи, в които участва
+      const updatedTransitions = prev.transitions.filter(
+        t => t.source !== statusToDelete && t.target !== statusToDelete
+      );
+
+      return {
+        ...prev,
+        workflowStatuses: updatedStatuses,
+        transitions: updatedTransitions
+      };
     });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    await workflowService.saveWorkflow(workflow);
-    setOriginalWorkflow(workflow);
-    setIsSaving(false);
-    setIsEditMode(false);
+    try {
+      if (isNewWorkflow) {
+        await workflowService.createWorkflow(projectId, workflow); 
+        setIsNewWorkflow(false);
+      } else {
+        await workflowService.updateWorkflow(projectId, workflow); 
+      }
+      
+      setOriginalWorkflow(workflow);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error(error);
+      alert('Грешка при запазване на workflow.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
-    setWorkflow(originalWorkflow);
+    setWorkflow(originalWorkflow); 
     setIsEditMode(false);
+    setNewStatusText('');
   };
 
   if (isLoading) {
     return <div className="workflow-loading">Зареждане на правилата...</div>;
   }
+
+  const activeTransitions = new Set(
+    workflow?.transitions.map(t => `${t.source}-${t.target}`) || []
+  );
 
   return (
     <div className="workflow-editor-container">
@@ -60,46 +140,44 @@ const WorkflowEditor = ({ canEdit, onClose }) => {
           : "Разгледайте към кои статуси може да преминава даден билет."}
       </p>
 
-      <table className="workflow-matrix">
-        <thead>
-          <tr>
-            <th>От \ Към</th>
-            {STATUS_OPTIONS.map((status) => (
-              <th key={status}>{status.replace('_', ' ')}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {STATUS_OPTIONS.map((rowStatus) => (
-            <tr key={rowStatus}>
-              <td className="row-header">
-                <strong>{rowStatus.replace('_', ' ')}</strong>
-              </td>
-              {STATUS_OPTIONS.map((colStatus) => {
-                const isAllowed = workflow[rowStatus]?.includes(colStatus);
-                const isSameStatus = rowStatus === colStatus;
-
-                return (
-                  <td key={colStatus} className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={isAllowed || false}
-                      // НОВО: Чекбоксът е активен САМО ако сме в Edit Mode
-                      disabled={!isEditMode || isSameStatus || isSaving}
-                      onChange={(e) => 
-                        handleCheckboxChange(rowStatus, colStatus, e.target.checked)
-                      }
-                    />
-                  </td>
-                );
-              })}
-            </tr>
+      <div className="workflow-initial-status" style={{ marginBottom: '15px' }}>
+        <label><strong>Начален статус на нов билет: </strong></label>
+        <select 
+          value={workflow.initialStatus} 
+          onChange={(e) => setWorkflow({...workflow, initialStatus: e.target.value})}
+          disabled={!isEditMode || isSaving}
+        >
+          {workflow.workflowStatuses.map(status => (
+            <option key={status} value={status}>{status.replace(/_/g, ' ')}</option>
           ))}
-        </tbody>
-      </table>
+        </select>
+      </div>
 
-      <div className="workflow-actions">
-        
+      <WorkflowMatrix 
+        workflow={workflow}
+        activeTransitions={activeTransitions}
+        isEditMode={isEditMode}
+        isSaving={isSaving}
+        onCheckboxChange={handleCheckboxChange}
+        onDeleteStatus={handleDeleteStatus} 
+      />
+
+      {isEditMode && (
+        <div className="workflow-add-status" style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+          <input 
+            type="text" 
+            placeholder="Име на нов статус (напр. QA)" 
+            value={newStatusText}
+            onChange={(e) => setNewStatusText(e.target.value)}
+            disabled={isSaving}
+          />
+          <button onClick={handleAddCustomStatus} disabled={isSaving || !newStatusText.trim()}>
+            Добави статус
+          </button>
+        </div>
+      )}
+
+      <div className="workflow-actions" style={{ marginTop: '20px' }}>
         {!isEditMode && (
           <>
             <button 
@@ -118,23 +196,14 @@ const WorkflowEditor = ({ canEdit, onClose }) => {
 
         {isEditMode && (
           <>
-            <button 
-              className="save-btn" 
-              onClick={handleSave} 
-              disabled={isSaving}
-            >
+            <button className="save-btn" onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Запазване...' : 'Запази промените'}
             </button>
-            <button 
-              className="cancel-btn" 
-              onClick={handleCancelEdit} 
-              disabled={isSaving}
-            >
+            <button className="cancel-btn" onClick={handleCancelEdit} disabled={isSaving}>
               Отказ
             </button>
           </>
         )}
-        
       </div>
     </div>
   );

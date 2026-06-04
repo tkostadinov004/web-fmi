@@ -1,26 +1,61 @@
-// Фалшиви данни, които имитират отговора от бекенда
-const MOCK_WORKFLOW = {
-  "TO_DO": ["IN_PROGRESS"],
-  "IN_PROGRESS": ["TO_DO", "IN_REVIEW", "DONE"],
-  "IN_REVIEW": ["IN_PROGRESS", "DONE"],
-  "DONE": ["IN_PROGRESS"]
+const API_BASE = '/api';
+
+const getHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
 };
 
 export const workflowService = {
-  getWorkflow: () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(MOCK_WORKFLOW);
-      }, 500);
-    });
-  },
+    getWorkflow: async (projectId) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
+            method: 'GET',
+            headers: getHeaders()
+        });
 
-  saveWorkflow: (newWorkflowData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("Данните са 'запазени' в бекенда:", newWorkflowData);
-        resolve({ success: true });
-      }, 500);
-    });
-  }
+        if (!response.ok) {
+            throw new Error('Грешка при зареждане на workflow.');
+        }
+        return response.json();
+    },
+
+    createWorkflow: async (projectId, workflowData) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(workflowData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Грешка при създаване на workflow.');
+        }
+        return response; 
+    },
+
+    updateWorkflow: async (projectId, workflowData) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(workflowData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Грешка при обновяване на workflow.');
+        }
+        return response; 
+    },
+    
+    deleteWorkflow: async (projectId) => {
+        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Грешка при изтриване на workflow.');
+        }
+        return response; 
+    }
 };
