@@ -5,7 +5,7 @@ import TicketHeader from './TicketHeader';
 import TicketContent from './TicketContent';
 import { ticketService } from '../../services/ticketService';
 
-const TicketModal = ({ ticketCode, onClose }) => {
+const TicketModal = ({projectId, ticketCode, onClose }) => {
     const [ticket, setTicket] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -16,7 +16,7 @@ const TicketModal = ({ ticketCode, onClose }) => {
             setError(null);
 
             try {
-                const data = await ticketService.getTicket(ticketCode);
+                const data = await ticketService.getTicket(projectId, ticketCode);
                 setTicket(data);
             } catch (err) {
                 setError(err.message);
@@ -25,10 +25,10 @@ const TicketModal = ({ ticketCode, onClose }) => {
             }
         };
 
-        if (ticketCode) {
+        if (projectId && ticketCode) {
             fetchTicketDetails();
         }
-    }, [ticketCode]); // everytime when ticketCode changed
+    }, [projectId, ticketCode]); // everytime when ticketCode changed or projectID
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -49,10 +49,12 @@ const TicketModal = ({ ticketCode, onClose }) => {
                         />
                         <div className="modal-body">
                             <TicketContent
+                                projectId={projectId}
                                 ticket={ticket}
                                 onUpdate={(updatedTicket) => setTicket(updatedTicket)}
                             />
                             <TicketSidebar
+                                projectId={projectId}
                                 ticket={ticket}
                                 onUpdate={(updatedTicket) => setTicket(updatedTicket)}
                             />

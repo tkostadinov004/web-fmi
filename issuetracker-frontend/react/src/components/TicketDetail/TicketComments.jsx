@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CommentItem from './CommentItem';
 import { ticketService } from '../../services/ticketService';
 
-const TicketComments = ({ ticketCode }) => {
+const TicketComments = ({ projectId, ticketCode }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newCommentText, setNewCommentText] = useState('');
@@ -11,7 +11,7 @@ const TicketComments = ({ ticketCode }) => {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const data = await ticketService.getComments(ticketCode);
+      const data = await ticketService.getComments(projectId, ticketCode);
       setComments(data);
     } catch (error) {
       console.error('Сървърна грешка:', error);
@@ -21,17 +21,17 @@ const TicketComments = ({ ticketCode }) => {
   };
 
   useEffect(() => {
-    if (ticketCode) {
+    if (projectId && ticketCode) {
       fetchComments();
     }
-  }, [ticketCode]);
+  }, [projectId, ticketCode]);
 
   const handlePostComment = async () => {
     if (!newCommentText.trim()) return;
 
     setIsPosting(true);
     try {
-      await ticketService.addComment(ticketCode, newCommentText);
+      await ticketService.addComment(projectId, ticketCode, newCommentText);
       setNewCommentText('');
       fetchComments();
     } catch (error) {
@@ -50,7 +50,7 @@ const TicketComments = ({ ticketCode }) => {
       
       <div className="add-comment-box">
         <div className="add-comment-avatar">
-           {/* Тук по-късно може да сложим профилната снимка на логнатия потребител */}
+           {/* профилната снимка на логнатия потребител */}
           <i className="fa-solid fa-user"></i>
         </div>
         <div className="add-comment-input-area">

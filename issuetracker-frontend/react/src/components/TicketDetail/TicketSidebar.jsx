@@ -4,10 +4,10 @@ import SidebarDates from './SidebarDates';
 import { ticketService } from '../../services/ticketService';
 import { workflowService } from '../../services/workflowService';
 
-const STATUS_OPTIONS = ['TO_DO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
+const FALLBACK_STATUSES = ['TO_DO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 const PRIORITY_OPTIONS = ['LOWEST', 'LOW', 'MEDIUM', 'HIGH', 'HIGHEST'];
 
-const TicketSidebar = ({ ticket, onUpdate }) => {
+const TicketSidebar = ({ projectId, ticket, onUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [allowedStatuses, setAllowedStatuses] = useState([ticket.ticketStatus]);
@@ -15,29 +15,34 @@ const TicketSidebar = ({ ticket, onUpdate }) => {
   useEffect(() => {
     const fetchAllowedTransitions = async () => {
       try {
-        const rules = await workflowService.getWorkflow();
+        // 1. Подаваме projectId
+        const workflowData = await workflowService.getWorkflow(projectId);
         
-        // Взимаме до кои статуси можем да стигнем от текущия
-        const possibleTransitions = rules[ticket.ticketStatus] || [];
+        // 2. Филтрираме новия масив transitions, за да намерим накъде можем да отидем
+        const possibleTransitions = workflowData.transitions
+          .filter(t => t.source === ticket.ticketStatus)
+          .map(t => t.target);
         
-        // В падащото меню винаги трябва да виждаме ТЕКУЩИЯ си статус + позволените нови
-        setAllowedStatuses([ticket.ticketStatus, ...possibleTransitions]);
+        // 3. Комбинираме текущия статус и позволените (ползваме Set, за да сме сигурни, че няма дубликати)
+        const uniqueStatuses = Array.from(new Set([ticket.ticketStatus, ...possibleTransitions]));
+        setAllowedStatuses(uniqueStatuses);
       } catch (error) {
         console.error("Грешка при зареждане на workflow", error);
-        // Fallback: Ако сървърът гръмне, позволяваме всички опции, за да не блокираме работата
-        setAllowedStatuses(STATUS_OPTIONS); 
+        // Fallback: Ако сървърът гръмне, позволяваме базовите + текущия
+        const fallbackUnique = Array.from(new Set([ticket.ticketStatus, ...FALLBACK_STATUSES]));
+        setAllowedStatuses(fallbackUnique); 
       }
     };
 
-    if (ticket && ticket.ticketStatus) {
+    if (projectId && ticket && ticket.ticketStatus) {
       fetchAllowedTransitions();
     }
-  }, [ticket.ticketStatus]); // Слушаме за промяна в статуса!
+  }, [projectId, ticket.ticketStatus]); 
 
   const handleGeneralUpdate = async (field, value) => {
     setIsUpdating(true);
     try {
-      await ticketService.updateTicket(ticket.code, { [field]: value }); 
+      await ticketService.updateTicket(projectId, ticket.code, { [field]: value }); 
       
       onUpdate({ ...ticket, [field]: value });
     } catch (error) {
@@ -46,10 +51,6 @@ const TicketSidebar = ({ ticket, onUpdate }) => {
       setIsUpdating(false);
     }
   };
-
-  const dropdownStatuses = STATUS_OPTIONS.filter(status => 
-    allowedStatuses.includes(status)
-  );
 
   return (
     <div className="modal-sidebar">
@@ -62,9 +63,9 @@ const TicketSidebar = ({ ticket, onUpdate }) => {
           onChange={(e) => handleGeneralUpdate('ticketStatus', e.target.value)}
           disabled={isUpdating}
         >
-          {/* Въртим цикъла върху филтрирания списък, а не върху всички! */}
-          {dropdownStatuses.map(status => (
-            <option key={status} value={status}>{status.replace('_', ' ')}</option>
+          {/* Вече въртим директно allowedStatuses, защото може да имаме къстъм статуси (напр. QA) */}
+          {allowedStatuses.map(status => (
+            <option key={status} value={status}>{status.replace(/_/g, ' ')}</option>
           ))}
         </select>
       </div>
@@ -83,7 +84,11 @@ const TicketSidebar = ({ ticket, onUpdate }) => {
         </select>
       </div>
 
-      <AssigneeSelect ticket={ticket} onUpdate={onUpdate} />
+      <AssigneeSelect
+        projectId={projectId}
+        ticket={ticket} 
+        onUpdate={onUpdate} 
+      />
 
       <SidebarDates 
         createDate={ticket.createDate}

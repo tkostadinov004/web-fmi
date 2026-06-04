@@ -665,6 +665,7 @@
   font-size: 0.9rem;
 }
 
+/* --- СТИЛОВЕ ЗА МАТРИЦАТА (ТАБЛИЦАТА) --- */
 .workflow-matrix {
   width: 100%;
   border-collapse: collapse;
@@ -701,13 +702,123 @@
   opacity: 0.5;
 }
 
+.workflow-th-relative {
+  position: relative;
+  padding-right: 30px !important; 
+}
+
+.delete-status-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #d9534f;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.delete-status-btn:hover:not(:disabled) {
+  background-color: #f2dede;
+  color: #c9302c;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.delete-status-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workflow-initial-status {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-dark);
+}
+
+.workflow-initial-status select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #DFE1E6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--hunter-green);
+  background-color: #fafbfc;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.workflow-initial-status select:focus {
+  border-color: var(--sage-green);
+}
+
+.workflow-initial-status select:disabled {
+  background-color: #F4F5F7;
+  color: #A5ADBA;
+  cursor: not-allowed;
+}
+
+/* --- СТИЛОВЕ ЗА ДОБАВЯНЕ НА НОВ СТАТУС --- */
+.workflow-add-status {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.workflow-add-status input {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #DFE1E6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.workflow-add-status input:focus {
+  border-color: var(--sage-green);
+}
+
+.workflow-add-status input:disabled {
+  background-color: #F4F5F7;
+  cursor: not-allowed;
+}
+
+.workflow-add-status button {
+  background-color: var(--sage-green);
+  color: white;
+  border: none;
+  padding: 0 1.2rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.workflow-add-status button:hover:not(:disabled) {
+  background-color: var(--hunter-green);
+}
+
+.workflow-add-status button:disabled {
+  background-color: #DFE1E6;
+  color: #A5ADBA;
+  cursor: not-allowed;
+}
+
+/* --- СТИЛОВЕ ЗА БУТОНИТЕ НАЙ-ОТДОЛУ (ACTIONS) --- */
 .workflow-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
 }
 
-/* --- СТИЛОВЕ ЗА НОВИЯ БУТОН EDIT --- */
 .edit-workflow-btn {
   background-color: var(--vanilla-cream);
   color: var(--hunter-green);

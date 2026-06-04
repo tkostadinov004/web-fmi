@@ -38,11 +38,10 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
       }
     };
 
-    // Извикваме функцията само когато имаме наличен projectUuid
     if (projectUuid) {
       fetchProjectPermissions();
     }
-  }, [projectUuid]); // Dependency array-ят вече слуша за projectUuid
+  }, [projectUuid]); 
 
   return (
     <div className="modal-header">
@@ -78,6 +77,7 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
         <div className="workflow-modal-overlay">
           <div className="workflow-modal-content">
             <WorkflowEditor
+              projectId={projectUuid}
               canEdit={canEditWorkflow}
               onClose={() => setIsWorkflowOpen(false)}
             />
