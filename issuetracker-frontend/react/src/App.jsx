@@ -9,6 +9,9 @@ import Dashboard from './components/Dashboard/Dashboard';
 
 import './App.css';
 import TicketModal from './components/TicketDetail/TicketModal';
+import HomePage from './components/homepage/HomePage';
+import CreateProjectPage from './components/CreateProjectPage/createProject';
+import CreateTicketPage from './components/CreateTicketPage/createTicket';
 
 function App() {
   return (
@@ -18,20 +21,24 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/create-project" element={<CreateProjectPage />} />
+        <Route path="/create-ticket/:projectUuid" element={<CreateTicketPage />} />
+        
         <Route 
-          path="/dashboard" 
+          path="/dashboard/:projectUuid" 
           element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           } 
         />
         <Route 
           path="/ticket/:id" 
           element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <TicketModal />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           } 
         />
 

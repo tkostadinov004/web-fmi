@@ -15,7 +15,7 @@ body.register-body {
   padding: 2rem;
 }
 
-.card {
+.register-card {
   display: flex;
   width: 100%;
   max-width: 1000px;
@@ -124,7 +124,7 @@ body.register-body {
 
 
 @media (max-width: 768px) {
-  .card {
+  .register-card {
     flex-direction: column;
   }
 

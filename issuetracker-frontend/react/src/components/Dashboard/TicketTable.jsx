@@ -1,16 +1,15 @@
-import React from 'react';
-import { useSearchParams } from "react-router-dom"; 
+import React, { useState } from 'react';
+import { NavLink, useSearchParams } from "react-router-dom"; 
 import { StatusBadge, PriorityBadge } from "./Badge";
 import TicketModal from '../TicketDetail/TicketModal';
 
-export const TicketTable = ({ tickets }) => {
+export const TicketTable = ({ tickets, projectUuid}) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedTicketCode = searchParams.get('ticket');
 
-  const handleOpenModal = (code) => {
-    setSearchParams({ ticket: code });
-  };
+  const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [ticketInfo, setTicketInfo] = useState({});
 
   const handleCloseModal = () => {
     setSearchParams({});
@@ -33,7 +32,7 @@ export const TicketTable = ({ tickets }) => {
             <tr key={ticket.code}>
               <td>
                 <div 
-                  onClick={() => handleOpenModal(ticket.code)}
+                  onClick={() => {setIsTicketOpen(true); setTicketInfo({projectUuid: ticket.projectUuid, code: ticket.code})}}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="table-ticket-id" style={{ color: 'var(--hunter-green)', textDecoration: 'underline' }}>
@@ -54,13 +53,17 @@ export const TicketTable = ({ tickets }) => {
               </td>
             </tr>
           ))}
+          <tr>
+            <td><NavLink to={`/create-ticket/${projectUuid}`} className="btn btn-success">Create new ticket</NavLink></td>
+          </tr>
         </tbody>
       </table>
 
-      {selectedTicketCode && (
+      {isTicketOpen && (
         <TicketModal 
-          ticketCode={selectedTicketCode} 
-          onClose={handleCloseModal} 
+          projectId={ticketInfo.projectUuid}
+          ticketCode={ticketInfo.code} 
+          onClose={() => {setIsTicketOpen(false)}} 
         />
       )}
     </div>

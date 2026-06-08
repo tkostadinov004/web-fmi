@@ -321,3 +321,12 @@ tr:hover {
 .logout-button:hover {
   background: green;
 }
+
+.ticket-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  text-decoration: none;
+}

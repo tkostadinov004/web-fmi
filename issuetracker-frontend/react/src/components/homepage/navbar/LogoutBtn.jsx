@@ -18,6 +18,7 @@ function LogoutButton() {
         headers: getHeaders()
       });
 
+      localStorage.clear();
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);

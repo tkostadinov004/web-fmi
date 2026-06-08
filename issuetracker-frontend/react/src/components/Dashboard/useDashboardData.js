@@ -1,28 +1,45 @@
-import { useState, useEffect } from 'react';
-import { fetchProjects, fetchTickets, fetchUsers } from './dashboardServices';
-
+import { useState, useEffect } from "react";
+import { fetchProjects, fetchTickets, fetchUsers } from "./dashboardServices";
 
 const MOCK_PROJECTS = [
-  { uuid: 'proj-1', name: 'Project Issue Tracker' },
-  { uuid: 'proj-2', name: 'Marketing Platform' },
-  { uuid: 'proj-3', name: 'Company CRM' },
-  { uuid: 'proj-4', name: 'Internal Dashboard' },
+  { uuid: "proj-1", name: "Project Issue Tracker" },
+  { uuid: "proj-2", name: "Marketing Platform" },
+  { uuid: "proj-3", name: "Company CRM" },
+  { uuid: "proj-4", name: "Internal Dashboard" },
 ];
- 
+
 const MOCK_TICKETS = [
-  { code: 'KAN-1', title: 'Create login page',      assignee: { username: 'John Doe'},    ticketPriority: 'Medium', ticketStatus: 'TODO'        },
-  { code: 'KAN-2', title: 'Implement auth service', assignee: { username: 'Sarah Smith'}, ticketPriority: 'High',   ticketStatus: 'IN PROGRESS' },
-  { code: 'KAN-3', title: 'Setup API integration',  assignee: { username: 'Alex Johnson'},ticketPriority: 'Low',    ticketStatus: 'DONE'        },
+  {
+    code: "KAN-1",
+    title: "Create login page",
+    assignee: { username: "John Doe" },
+    ticketPriority: "Medium",
+    ticketStatus: "TODO",
+  },
+  {
+    code: "KAN-2",
+    title: "Implement auth service",
+    assignee: { username: "Sarah Smith" },
+    ticketPriority: "High",
+    ticketStatus: "IN PROGRESS",
+  },
+  {
+    code: "KAN-3",
+    title: "Setup API integration",
+    assignee: { username: "Alex Johnson" },
+    ticketPriority: "Low",
+    ticketStatus: "DONE",
+  },
 ];
- 
+
 const MOCK_USERS = [
-  { username: 'John Doe',    roles: ['DEVELOPER'], profilePicturePath: '' },
-  { username: 'Sarah Smith', roles: ['DEVELOPER'], profilePicturePath: '' },
-  { username: 'Alex Johnson',roles: ['DEVELOPER'], profilePicturePath: '' },
-  { username: 'Emily Brown', roles: ['DEVELOPER'], profilePicturePath: '' },
+  { username: "John Doe", roles: ["DEVELOPER"], profilePicturePath: "" },
+  { username: "Sarah Smith", roles: ["DEVELOPER"], profilePicturePath: "" },
+  { username: "Alex Johnson", roles: ["DEVELOPER"], profilePicturePath: "" },
+  { username: "Emily Brown", roles: ["DEVELOPER"], profilePicturePath: "" },
 ];
- 
-export const useDashboardData = () => {
+
+export const useDashboardData = (currProjectUuid) => {
   // const [selectedProjectId, setSelectedProjectId] = useState(MOCK_PROJECTS[0].uuid);
 
   // const projects = MOCK_PROJECTS;
@@ -30,67 +47,60 @@ export const useDashboardData = () => {
   // const users    = MOCK_USERS;
   // const isLoading    = false;
   // const errorMessage = '';
- 
+
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
- 
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isProjectLoading, setIsProjectLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const loadProjects = async () => {
-      setIsLoading(true);
-      setErrorMessage('');
- 
       try {
-        const data = await fetchProjects();
-        setProjects(data);
-        if (data.length > 0) {
-          setSelectedProjectId(data[0].uuid); 
-        }
+        const projects = await fetchProjects(); //could be changed because both the home page and the dashboard are making requests
+        // const data = [];
+        setProjects(projects);
       } catch (error) {
         setErrorMessage(error.message);
-      } finally {  
-        setIsLoading(false);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
- 
+
     loadProjects();
   }, []);
- 
+
   useEffect(() => {
-    if (!selectedProjectId) return;
- 
+    if (!currProjectUuid) return;
+
     const loadProjectData = async () => {
-      setIsLoading(true);
-      setErrorMessage('');
- 
+      setIsProjectLoading(true);
+
       try {
         const [ticketsData, usersData] = await Promise.all([
-          fetchTickets(selectedProjectId),
-          fetchUsers(selectedProjectId),
+          fetchTickets(currProjectUuid),
+          fetchUsers(currProjectUuid),
         ]);
- 
+
         setTickets(ticketsData);
         setUsers(usersData);
       } catch (error) {
         setErrorMessage(error.message);
       } finally {
-        setIsLoading(false);
+        setIsProjectLoading(false);
       }
     };
- 
+
     loadProjectData();
-  }, [selectedProjectId]);
- 
+  }, [currProjectUuid]);
+
   return {
     projects,
     tickets,
     users,
-    selectedProjectId,
-    setSelectedProjectId, 
-    isLoading,
+    isInitialLoading,
+    isProjectLoading,
     errorMessage,
   };
 };

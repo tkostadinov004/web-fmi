@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Register.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Register = () => {
   useEffect(() => {
@@ -11,6 +11,7 @@ const Register = () => {
     };
   }, []);
 
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -47,14 +48,18 @@ const Register = () => {
         }),
       });
 
-      const data = await response.json();
+      // console.log("Status:", response.status);
 
+      // const text = await response.text();
+      // console.log("Response:", text);
+      
       if (response.ok) {
         navigate("/login");
       } else {
-        setErrorMessage(data.error || "An error occurred during register.");
+        setErrorMessage("An error occurred during register.");
       }
     } catch (error) {
+      console.log(error);
       setErrorMessage("Server connection problem.");
     }
   };
@@ -62,7 +67,7 @@ const Register = () => {
   return (
     <>
       <div className="auth-container">
-        <div className="card">
+        <div className="register-card">
           <div className="auth-left">
             <div className="auth-left-content">
               <h1>Get Started</h1>
@@ -83,8 +88,8 @@ const Register = () => {
                   <div className="error-message">{errorMessage}</div>
                 )}
                 <div className="form-row">
-                  <div className="input-group">
-                    <label>First Name</label>
+                  <div className="register-input-group">
+                    <p>First Name</p>
                     <input
                       type="text"
                       name="firstName"
@@ -94,8 +99,8 @@ const Register = () => {
                     />
                   </div>
 
-                  <div className="input-group">
-                    <label>Last Name</label>
+                  <div className="register-input-group">
+                    <p>Last Name</p>
                     <input
                       type="text"
                       name="lastName"
@@ -106,8 +111,8 @@ const Register = () => {
                   </div>
                 </div>
 
-                <div className="input-group">
-                  <label>Username</label>
+                <div className="register-input-group">
+                  <p>Username</p>
                   <input
                     type="text"
                     name="username"
@@ -120,8 +125,8 @@ const Register = () => {
                   />
                 </div>
 
-                <div className="input-group">
-                  <label>Company Name</label>
+                <div className="register-input-group">
+                  <p>Company Name</p>
                   <input
                     type="text"
                     name="companyName"
@@ -131,8 +136,8 @@ const Register = () => {
                   />
                 </div>
 
-                <div className="input-group">
-                  <label>Email</label>
+                <div className="register-input-group">
+                  <p>Email</p>
                   <input
                     type="email"
                     name="email"
@@ -142,8 +147,8 @@ const Register = () => {
                   />
                 </div>
 
-                <div className="input-group">
-                  <label>Password</label>
+                <div className="register-input-group">
+                  <p>Password</p>
                   <input
                     type="password"
                     name="password"

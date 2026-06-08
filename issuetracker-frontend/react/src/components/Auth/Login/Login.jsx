@@ -23,7 +23,7 @@ const Login = () => {
 
             localStorage.setItem('authToken', token);
             localStorage.setItem('currentUsername', username);
-            navigate('/dashboard');
+            navigate('/home');
         } catch (error) {
             setErrorMessage(error.message || 'Проблем с връзката към сървъра.');
         } finally {

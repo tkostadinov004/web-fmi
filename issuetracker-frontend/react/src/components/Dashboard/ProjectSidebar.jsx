@@ -1,12 +1,13 @@
 import { useState } from "react";
+import { NavLink, Link } from "react-router-dom";
 
 const PROJECT_COUNT_VISIBLE = 4;
 
-const ProjectMenu = ({ projects, query, onQueryChange, onProjectSelect }) => {
+const ProjectMenu = ({ projects, query, onQueryChange }) => {
   const filtered = projects.filter((p) =>
-    p.name.toLowerCase().includes(query.toLowerCase())
+    p.name.toLowerCase().includes(query.toLowerCase()),
   );
- 
+
   return (
     <div className="popup-menu">
       <label>Projects</label>
@@ -18,49 +19,48 @@ const ProjectMenu = ({ projects, query, onQueryChange, onProjectSelect }) => {
         onChange={(e) => onQueryChange(e.target.value)}
       />
       <div className="project-search-result">
-        {query.trim() !== '' &&
+        {query.trim() !== "" &&
           filtered.map((project) => (
-            <button
-              key={project.id}
-              className="project-button"
-              onClick={() => onProjectSelect(project.id)}
+            <Link
+              to={`/dashboard/${project.uuid}`}
+              className={`project-button text-decoration-none text-dark`}
             >
               {project.name}
-            </button>
+            </Link>
           ))}
       </div>
     </div>
   );
 };
- 
+
 export const ProjectSidebar = ({
   projects,
   selectedProjectId,
-  onProjectSelect,
   onCreateProject,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [query, setQuery] = useState('');
- 
+  const [query, setQuery] = useState("");
+
   const visibleProjects = projects.slice(0, PROJECT_COUNT_VISIBLE);
- 
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1>Projects</h1>
+        <NavLink to={`/home`} className={`text-decoration-none text-dark`}>
+          <h1>Projects</h1>
+        </NavLink>
       </div>
- 
+
       <nav className="projects-list">
         {visibleProjects.map((project) => (
-          <button
-            key={project.uuid}
-            className={`project-button ${project.uuid === selectedProjectId ? 'active-project' : ''}`}
-            onClick={() => onProjectSelect(project.uuid)}
+          <NavLink
+            to={`/dashboard/${project.uuid}`}
+            className={`project-button ${project.uuid === selectedProjectId ? "active-project" : ""} text-decoration-none text-dark`}
           >
             {project.name}
-          </button>
+          </NavLink>
         ))}
- 
+
         <div className="project-menu">
           <button
             className="project-button"
@@ -68,21 +68,16 @@ export const ProjectSidebar = ({
           >
             More projects →
           </button>
- 
+
           {isMenuOpen && (
             <ProjectMenu
               projects={projects}
               query={query}
               onQueryChange={setQuery}
-              onProjectSelect={(id) => {
-                onProjectSelect(id);
-                setIsMenuOpen(false);
-                setQuery('');
-              }}
             />
           )}
         </div>
- 
+
         <button className="signup-btn" onClick={onCreateProject}>
           Create project
         </button>
