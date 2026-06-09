@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -41,6 +42,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -174,11 +176,34 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidUrl()), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler({HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponse> handleJacksonErrors(HttpMessageNotReadableException ex) {
+        LOGGER.error(ex.getMessage());
+        DateTimeParseException dtex = findCause(ex, DateTimeParseException.class);
+        if (dtex != null) {
+            return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidDate(dtex.getParsedString())), HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity
+                .internalServerError()
+                .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         return ResponseEntity
                 .internalServerError()
                 .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+    }
+
+    private static <T extends Throwable> T findCause(Throwable throwable, Class<T> type) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (type.isInstance(current)) {
+                return type.cast(current);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 }

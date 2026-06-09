@@ -22,6 +22,17 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
     }
 
     @Override
+    public String getInitialStatus(String projectId) {
+        try (Session session = driver.session(sessionConfig)) {
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
+                    tx.run("""
+                            MATCH (p: Project {id: $projectId})-[w: WORKFLOW]->(s: Status) RETURN s.name AS name;
+                            """, Map.of("projectId", projectId)).list());
+            return query.getFirst().get("name").asString();
+        }
+    }
+
+    @Override
     public ProjectWorkflowDTO getWorkflow(String projectId) {
         try (Session session = driver.session(sessionConfig)) {
             org.neo4j.driver.Record query = session.executeRead(tx ->

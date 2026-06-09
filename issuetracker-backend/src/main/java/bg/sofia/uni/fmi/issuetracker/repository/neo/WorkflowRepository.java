@@ -12,6 +12,14 @@ import java.util.List;
  */
 public interface WorkflowRepository {
     /**
+     * Retrieves the initial (default) status for the specified project.
+     *
+     * @param projectId the unique identifier of the project
+     * @return the initial status for the project
+     */
+    String getInitialStatus(String projectId);
+
+    /**
      * Retrieves the workflow configuration for the specified project.
      *
      * @param projectId the unique identifier of the project
