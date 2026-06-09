@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.controller;
 
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,7 +35,7 @@ public class FileController {
             @ApiResponse(responseCode = "400", description = "Invalid or missing file",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "File not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",

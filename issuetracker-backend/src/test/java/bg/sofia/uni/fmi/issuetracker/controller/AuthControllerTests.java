@@ -11,6 +11,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -79,13 +81,15 @@ public class AuthControllerTests extends BaseControllerTests {
     @Test
     public void testLogin_ReturnsOkWhenSuccessful() throws Exception {
         UserLoginDTO dto = new UserLoginDTO("User", "pass");
-        when(authService.login(dto)).thenReturn("token");
+        AuthResponse tokens = new AuthResponse("accessToken", "refreshToken");
+        when(authService.login(dto)).thenReturn(tokens);
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Authorization", "token"));
+                .andExpect(header().string("Authorization", tokens.accessToken()))
+                .andExpect(cookie().value("refreshToken", tokens.refreshToken()));
     }
 
     @Test

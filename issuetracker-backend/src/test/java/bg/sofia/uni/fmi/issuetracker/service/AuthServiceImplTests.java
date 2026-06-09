@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.ForgotPasswordTokenAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.auth.InvalidTokenException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
@@ -16,11 +17,13 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
+import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.EmailUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -86,6 +89,8 @@ public class AuthServiceImplTests {
         doReturn("encodedPass").when(passwordEncoder).encode(any());
         doAnswer(a -> null).when(userRepository).save(any());
 
+        authService.register(REGISTER_USER);
+
         verify(passwordEncoder, times(1)).encode(REGISTER_USER.password());
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -138,15 +143,18 @@ public class AuthServiceImplTests {
         when(userRepository.findById(LOGIN_USER.username())).thenReturn(Optional.of(TEST_USER));
         doReturn(true).when(passwordEncoder).matches(any(), any());
 
-        Token oldToken = new Token("oldToken", TEST_USER);
+        Token oldToken = new Token("oldToken", TokenType.AUTH, TEST_USER);
         when(jwtUtils.isValid(oldToken.getTokenValue())).thenReturn(false);
         when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.AUTH)).thenReturn(List.of(oldToken));
 
-        Token token = new Token("testToken", TEST_USER);
-        doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.AUTH), any(Long.class));
+        Token accessToken = new Token("testToken", TokenType.AUTH, TEST_USER);
+        doReturn(accessToken).when(authService).createToken(eq(TEST_USER), eq(TokenType.AUTH), any(Long.class));
+        Token refreshToken = new Token("testRefreshToken", TokenType.AUTH, TEST_USER);
+        doReturn(refreshToken).when(authService).createToken(eq(TEST_USER), eq(TokenType.REFRESH), any(Long.class));
 
-        String response = authService.login(LOGIN_USER);
-        assertEquals(token.getTokenValue(), response);
+        AuthResponse response = authService.login(LOGIN_USER);
+        assertEquals(accessToken.getTokenValue(), response.accessToken());
+        assertEquals(refreshToken.getTokenValue(), response.refreshToken());
 
         verify(jwtUtils, times(1)).isValid(any());
         verify(tokenRepository, times(1)).deleteAll(any());
@@ -167,7 +175,7 @@ public class AuthServiceImplTests {
 
         authService.logout(TEST_USER.getUsername());
 
-        verify(tokenRepository, times(1)).deleteAllByUserAndTokenType(TEST_USER, TokenType.AUTH);
+        verify(tokenRepository, times(1)).deleteAllByUserAndTokenTypeIn(TEST_USER, List.of(TokenType.AUTH, TokenType.REFRESH));
     }
 
     @Test
@@ -361,6 +369,61 @@ public class AuthServiceImplTests {
         verify(tokenRepository, times(1)).deleteByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.FORGOT_PASSWORD);
     }
 
+    @Test
+    void testRefresh_ThrowsOnInvalidToken() {
+        String refreshToken = "invalid-refresh-token";
+        when(jwtUtils.isValid(refreshToken)).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isExactlyInstanceOf(InvalidTokenException.class)
+                .hasMessage(OutputMessages.System.UNAUTHORIZED);
+    }
+
+    @Test
+    void testRefresh_ThrowsWhenUserDoesNotExist() {
+        String refreshToken = "valid-refresh-token";
+        when(jwtUtils.isValid(refreshToken)).thenReturn(true);
+        when(jwtUtils.extractUsername(refreshToken)).thenReturn(TEST_USER.getUsername());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isExactlyInstanceOf(UserNotFoundException.class)
+                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()));
+    }
+
+    @Test
+    void testRefresh_ThrowsWhenRefreshTokenIsNotFound() {
+        String refreshToken = "valid-refresh-token";
+        when(jwtUtils.isValid(refreshToken)).thenReturn(true);
+        when(jwtUtils.extractUsername(refreshToken)).thenReturn(TEST_USER.getUsername());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(tokenRepository.existsByTokenValueAndUserAndTokenType(refreshToken, TEST_USER, TokenType.REFRESH)).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isExactlyInstanceOf(InvalidTokenException.class)
+                .hasMessage(ExceptionMessages.Auth.refreshTokenNotFound(TEST_USER.getUsername()));
+    }
+
+    @Test
+    void testRefresh_SuccessfullyReturnsNewTokens() {
+        String refreshToken = "valid-refresh-token";
+        when(jwtUtils.isValid(refreshToken)).thenReturn(true);
+        when(jwtUtils.extractUsername(refreshToken)).thenReturn(TEST_USER.getUsername());
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        when(tokenRepository.existsByTokenValueAndUserAndTokenType(refreshToken, TEST_USER, TokenType.REFRESH)).thenReturn(true);
+
+        Token accessToken = new Token("new-access-token", TokenType.AUTH, TEST_USER);
+        Token refreshTokenEntity = new Token("new-refresh-token", TokenType.REFRESH, TEST_USER);
+        doReturn(accessToken).when(authService).createToken(eq(TEST_USER), eq(TokenType.AUTH), any(Long.class));
+        doReturn(refreshTokenEntity).when(authService).createToken(eq(TEST_USER), eq(TokenType.REFRESH), any(Long.class));
+
+        AuthResponse response = authService.refresh(refreshToken);
+
+        assertEquals(accessToken.getTokenValue(), response.accessToken());
+        assertEquals(refreshTokenEntity.getTokenValue(), response.refreshToken());
+        verify(tokenRepository, times(1)).deleteByTokenValueAndTokenType(refreshToken, TokenType.REFRESH);
+        verify(tokenRepository, times(1)).deleteAllByUserAndTokenType(TEST_USER, TokenType.AUTH);
+    }
 
     @Test
     void testCreateToken_Success() {

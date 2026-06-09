@@ -404,6 +404,30 @@ public class ProjectServiceImplTests {
     }
 
     @Test
+    void testGetProjectWorkflow_ThrowsOnNonexistentProject() {
+        String projectId = "non-existent";
+        when(projectRepository.existsById(projectId)).thenReturn(false);
+
+        assertThatThrownBy(() -> projectService.getProjectWorkflow(projectId))
+                .isExactlyInstanceOf(ProjectNotFoundException.class)
+                .hasMessage(ExceptionMessages.Project.projectNotFound(projectId));
+    }
+
+    @Test
+    void testGetProjectWorkflow_ReturnsWorkflowSuccessfully() {
+        ProjectWorkflowDTO dto = new ProjectWorkflowDTO(List.of("To do", "Done"), "To do",
+                List.of(new WorkflowTransitionDTO("To do", "Done")));
+
+        when(projectRepository.existsById(TEST_PROJECT.getUuid())).thenReturn(true);
+        when(workflowRepository.getWorkflow(TEST_PROJECT.getUuid())).thenReturn(dto);
+
+        ProjectWorkflowDTO result = projectService.getProjectWorkflow(TEST_PROJECT.getUuid());
+
+        assertEquals(dto, result);
+        verify(workflowRepository, times(1)).getWorkflow(TEST_PROJECT.getUuid());
+    }
+
+    @Test
     void testDeleteProjectWorkflow_ThrowsOnNonexistentProject() {
         String projectId = "non-existent";
         when(projectRepository.existsById(projectId)).thenReturn(false);

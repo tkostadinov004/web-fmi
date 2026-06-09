@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.service;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.CreateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
@@ -26,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -106,6 +108,36 @@ public class TicketServiceImplTests {
 
         assertEquals(1, result.size());
         assertEquals(TEST_TICKET.getCode(), result.get(0).code());
+    }
+
+    @Test
+    void testGetDependentTickets_ThrowsWhenTicketNotFound() {
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getDependentTickets(PROJECT_UUID, TEST_TICKET.getCode()))
+                .isExactlyInstanceOf(TicketNotFoundException.class)
+                .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode(), PROJECT_UUID));
+    }
+
+    @Test
+    void testGetDependentTickets_ReturnsDependentTicketDTOs() {
+        Ticket parentTicket = new Ticket(TEST_TICKET.getCode(), TEST_TICKET.getTitle(), TEST_TICKET.getDescription(), TEST_TICKET.getTicketPriority(),
+                TEST_TICKET.getTicketStatus(), TEST_TICKET.getDueDate(), TEST_PROJECT, TEST_USER, new ArrayList<>());
+        Ticket dependentTicket = new Ticket("Ticket-2", "dependentTitle", "dependentDescription",
+                TicketPriority.MEDIUM, "To do", TEST_TICKET.getDueDate(), TEST_PROJECT, TEST_USER_2, new ArrayList<>());
+        parentTicket.addDependentTicket(dependentTicket);
+
+        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
+        when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.of(parentTicket));
+
+        List<DependentTicketDTO> result = service.getDependentTickets(PROJECT_UUID, TEST_TICKET.getCode());
+
+        assertEquals(1, result.size());
+        assertEquals(dependentTicket.getCode(), result.get(0).code());
+        assertEquals(dependentTicket.getTitle(), result.get(0).title());
+        assertEquals(dependentTicket.getDescription(), result.get(0).description());
+        assertEquals(dependentTicket.getTicketStatus(), result.get(0).status());
     }
 
     @Test

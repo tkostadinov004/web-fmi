@@ -7,11 +7,13 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -80,13 +82,23 @@ public class AuthController {
                 .build();
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.AUTHORIZATION, tokens.authToken())
+                .header(HttpHeaders.AUTHORIZATION, tokens.accessToken())
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
 
+    @Operation(summary = "Refresh access token", description = "Generates a new access token using a valid refresh token stored in a cookie.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Access token refreshed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid refresh token cookie",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing refresh token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/refresh")
-    public ResponseEntity<Void> refreshToken(@CookieValue(name = "refreshToken") String refreshToken) {
+    public ResponseEntity<Void> refreshToken(@Parameter(description = "Refresh token cookie value", required = true) @CookieValue(name = "refreshToken") String refreshToken) {
         AuthResponse tokens = authService.refresh(refreshToken);
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.refreshToken())
                 .httpOnly(true)
@@ -97,7 +109,7 @@ public class AuthController {
                 .build();
         return ResponseEntity
                 .noContent()
-                .header(HttpHeaders.AUTHORIZATION, tokens.authToken())
+                .header(HttpHeaders.AUTHORIZATION, tokens.accessToken())
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
@@ -106,7 +118,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Logout completed successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -137,7 +149,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "The old password is incorrect or the new passwords do not match",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -158,7 +170,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "The provided email does not match the current user's email",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "A valid forgot-password token already exists for the user",
@@ -188,7 +200,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "The new passwords do not match",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "The password reset token is invalid or has already been used",

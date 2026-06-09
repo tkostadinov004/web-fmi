@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.filter;
 
 import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
@@ -14,14 +15,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
 
-import static bg.sofia.uni.fmi.issuetracker.utils.CommonUtils.buildErrorResponseAsJson;
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final TokenRepository tokenRepository;
     private final UserService userService;
     private final JwtUtils jwtUtils;
@@ -73,6 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     void outputUnauthorized(HttpServletResponse response, boolean isExpired) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write(buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED, isExpired));
+        response.getWriter().write(buildErrorResponse(OutputMessages.System.UNAUTHORIZED, isExpired));
+    }
+
+    static String buildErrorResponse(String message, boolean isExpired) {
+        return OBJECT_MAPPER.writeValueAsString(new InvalidOrExpiredTokenErrorResponse(message, isExpired));
     }
 }

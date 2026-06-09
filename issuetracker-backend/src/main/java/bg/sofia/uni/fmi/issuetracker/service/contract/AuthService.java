@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.ForgotPasswordTokenAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.auth.InvalidTokenException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
@@ -87,5 +88,17 @@ public interface AuthService {
      */
     void changeForgottenPassword(ChangeForgottenPasswordDTO dto);
 
+    /**
+     * Refreshes authentication tokens using a valid refresh token.
+     *
+     * <p>The implementation verifies that the refresh token is valid, belongs to an existing active user,
+     * and exists in the token repository as a refresh token. The old refresh token and any old auth tokens
+     * are removed before new tokens are created.</p>
+     *
+     * @param refreshToken the refresh token to validate and use for issuing new tokens
+     * @return an {@link bg.sofia.uni.fmi.issuetracker.response.AuthResponse} containing the new access token and refresh token
+     * @throws InvalidTokenException if the refresh token is invalid or not present in the refresh token repository
+     * @throws UserNotFoundException if the token's owner user does not exist or is marked as deleted
+     */
     AuthResponse refresh(String refreshToken);
 }

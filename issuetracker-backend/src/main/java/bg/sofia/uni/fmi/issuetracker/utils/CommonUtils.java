@@ -1,7 +1,6 @@
 package bg.sofia.uni.fmi.issuetracker.utils;
 
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
-import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
@@ -19,13 +18,9 @@ public class CommonUtils {
         return new ErrorResponse(message);
     }
 
-    public static InvalidOrExpiredTokenErrorResponse buildErrorResponse(String message, boolean isExpired) {
-        return new InvalidOrExpiredTokenErrorResponse(message, isExpired);
-    }
-
-    public static String buildErrorResponseAsJson(String message, boolean isExpired) {
+    public static String buildErrorResponseAsJson(String message) {
         try {
-            return OBJECT_MAPPER.writeValueAsString(buildErrorResponse(message, isExpired));
+            return OBJECT_MAPPER.writeValueAsString(buildErrorResponse(message));
         } catch (JsonProcessingException e) {
             return "{\"error\":\"" + message + "\"}";
         }
