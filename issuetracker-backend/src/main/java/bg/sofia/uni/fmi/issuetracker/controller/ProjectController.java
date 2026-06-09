@@ -108,8 +108,8 @@ public class ProjectController {
     @Operation(summary = "Create project", description = "Creates a new project.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "201", description = "Project created successfully",
-                    content = @Content),
+                    responseCode = "200", description = "Project created successfully",
+                    content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
             @ApiResponse(
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
@@ -122,13 +122,12 @@ public class ProjectController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<Void> createProject(
+    public ResponseEntity<ProjectDetailsDTO> createProject(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project creation data", required = true, content = @Content)
             @Valid @RequestBody
             CreateProjectDTO dto) {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        projectService.addProject(dto, username);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok(projectService.addProject(dto, username));
     }
 
     @Operation(summary = "Update project", description = "Updates an existing project.")

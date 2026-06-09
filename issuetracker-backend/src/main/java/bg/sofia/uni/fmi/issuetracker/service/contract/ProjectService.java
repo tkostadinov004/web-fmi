@@ -93,7 +93,7 @@ public interface ProjectService {
      * @throws ProjectAlreadyExistsException if the project already exists
      * @throws UserNotFoundException         if such a user does not exist
      */
-    void addProject(CreateProjectDTO dto, String username);
+    ProjectDetailsDTO addProject(CreateProjectDTO dto, String username);
 
     /**
      * Updates project information
