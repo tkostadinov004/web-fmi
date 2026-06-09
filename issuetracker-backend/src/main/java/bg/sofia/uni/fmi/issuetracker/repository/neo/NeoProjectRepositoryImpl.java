@@ -34,7 +34,7 @@ public class NeoProjectRepositoryImpl implements NeoProjectRepository {
         try (Session session = driver.session(sessionConfig)) {
             session.executeWrite(tx -> {
                 tx.run("""
-                        MATCH (p: Project {id: $projectId}) DETACH DELETE p;
+                        MATCH r = (p: Project {id: $projectId})-[*]->(s) DETACH DELETE r;
                         """, Map.of("projectId", projectId)).consume();
                 return null;
             });
