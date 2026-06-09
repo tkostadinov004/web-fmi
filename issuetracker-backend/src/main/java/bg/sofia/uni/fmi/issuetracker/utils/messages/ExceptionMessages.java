@@ -14,48 +14,41 @@ public class ExceptionMessages {
 
     public static class Auth {
         private static final String WRONG_CREDENTIALS = "Wrong username or password!";
+        private static final String WRONG_OLD_PASSWORD = "Wrong old password!";
+        private static final String NEW_PASSWORDS_DO_NOT_MATCH = "The new password and the repeated new password don't match!";
+        private static final String WRONG_EMAIL = "The provided email doesn't match the user's real email!";
+        private static final String ALREADY_CHANGED_PASSWORD = "You already changed your password!";
+        private static final String FORGOT_PASSWORD_TOKEN_EXISTS = "You already started a forgot password procedure!";
+        private static final String USER_ALREADY_LOGGED_IN = "User with username %s is already logged in!";
+        private static final String USER_NOT_LOGGED = "User not logged in!";
 
         public static String wrongCredentials() {
             return WRONG_CREDENTIALS;
         }
 
-        private static final String WRONG_OLD_PASSWORD = "Wrong old password!";
-
         public static String wrongOldPassword() {
             return WRONG_OLD_PASSWORD;
         }
-
-        private static final String NEW_PASSWORDS_DO_NOT_MATCH = "The new password and the repeated new password don't match!";
 
         public static String newPasswordsDoNotMatch() {
             return NEW_PASSWORDS_DO_NOT_MATCH;
         }
 
-        private static final String WRONG_EMAIL = "The provided email doesn't match the user's real email!";
-
         public static String wrongEmail() {
             return WRONG_EMAIL;
         }
-
-        private static final String ALREADY_CHANGED_PASSWORD = "You already changed your password!";
 
         public static String alreadyChangedPassword() {
             return ALREADY_CHANGED_PASSWORD;
         }
 
-        private static final String FORGOT_PASSWORD_TOKEN_EXISTS = "You already started a forgot password procedure!";
-
         public static String forgotPasswordTokenAlreadyExists() {
             return FORGOT_PASSWORD_TOKEN_EXISTS;
         }
 
-        private static final String USER_ALREADY_LOGGED_IN = "User with username %s is already logged in!";
-
         public static String userAlreadyLoggedIn(String username) {
             return USER_ALREADY_LOGGED_IN.formatted(username);
         }
-
-        private static final String USER_NOT_LOGGED = "User not logged in!";
 
         public static String userNotLogged() {
             return USER_NOT_LOGGED;
@@ -97,24 +90,21 @@ public class ExceptionMessages {
 
     public static class User {
         private static final String USER_ALREADY_EXISTS = "User with username %s already exists!";
+        private static final String USER_NOT_FOUND = "User with username %s not found!";
+        private static final String USER_WITH_EMAIL_NOT_FOUND = "User with email %s not found!";
+        private static final String EMAIL_ALREADY_EXISTS = "Account with email '%s' already exists!";
 
         public static String userAlreadyExists(String username) {
             return USER_ALREADY_EXISTS.formatted(username);
         }
 
-        private static final String USER_NOT_FOUND = "User with username %s not found!";
-
         public static String userNotFound(String username) {
             return USER_NOT_FOUND.formatted(username);
         }
 
-        private static final String USER_WITH_EMAIL_NOT_FOUND = "User with email %s not found!";
-
         public static String userWithEmailNotFound(String email) {
             return USER_WITH_EMAIL_NOT_FOUND.formatted(email);
         }
-
-        private static final String EMAIL_ALREADY_EXISTS = "Account with email '%s' already exists!";
 
         public static String emailAlreadyExists(String email) {
             return EMAIL_ALREADY_EXISTS.formatted(email);
@@ -123,48 +113,41 @@ public class ExceptionMessages {
 
     public static class File {
         private static final String EMPTY_FILE = "The file you're trying to upload is empty!";
+        private static final String CANNOT_STORE_OUTSIDE_ROOT = "Cannot store file outside current directory";
+        private static final String UNREADABLE_FILE = "Cannot read file '%s'";
+        private static final String CANNOT_WRITE = "Cannot write in file '%s'";
+        private static final String INVALID_FILE = "Invalid or nonexistent file in request!";
+        private static final String SIZE_EXCEEDED = "The provided file must be less than %s megabytes!";
+        private static final String INVALID_FORMAT = "The provided file must have one of the following extensions: %s!";
+        private static final String INVALID_CUSTOM_NAME = "File name contains invalid characters!";
 
         public static String emptyFile() {
             return EMPTY_FILE;
         }
 
-        private static final String CANNOT_STORE_OUTSIDE_ROOT = "Cannot store file outside current directory";
-
         public static String unableToStoreOutsideOfRoot() {
             return CANNOT_STORE_OUTSIDE_ROOT;
         }
-
-        private static final String UNREADABLE_FILE = "Cannot read file '%s'";
 
         public static String unreadableFile(String file) {
             return UNREADABLE_FILE.formatted(file);
         }
 
-        private static final String CANNOT_WRITE = "Cannot write in file '%s'";
-
         public static String cannotWrite(String file) {
             return CANNOT_WRITE.formatted(file);
         }
-
-        private static final String INVALID_FILE = "Invalid or nonexistent file in request!";
 
         public static String invalidFile() {
             return INVALID_FILE;
         }
 
-        private static final String SIZE_EXCEEDED = "The provided file must be less than %s megabytes!";
-
         public static String sizeExceeded() {
             return SIZE_EXCEEDED.formatted(Constants.MAX_IMAGE_FILE_SIZE / 1_000_000); // dividing by 1 MB
         }
 
-        private static final String INVALID_FORMAT = "The provided file must have one of the following extensions: %s!";
-
         public static String invalidFormat() {
             return INVALID_FORMAT.formatted(String.join(", ", Constants.VALID_IMAGE_FORMATS));
         }
-
-        private static final String INVALID_CUSTOM_NAME = "File name contains invalid characters!";
 
         public static String invalidCustomName() {
             return INVALID_CUSTOM_NAME;
@@ -173,33 +156,29 @@ public class ExceptionMessages {
 
     public static class Ticket {
         private static final String TICKET_ALREADY_EXISTS = "Ticket named '%s' already exists in project '%s'!";
+        private static final String TICKET_NOT_FOUND = "Ticket '%s' not found in project '%s'!";
+        private static final String TICKET_PROJECT_MISMATCH =
+                "Ticket '%s' and parent ticket '%s' cannot be from different projects!";
+        private static final String UNASSIGNED_TICKET =
+                "Ticket '%s' is currently not assigned to anyone!";
+        private static final String INVALID_STATUS =
+                "Invalid ticket status! Possible ticket statuses are: %s";
 
         public static String ticketAlreadyExists(String code, String projectUuid) {
             return TICKET_ALREADY_EXISTS.formatted(code, projectUuid);
         }
 
-        private static final String TICKET_NOT_FOUND = "Ticket '%s' not found in project '%s'!";
-
         public static String ticketNotFound(String code, String projectId) {
             return TICKET_NOT_FOUND.formatted(code, projectId);
         }
-
-        private static final String TICKET_PROJECT_MISMATCH =
-                "Ticket '%s' and parent ticket '%s' cannot be from different projects!";
 
         public static String ticketProjectMismatch(String dependentCode, String parentCode) {
             return TICKET_PROJECT_MISMATCH.formatted(dependentCode, parentCode);
         }
 
-        private static final String UNASSIGNED_TICKET =
-                "Ticket '%s' is currently not assigned to anyone!";
-
         public static String unassignedTicket(String ticketCode) {
             return UNASSIGNED_TICKET.formatted(ticketCode);
         }
-
-        private static final String INVALID_STATUS =
-                "Invalid ticket status! Possible ticket statuses are: %s";
 
         public static String invalidStatus(List<String> validStatuses) {
             return INVALID_STATUS.formatted(String.join(", ", validStatuses));
@@ -208,33 +187,29 @@ public class ExceptionMessages {
 
     public static class TicketComment {
         private static final String COMMENT_ALREADY_EXISTS = "Ticket comment with UUID %s already exists!";
+        private static final String COMMENT_NOT_FOUND = "Ticket comment with UUID %s not found!";
+        private static final String COMMENT_NOT_IN_TICKET =
+                "Ticket comment with UUID %s does not belong to ticket with title '%s'!";
+        private static final String ALLOWED_TO_MODIFY_ONLY_OWN_COMMENTS =
+                "You're only allowed to modify your own comments!";
+        private static final String ALLOWED_TO_DELETE_ONLY_OWN_COMMENTS =
+                "You're only allowed to delete your own comments!";
 
         public static String ticketCommentAlreadyExists(String commentUuid) {
             return COMMENT_ALREADY_EXISTS.formatted(commentUuid);
         }
 
-        private static final String COMMENT_NOT_FOUND = "Ticket comment with UUID %s not found!";
-
         public static String ticketCommentNotFound(String commentUuid) {
             return COMMENT_NOT_FOUND.formatted(commentUuid);
         }
-
-        private static final String COMMENT_NOT_IN_TICKET =
-                "Ticket comment with UUID %s does not belong to ticket with title '%s'!";
 
         public static String ticketCommentNotInTicket(String commentUuid, String ticketTitle) {
             return COMMENT_NOT_IN_TICKET.formatted(commentUuid, ticketTitle);
         }
 
-        private static final String ALLOWED_TO_MODIFY_ONLY_OWN_COMMENTS =
-                "You're only allowed to modify your own comments!";
-
         public static String allowedToModifyOnlyOwnComments() {
             return ALLOWED_TO_MODIFY_ONLY_OWN_COMMENTS;
         }
-
-        private static final String ALLOWED_TO_DELETE_ONLY_OWN_COMMENTS =
-                "You're only allowed to delete your own comments!";
 
         public static String allowedToDeleteOnlyOwnComments() {
             return ALLOWED_TO_DELETE_ONLY_OWN_COMMENTS;

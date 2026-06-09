@@ -11,22 +11,4 @@ public class OutputMessages {
         public static final String ACCESS_DENIED = "Access denied!";
         public static final String UNAUTHORIZED = "Invalid or expired token provided!";
     }
-
-    public static class Ticket {
-        public static final String TICKET_CREATED = "Ticket created successfully!";
-        public static final String TICKET_UPDATED = "Ticket updated successfully!";
-        public static final String TICKET_DELETED = "Ticket deleted successfully!";
-    }
-
-    public static class TicketComment {
-        public static final String COMMENT_CREATED = "Comment created successfully!";
-        public static final String COMMENT_UPDATED = "Comment updated successfully!";
-        public static final String COMMENT_DELETED = "Comment deleted successfully!";
-    }
-
-    public static class Project {
-        public static final String PROJECT_CREATED = "Project created successfully!";
-        public static final String PROJECT_UPDATED = "Project updated successfully!";
-        public static final String PROJECT_DELETED = "Project deleted successfully!";
-    }
 }
