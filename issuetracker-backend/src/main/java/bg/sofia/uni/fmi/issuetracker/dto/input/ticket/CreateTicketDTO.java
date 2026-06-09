@@ -2,7 +2,6 @@ package bg.sofia.uni.fmi.issuetracker.dto.input.ticket;
 
 import bg.sofia.uni.fmi.issuetracker.model.ticket.TicketPriority;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
@@ -28,7 +27,6 @@ public record CreateTicketDTO(@NotBlank(message = ValidationConstants.Ticket.BLA
                               TicketPriority ticketPriority,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)
                               @Schema(description = "Due date for the ticket in the future. Optional. Format: YYYY-MM-DD HH:mm.", example = "2026-12-31 14:30", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string")
-                              @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
                               LocalDateTime dueDate,
                               @Schema(description = "Username of the user assigned to this ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
                               String assigneeUsername) {
