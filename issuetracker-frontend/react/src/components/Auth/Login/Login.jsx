@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../AuthShared.css';
 import './Login.css';
@@ -12,6 +12,14 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            // Слагаме replace: true, за да не може да се върне тук с бутона "Назад" на браузъра
+            navigate('/home', { replace: true });
+        }
+    }, [navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

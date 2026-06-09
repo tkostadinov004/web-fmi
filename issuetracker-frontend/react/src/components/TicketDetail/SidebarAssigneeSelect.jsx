@@ -20,10 +20,8 @@ const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
   const handleAssigneeChange = async (newUsername) => {
     setIsUpdating(true);
     try {
-      // Подаваме кода на билета и новото име (или празен низ) към сървиса
       await ticketService.updateAssignee(projectId, ticket.code, newUsername);
 
-      // Обновяваме локалния стейт на модала
       if (newUsername === "") {
         onUpdate({ ...ticket, assignee: null });
       } else {
