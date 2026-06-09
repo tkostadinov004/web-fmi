@@ -137,12 +137,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public void addProject(CreateProjectDTO dto, String username) {
         User creator = getUser(username);
         Project project = new Project(dto.name());
         project.setCreatedBy(creator);
 
         project = projectRepository.save(project);
+        project.addUser(new ProjectUser(project, creator, Role.TEAM_LEAD));
+        projectRepository.save(project);
         neoProjectRepository.addProject(project.getUuid());
     }
 

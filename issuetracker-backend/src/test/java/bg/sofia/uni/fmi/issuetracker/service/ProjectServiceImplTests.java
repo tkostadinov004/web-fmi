@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.service;
 
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
+import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
@@ -13,8 +15,6 @@ import bg.sofia.uni.fmi.issuetracker.repository.ProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.ProjectUserRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.TicketRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
-import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
 import bg.sofia.uni.fmi.issuetracker.repository.neo.NeoProjectRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.neo.WorkflowRepository;
 import bg.sofia.uni.fmi.issuetracker.service.mapper.ProjectMapper;
@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -315,11 +314,12 @@ public class ProjectServiceImplTests {
     void testAddProject_SuccessfullyCreatesProject() {
         Project savedProject = new Project(CREATE_PROJECT_DTO.name());
         when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
-        when(userRepository.findById(anyString())).thenReturn(Optional.of(TEST_USER));
+        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
 
-        projectService.addProject(CREATE_PROJECT_DTO, "");
+        projectService.addProject(CREATE_PROJECT_DTO, TEST_USER.getUsername());
 
-        verify(projectRepository, times(1)).save(any(Project.class));
+        verify(projectRepository, times(2)).save(any(Project.class));
+        verify(neoProjectRepository, times(1)).addProject(any());
     }
 
     @Test
