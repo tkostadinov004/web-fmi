@@ -6,7 +6,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.SendForgotPasswordEmailDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
-import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.ForgotPasswordTokenAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
@@ -79,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         List<Token> tokens = tokenRepository.findAllByUserAndTokenType(foundUser.get(), TokenType.AUTH);
-        if (tokens.stream().anyMatch(token -> !jwtUtils.isTokenExpired(token.getTokenValue()))) {
+        if (tokens.stream().anyMatch(token -> jwtUtils.isValid(token.getTokenValue()))) {
             throw new UserAlreadyLoggedException(ExceptionMessages.Auth.userAlreadyLoggedIn(user.username()));
         }
         tokenRepository.deleteAll(tokens);
@@ -118,13 +117,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String sendForgotPasswordEmail(String username, SendForgotPasswordEmailDTO dto) {
-        Optional<User> user = userRepository.findById(username);
+    public String sendForgotPasswordEmail(SendForgotPasswordEmailDTO dto) {
+        Optional<User> user = userRepository.findByEmail(dto.email());
         if (user.isEmpty() || user.get().isDeleted()) {
-            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
-        }
-        if (!user.get().getEmail().equals(dto.email())) {
-            throw new AuthException(ExceptionMessages.Auth.wrongEmail());
+            throw new UserNotFoundException(ExceptionMessages.User.userWithEmailNotFound(dto.email()));
         }
 
         List<Token> forgotPasswordTokens = tokenRepository.findAllByUserAndTokenType(user.get(), TokenType.FORGOT_PASSWORD);
@@ -142,16 +138,18 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void changeForgottenPassword(String username, ChangeForgottenPasswordDTO dto) {
-        Optional<User> user = userRepository.findById(username);
-        if (user.isEmpty() || user.get().isDeleted()) {
-            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
-        }
+    public void changeForgottenPassword(ChangeForgottenPasswordDTO dto) {
         if (!dto.newPassword().equals(dto.repeatedNewPassword())) {
             throw new WrongCredentialsException(ExceptionMessages.Auth.newPasswordsDoNotMatch());
         }
         if (!jwtUtils.isValid(dto.token()) || !tokenRepository.existsByTokenValueAndTokenType(dto.token(), TokenType.FORGOT_PASSWORD)) {
             throw new AlreadyChangedPasswordException(ExceptionMessages.Auth.alreadyChangedPassword());
+        }
+
+        String username = jwtUtils.extractUsername(dto.token());
+        Optional<User> user = userRepository.findById(username);
+        if (user.isEmpty() || user.get().isDeleted()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
 
         user.get().setPassword(passwordEncoder.encode(dto.newPassword()));

@@ -22,14 +22,6 @@ public interface FileService {
     String saveOrReplaceFile(MultipartFile file, Path targetDirectory, String customName);
 
     /**
-     * Checks whether a file exists at the given filesystem path.
-     *
-     * @param path the filesystem path to check
-     * @return {@code true} if a file exists at the given path, {@code false} otherwise
-     */
-    boolean fileExists(String path);
-
-    /**
      * Loads the requested file as a Spring {@link Resource}.
      *
      * @param path the filesystem path of the file to load

@@ -11,7 +11,6 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -55,11 +54,6 @@ public class FileServiceImpl implements FileService {
         }
 
         return filename;
-    }
-
-    @Override
-    public boolean fileExists(String path) {
-        return new File(path).isFile();
     }
 
     @Override

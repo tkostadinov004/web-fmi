@@ -34,14 +34,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         this.auditLogRepository = auditLogRepository;
     }
 
-    /**
-     * Retrieves a page of audit log entries for a specific user.
-     *
-     * @param username   username whose audit logs should be returned
-     * @param pageNumber requested page number, converted to the default when non-positive
-     * @param pageSize   requested page size, converted to the default when non-positive
-     * @return a {@link Page} of {@link OutputAuditLogDTO} objects for the requested page
-     */
     @Override
     public Page<OutputAuditLogDTO> getAll(String username, int pageNumber, int pageSize) {
         Optional<User> user = userRepository.findById(username);
@@ -59,12 +51,6 @@ public class AuditLogServiceImpl implements AuditLogService {
                         new OutputAuditLogUserDTO(au.getUser().getUsername(), au.getUser().getProfilePicturePath())));
     }
 
-    /**
-     * Persists a new audit log entry for the given DTO.
-     *
-     * @param dto the audit log data transfer object containing message, type, timestamp and username
-     * @throws UserNotFoundException when the provided username does not exist in the system
-     */
     @Override
     public void addAuditLog(InputAuditLogDTO dto) {
         Optional<User> user = userRepository.findById(dto.username());

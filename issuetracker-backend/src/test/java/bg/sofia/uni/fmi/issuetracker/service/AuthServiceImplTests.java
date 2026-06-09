@@ -6,7 +6,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.SendForgotPasswordEmailDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
-import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.ForgotPasswordTokenAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
@@ -46,6 +45,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -130,13 +130,13 @@ public class AuthServiceImplTests {
 
         Token token = new Token("testToken", TEST_USER);
         when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.AUTH)).thenReturn(List.of(token));
-        when(jwtUtils.isTokenExpired(token.getTokenValue())).thenReturn(false);
+        when(jwtUtils.isValid(token.getTokenValue())).thenReturn(true);
 
         assertThatThrownBy(() -> authService.login(LOGIN_USER))
                 .hasMessage(ExceptionMessages.Auth.userAlreadyLoggedIn(TEST_USER.getUsername()))
                 .isExactlyInstanceOf(UserAlreadyLoggedException.class);
 
-        verify(jwtUtils, times(1)).isTokenExpired(token.getTokenValue());
+        verify(jwtUtils, times(1)).isValid(token.getTokenValue());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class AuthServiceImplTests {
         doReturn(true).when(passwordEncoder).matches(any(), any());
 
         Token oldToken = new Token("oldToken", TEST_USER);
-        when(jwtUtils.isTokenExpired(oldToken.getTokenValue())).thenReturn(true);
+        when(jwtUtils.isValid(oldToken.getTokenValue())).thenReturn(false);
         when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.AUTH)).thenReturn(List.of(oldToken));
 
         Token token = new Token("testToken", TEST_USER);
@@ -154,7 +154,7 @@ public class AuthServiceImplTests {
         String response = authService.login(LOGIN_USER);
         assertEquals(token.getTokenValue(), response);
 
-        verify(jwtUtils, times(1)).isTokenExpired(any());
+        verify(jwtUtils, times(1)).isValid(any());
         verify(tokenRepository, times(1)).deleteAll(any());
     }
 
@@ -231,49 +231,45 @@ public class AuthServiceImplTests {
     }
 
     @Test
-    public void testSendForgotPasswordEmail_ThrowsOnNonexistentOrDeletedUser() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
+    public void testSendForgotPasswordEmail_ThrowsOnNonexistentUser() {
+        SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO("nochanceofmatching@email.com", "");
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(LOGIN_USER.username(), null))
-                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
-                .isExactlyInstanceOf(UserNotFoundException.class);
-
-        User user = new User();
-        user.setUsername("user");
-        user.setDeleted(true);
-        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(user.getUsername(), null))
-                .hasMessage(ExceptionMessages.User.userNotFound(user.getUsername()))
+        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(dto))
+                .hasMessage(ExceptionMessages.User.userWithEmailNotFound(dto.email()))
                 .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void testSendForgotPasswordEmail_ThrowsIfEmailsDoNotMatch() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+    public void testSendForgotPasswordEmail_ThrowsOnDeletedUser() {
+        User user = spy(TEST_USER);
+        SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(user.getEmail(), "");
+        when(user.isDeleted()).thenReturn(true);
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(user));
 
-        SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO("nochanceofmatching@email.com", "");
-
-        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(TEST_USER.getUsername(), dto))
-                .hasMessage(ExceptionMessages.Auth.wrongEmail())
-                .isExactlyInstanceOf(AuthException.class);
+        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(dto))
+                .hasMessage(ExceptionMessages.User.userWithEmailNotFound(dto.email()))
+                .isExactlyInstanceOf(UserNotFoundException.class);
     }
 
     @Test
     public void testSendForgotPasswordEmail_ThrowsIfThereIsCurrentlyAnActiveForgotPasswordSession() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
         SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(TEST_USER.getEmail(), "");
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(TEST_USER));
 
         when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.FORGOT_PASSWORD))
                 .thenReturn(List.of(TEST_TOKEN));
         when(jwtUtils.isValid(anyString())).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(TEST_USER.getUsername(), dto))
+        assertThatThrownBy(() -> authService.sendForgotPasswordEmail(dto))
                 .hasMessage(ExceptionMessages.Auth.forgotPasswordTokenAlreadyExists())
                 .isExactlyInstanceOf(ForgotPasswordTokenAlreadyExistsException.class);
     }
 
     @Test
     public void testSendForgotPasswordEmail_Successfully() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+        SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(TEST_USER.getEmail(), "");
+        when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(TEST_USER));
         when(tokenRepository.findAllByUserAndTokenType(TEST_USER, TokenType.FORGOT_PASSWORD))
                 .thenReturn(List.of(TEST_TOKEN));
         when(jwtUtils.isValid(anyString())).thenReturn(false);
@@ -282,71 +278,90 @@ public class AuthServiceImplTests {
         doReturn(token).when(authService).createToken(eq(TEST_USER), eq(TokenType.FORGOT_PASSWORD), any(Long.class));
         when(featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(false);
 
-        SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO(TEST_USER.getEmail(), "");
-        authService.sendForgotPasswordEmail(TEST_USER.getUsername(), dto);
+        authService.sendForgotPasswordEmail(dto);
 
         verify(authService, times(1)).createToken(TEST_USER, TokenType.FORGOT_PASSWORD, Constants.DEFAULT_FORGOT_PASSWORD_TOKEN_VALIDITY);
         verify(emailUtils, times(1)).sendForgotPasswordEmail(dto.email(), dto.redirectUrl(), token);
     }
 
     @Test
-    public void testChangeForgottenPassword_ThrowsOnNonexistentOrDeletedUser() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> authService.changeForgottenPassword(LOGIN_USER.username(), null))
-                .hasMessage(ExceptionMessages.User.userNotFound(TEST_USER.getUsername()))
-                .isExactlyInstanceOf(UserNotFoundException.class);
-
-        User user = new User();
-        user.setUsername("user");
-        user.setDeleted(true);
-        assertThatThrownBy(() -> authService.changeForgottenPassword(user.getUsername(), null))
-                .hasMessage(ExceptionMessages.User.userNotFound(user.getUsername()))
-                .isExactlyInstanceOf(UserNotFoundException.class);
-    }
-
-    @Test
     public void testChangeForgottenPassword_ThrowsIfNewPasswordsDoNotMatch() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
-
         ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("oldPass", "newPass", TEST_TOKEN.getTokenValue());
 
-        assertThatThrownBy(() -> authService.changeForgottenPassword(LOGIN_USER.username(), dto))
+        assertThatThrownBy(() -> authService.changeForgottenPassword(dto))
                 .hasMessage(ExceptionMessages.Auth.newPasswordsDoNotMatch())
                 .isExactlyInstanceOf(WrongCredentialsException.class);
     }
 
     @Test
-    public void testChangeForgottenPassword_ThrowsIfPasswordWasAlreadyChanged() {
-        when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
+    public void testChangeForgottenPassword_ThrowsOnInvalidToken() {
         ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("newPass", "newPass", TEST_TOKEN.getTokenValue());
+        when(jwtUtils.isValid(dto.token())).thenReturn(false);
 
-        doReturn(false).when(jwtUtils).isValid(TEST_TOKEN.getTokenValue());
-
-        assertThatThrownBy(() -> authService.changeForgottenPassword(LOGIN_USER.username(), dto))
-                .hasMessage(ExceptionMessages.Auth.alreadyChangedPassword())
-                .isExactlyInstanceOf(AlreadyChangedPasswordException.class);
-
-        doReturn(true).when(jwtUtils).isValid(TEST_TOKEN.getTokenValue());
-        doReturn(false).when(tokenRepository).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.FORGOT_PASSWORD);
-
-        assertThatThrownBy(() -> authService.changeForgottenPassword(LOGIN_USER.username(), dto))
+        assertThatThrownBy(() -> authService.changeForgottenPassword(dto))
                 .hasMessage(ExceptionMessages.Auth.alreadyChangedPassword())
                 .isExactlyInstanceOf(AlreadyChangedPasswordException.class);
     }
 
     @Test
-    public void testChangeForgottenPassword_Correctly() {
-        User user = User.UserBuilder.newBuilder().username("user").password("pass").build();
-        when(userRepository.findById(user.getUsername())).thenReturn(Optional.of(user));
+    public void testChangeForgottenPassword_ThrowsOnNonexistentToken() {
+        ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("newPass", "newPass", TEST_TOKEN.getTokenValue());
+        when(jwtUtils.isValid(dto.token())).thenReturn(true);
+        when(tokenRepository.existsByTokenValueAndTokenType(dto.token(), TokenType.FORGOT_PASSWORD)).thenReturn(false);
 
+        assertThatThrownBy(() -> authService.changeForgottenPassword(dto))
+                .hasMessage(ExceptionMessages.Auth.alreadyChangedPassword())
+                .isExactlyInstanceOf(AlreadyChangedPasswordException.class);
+    }
+
+    @Test
+    public void testChangeForgottenPassword_ThrowsOnNonexistentUser() {
+        ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("newPass", "newPass", TEST_TOKEN.getTokenValue());
+        when(jwtUtils.isValid(dto.token())).thenReturn(true);
+        when(tokenRepository.existsByTokenValueAndTokenType(dto.token(), TokenType.FORGOT_PASSWORD)).thenReturn(true);
+
+        String username = TEST_TOKEN.getUser().getUsername();
+        when(jwtUtils.extractUsername(dto.token())).thenReturn(username);
+        when(userRepository.findById(username)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.changeForgottenPassword(dto))
+                .hasMessage(ExceptionMessages.User.userNotFound(username))
+                .isExactlyInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    public void testChangeForgottenPassword_ThrowsOnDeletedUser() {
+        ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("newPass", "newPass", TEST_TOKEN.getTokenValue());
+        when(jwtUtils.isValid(dto.token())).thenReturn(true);
+        when(tokenRepository.existsByTokenValueAndTokenType(dto.token(), TokenType.FORGOT_PASSWORD)).thenReturn(true);
+
+        String username = TEST_TOKEN.getUser().getUsername();
+        when(jwtUtils.extractUsername(dto.token())).thenReturn(username);
+
+        User user = spy(TEST_USER);
+        when(user.isDeleted()).thenReturn(true);
+        when(userRepository.findById(username)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.changeForgottenPassword(dto))
+                .hasMessage(ExceptionMessages.User.userNotFound(username))
+                .isExactlyInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    public void testChangeForgottenPassword_Correctly() {
         ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("newPass", "newPass", TEST_TOKEN.getTokenValue());
         doReturn(true).when(jwtUtils).isValid(TEST_TOKEN.getTokenValue());
         doReturn(true).when(tokenRepository).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.FORGOT_PASSWORD);
+
+        String username = TEST_TOKEN.getUser().getUsername();
+        when(jwtUtils.extractUsername(dto.token())).thenReturn(username);
+
+        User user = User.UserBuilder.newBuilder().username(username).password("pass").build();
+        when(userRepository.findById(user.getUsername())).thenReturn(Optional.of(user));
         doReturn("encodedPassword").when(passwordEncoder).encode(dto.newPassword());
         doReturn(user).when(userRepository).save(user);
 
-        authService.changeForgottenPassword(user.getUsername(), dto);
+        authService.changeForgottenPassword(dto);
         assertEquals("encodedPassword", user.getPassword());
         verify(userRepository, times(1)).save(user);
         verify(tokenRepository, times(1)).deleteByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.FORGOT_PASSWORD);

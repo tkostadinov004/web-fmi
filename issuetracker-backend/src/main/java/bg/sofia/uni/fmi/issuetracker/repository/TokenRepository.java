@@ -10,18 +10,10 @@ import java.util.List;
 
 @Repository
 public interface TokenRepository extends JpaRepository<Token, String> {
-    List<Token> findAllByUser(User user);
-
-    void deleteAllByUser(User user);
-
-    boolean existsByTokenValue(String tokenValue);
-
     boolean existsByTokenValueAndTokenType(String tokenValue, TokenType tokenType);
 
     void deleteByTokenValueAndTokenType(String tokenValue, TokenType tokenType);
-
-    boolean existsByUserAndTokenType(User user, TokenType tokenType);
-
+    
     List<Token> findAllByUserAndTokenType(User user, TokenType tokenType);
 
     void deleteAllByUserAndTokenType(User user, TokenType tokenType);

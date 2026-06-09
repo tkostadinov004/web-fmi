@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.issuetracker.controller;
 
-import bg.sofia.uni.fmi.issuetracker.dto.input.file.FetchFileDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FileService;
@@ -10,12 +9,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -43,7 +41,7 @@ public class FileController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<Resource> getFile(@Valid @RequestBody FetchFileDTO dto) {
-        return ResponseEntity.ok(fileService.getFile(dto.path()));
+    public ResponseEntity<Resource> getFile(@RequestParam("path") String clientPath) {
+        return ResponseEntity.ok(fileService.getFile(clientPath));
     }
 }
