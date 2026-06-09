@@ -46,8 +46,11 @@ function CreateTicketPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log("data:", form);
+      // console.log(JSON.stringify(form));
+
       const res = await fetch(
-        `http://localhost:8080/projects/${projectUuid}/tickets`,
+        `/api/projects/${projectUuid}/tickets`,
         {
           method: "POST",
           headers: getHeaders(),
@@ -55,7 +58,6 @@ function CreateTicketPage() {
         },
       );
 
-      console.log("adta:",JSON.stringify(form));
       console.log("Status:", res.status);
       console.log("URL:", res.url);
 
@@ -63,7 +65,7 @@ function CreateTicketPage() {
       console.log(text);
 
       if (res.ok) {
-        navigate(`/dashboard/${projectUuid}`);
+        // navigate(`/dashboard/${projectUuid}`);
       }
     } catch (error) {
       console.log("Error on creating ticket");

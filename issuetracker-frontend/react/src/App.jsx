@@ -33,14 +33,14 @@ function App() {
             // </ProtectedRoute>
           } 
         />
-        <Route 
+        {/* <Route 
           path="/ticket/:id" 
           element={
             // <ProtectedRoute>
               <TicketModal />
             // </ProtectedRoute>
           } 
-        />
+        /> */}
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "./navbar/Navbar.jsx";
 import { Link } from "react-router-dom";
+import { Container, Row, Col, Card, Form } from "react-bootstrap";
 //липсват данни за последна модификация; кратко описание отделно,
 // списък със продукти, време за приготвяне, автора да бъде с id
 
@@ -103,58 +104,62 @@ function HomePage() {
   return (
     <>
       <Navbar> </Navbar>
-      <div className="album py-5 bg-light">
-        <div className="container">
-          <div className="row mb-4">
-            <div className="col-md-6">
-              <select
-                className="form-select"
-                onChange={(e) => setSelectedAuthor(e.target.value)}
+      <Container className="py-5">
+        {" "}
+        <Row className="mb-4">
+          {" "}
+          <Col md={6}>
+            {" "}
+            <Form.Select
+              value={selectedAuthor}
+              onChange={(e) => setSelectedAuthor(e.target.value)}
+            >
+              {" "}
+              <option value="">All authors</option>{" "}
+              {allCreators.map((creator) => (
+                <option key={creator} value={creator}>
+                  {" "}
+                  {creator}{" "}
+                </option>
+              ))}{" "}
+            </Form.Select>{" "}
+          </Col>{" "}
+        </Row>{" "}
+        <Row xs={1} sm={2} md={3} className="g-3">
+          {" "}
+          {filteredprojects.map((project) => (
+            <Col key={project.uuid}>
+              {" "}
+              <Link
+                to={`/dashboard/${project.uuid}`}
+                className="text-decoration-none"
               >
-                <option value="">All authors</option>
-                {allCreators.map((creator) => (
-                  <option key={creator} value={creator}>
-                    {creator}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-            {filteredprojects.map((project) => (
-              <div className="col" key={project.uuid}>
-                <Link
-                  to={`/dashboard/${project.uuid}`}
-                  className="text-decoration-none text-dark"
-                //   onClick={(e) => {console.log(project.uuid)}}
-                >
-                  <div className="card shadow-sm h-100 btn btn-light">
-                    <div className="card-body d-flex flex-column">
-                      <h5 className="card-title">{project.name}</h5>
-
-                      <p className="card-text">
-                        {getSummary(project.description)}
-                      </p>
-
-                      <div className="mt-auto">
-                        <small className="text-muted d-block">
-                          By user: {project.creator.username}
-                        </small>
-
-                        <small className="text-muted d-block mb-3">
-                          Created at:{" "}
-                          {new Date(project.createTime).toLocaleString()}
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+                {" "}
+                <Card className="h-100 shadow-sm">
+                  {" "}
+                  <Card.Body className="d-flex flex-column">
+                    {" "}
+                    <Card.Title> {project.name} </Card.Title>{" "}
+                    <Card.Text> {getSummary(project.description)} </Card.Text>{" "}
+                    <div className="mt-auto">
+                      {" "}
+                      <small className="text-muted d-block">
+                        {" "}
+                        By user: {project.creator.username}{" "}
+                      </small>{" "}
+                      <small className="text-muted d-block">
+                        {" "}
+                        Created at:{" "}
+                        {new Date(project.createTime).toLocaleString()}{" "}
+                      </small>{" "}
+                    </div>{" "}
+                  </Card.Body>{" "}
+                </Card>{" "}
+              </Link>{" "}
+            </Col>
+          ))}{" "}
+        </Row>{" "}
+      </Container>
     </>
   );
 }
