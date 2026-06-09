@@ -38,6 +38,8 @@ object that has the following form:
 }
 ```
 
+## Skip forgot password email sending
+
 If you want to skip forgot password email sending, send a POST request to /featureflags with the following body:
 
 ```json
@@ -48,3 +50,25 @@ If you want to skip forgot password email sending, send a POST request to /featu
 ```
 
 *Note that you have to be logged in as an admin in order to execute this request!*
+
+## Generate Javadoc
+
+In order to generate javadoc, you can:
+
+```shell
+mvn javadoc:javadoc
+```
+
+Alternatively, if you don't have maven installed:
+
+- on Mac:
+
+```shell
+./mvnw javadoc:javadoc
+```
+
+- on Windows:
+
+```shell
+./mvnw.cmd javadoc:javadoc
+```

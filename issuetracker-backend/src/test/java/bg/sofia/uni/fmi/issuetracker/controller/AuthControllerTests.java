@@ -161,10 +161,9 @@ public class AuthControllerTests extends BaseControllerTests {
 
     @Test
     public void testSendForgotPasswordEmail_ReturnsAcceptedWithResetTokenHeaderWhenFeatureFlagEnabled() throws Exception {
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO("email@test.com", "url");
         when(featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(true);
-        when(authService.sendForgotPasswordEmail("user", dto)).thenReturn("reset-token");
+        when(authService.sendForgotPasswordEmail(dto)).thenReturn("reset-token");
 
         mockMvc.perform(post("/auth/forgotPassword")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -179,7 +178,7 @@ public class AuthControllerTests extends BaseControllerTests {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         SendForgotPasswordEmailDTO dto = new SendForgotPasswordEmailDTO("email@test.com", "url");
         when(featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)).thenReturn(false);
-        doThrow(new ForgotPasswordTokenAlreadyExistsException(ExceptionMessages.Auth.forgotPasswordTokenAlreadyExists())).when(authService).sendForgotPasswordEmail("user", dto);
+        doThrow(new ForgotPasswordTokenAlreadyExistsException(ExceptionMessages.Auth.forgotPasswordTokenAlreadyExists())).when(authService).sendForgotPasswordEmail(dto);
 
         mockMvc.perform(post("/auth/forgotPassword")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -203,7 +202,7 @@ public class AuthControllerTests extends BaseControllerTests {
     public void testChangeForgottenPassword_ReturnsConflictWhenTokenInvalid() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null));
         ChangeForgottenPasswordDTO dto = new ChangeForgottenPasswordDTO("token", "new", "new");
-        doThrow(new AlreadyChangedPasswordException("Reset token is invalid or already used")).when(authService).changeForgottenPassword("user", dto);
+        doThrow(new AlreadyChangedPasswordException("Reset token is invalid or already used")).when(authService).changeForgottenPassword(dto);
 
         mockMvc.perform(patch("/auth/forgotPassword")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)

@@ -108,6 +108,12 @@ public class ExceptionMessages {
             return USER_NOT_FOUND.formatted(username);
         }
 
+        private static final String USER_WITH_EMAIL_NOT_FOUND = "User with email %s not found!";
+
+        public static String userWithEmailNotFound(String email) {
+            return USER_WITH_EMAIL_NOT_FOUND.formatted(email);
+        }
+
         private static final String EMAIL_ALREADY_EXISTS = "Account with email '%s' already exists!";
 
         public static String emailAlreadyExists(String email) {

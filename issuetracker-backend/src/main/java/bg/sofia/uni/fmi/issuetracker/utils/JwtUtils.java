@@ -5,7 +5,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -23,11 +22,13 @@ public class JwtUtils {
         this.environment = environment;
     }
 
-    public boolean isTokenExpired(String token) {
-        DecodedJWT jwt = JWT.decode(token);
-        return jwt.getExpiresAt().before(new Date());
-    }
-
+    /**
+     * Checks if the token is valid.
+     * A valid token is a token that has not been tampered and is not expired.
+     *
+     * @param token the token to be validated
+     * @return {@code true if the token is valid}, otherwise {@code false}
+     */
     public boolean isValid(String token) {
         Algorithm algorithm = Algorithm.HMAC256(getSignInKey());
         JWTVerifier verifier = JWT.require(algorithm).build();

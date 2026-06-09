@@ -131,8 +131,7 @@ public class AuthController {
     })
     @PostMapping("/forgotPassword")
     public ResponseEntity<Void> sendForgotPasswordEmail(@Valid @RequestBody SendForgotPasswordEmailDTO dto) {
-        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String forgotPasswordToken = authService.sendForgotPasswordEmail(username, dto);
+        String forgotPasswordToken = authService.sendForgotPasswordEmail(dto);
 
         HttpHeaders headers = new HttpHeaders();
         if (featureFlagService.isFeatureEnabled(Constants.SKIP_EMAIL_FEATURE_FLAG)) {
@@ -162,8 +161,7 @@ public class AuthController {
     })
     @PatchMapping("/forgotPassword")
     public ResponseEntity<Void> changeForgottenPassword(@Valid @RequestBody ChangeForgottenPasswordDTO dto) {
-        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        authService.changeForgottenPassword(username, dto);
+        authService.changeForgottenPassword(dto);
         return ResponseEntity.noContent().build();
     }
 }
