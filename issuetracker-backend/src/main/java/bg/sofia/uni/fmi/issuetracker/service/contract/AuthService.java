@@ -21,23 +21,22 @@ public interface AuthService {
      * to the repository.</p>
      *
      * @param user the registration information for the new user
-     * @return an {@link AuthResponse} containing a success message and no token
      * @throws UserAlreadyExistsException if a user with the provided username already exists
      */
-    AuthResponse register(UserRegisterDTO user);
+    void register(UserRegisterDTO user);
 
     /**
-     * Authenticates the user and issues a new authentication token.
+     * Authenticates the user and issues a new access token and a refresh token.
      *
      * <p>The username and password are verified, any old auth tokens are deleted, and
-     * a new auth token is created.</p>
+     * a new auth token and refresh token are created.</p>
      *
      * @param user the login credentials
-     * @return an {@link String} containing the new access token
+     * @return an {@link AuthResponse} containing the new access token and refresh token
      * @throws WrongCredentialsException  if the username does not exist or the password is incorrect
      * @throws UserAlreadyLoggedException if the user already has a valid active auth token
      */
-    String login(UserLoginDTO user);
+    AuthResponse login(UserLoginDTO user);
 
     /**
      * Logs the user out by deleting all authentication tokens for the given user.
@@ -87,4 +86,6 @@ public interface AuthService {
      * @throws AlreadyChangedPasswordException if the token is invalid or no matching forgot-password token exists
      */
     void changeForgottenPassword(ChangeForgottenPasswordDTO dto);
+
+    AuthResponse refresh(String refreshToken);
 }

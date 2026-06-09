@@ -6,6 +6,7 @@ import bg.sofia.uni.fmi.issuetracker.exception.NotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.OwnershipMismatchException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AuthException;
+import bg.sofia.uni.fmi.issuetracker.exception.auth.InvalidTokenException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.file.FileServiceException;
@@ -172,6 +173,12 @@ public class ExceptionHandlers {
     public ResponseEntity<ErrorResponse> handleInvalidUrl(Exception ex) {
         LOGGER.error(ex.getMessage());
         return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidUrl()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({InvalidTokenException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex) {
+        LOGGER.error(ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidUrl()), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)

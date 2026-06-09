@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserLoginDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.auth.UserRegisterDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.AlreadyChangedPasswordException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.ForgotPasswordTokenAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.auth.InvalidTokenException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
@@ -52,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse register(UserRegisterDTO user) {
+    public void register(UserRegisterDTO user) {
         if (userRepository.existsById(user.username())) {
             throw new UserAlreadyExistsException(ExceptionMessages.User.userAlreadyExists(user.username()));
         }
@@ -66,12 +67,10 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(user.password()))
                 .build();
         userRepository.save(newUser);
-
-        return new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER, null);
     }
 
     @Override
-    public String login(UserLoginDTO user) {
+    public AuthResponse login(UserLoginDTO user) {
         Optional<User> foundUser = userRepository.findById(user.username());
         if (foundUser.isEmpty() || !passwordEncoder.matches(user.password(), foundUser.get().getPassword())) {
             throw new WrongCredentialsException(ExceptionMessages.Auth.wrongCredentials());
@@ -83,8 +82,9 @@ public class AuthServiceImpl implements AuthService {
         }
         tokenRepository.deleteAll(tokens);
 
-        Token token = createToken(foundUser.get(), TokenType.AUTH, Constants.DEFAULT_AUTH_TOKEN_VALIDITY);
-        return token.getTokenValue();
+        Token authToken = createToken(foundUser.get(), TokenType.AUTH, Constants.DEFAULT_AUTH_TOKEN_VALIDITY);
+        Token refreshToken = createToken(foundUser.get(), TokenType.REFRESH, Constants.DEFAULT_REFRESH_TOKEN_VALIDITY);
+        return new AuthResponse(authToken.getTokenValue(), refreshToken.getTokenValue());
     }
 
     @Override
@@ -95,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
         }
 
-        tokenRepository.deleteAllByUserAndTokenType(user.get(), TokenType.AUTH);
+        tokenRepository.deleteAllByUserAndTokenTypeIn(user.get(), List.of(TokenType.AUTH, TokenType.REFRESH));
     }
 
     @Override
@@ -155,6 +155,30 @@ public class AuthServiceImpl implements AuthService {
         user.get().setPassword(passwordEncoder.encode(dto.newPassword()));
         userRepository.save(user.get());
         tokenRepository.deleteByTokenValueAndTokenType(dto.token(), TokenType.FORGOT_PASSWORD);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refresh(String refreshToken) {
+        if (!jwtUtils.isValid(refreshToken)) {
+            throw new InvalidTokenException(OutputMessages.System.UNAUTHORIZED);
+        }
+
+        String username = jwtUtils.extractUsername(refreshToken);
+        Optional<User> user = userRepository.findById(username);
+        if (user.isEmpty() || user.get().isDeleted()) {
+            throw new UserNotFoundException(ExceptionMessages.User.userNotFound(username));
+        }
+        if (!tokenRepository.existsByTokenValueAndUserAndTokenType(refreshToken, user.get(), TokenType.REFRESH)) {
+            throw new InvalidTokenException(ExceptionMessages.Auth.refreshTokenNotFound(username));
+        }
+
+        tokenRepository.deleteByTokenValueAndTokenType(refreshToken, TokenType.REFRESH);
+        tokenRepository.deleteAllByUserAndTokenType(user.get(), TokenType.AUTH);
+
+        Token authToken = createToken(user.get(), TokenType.AUTH, Constants.DEFAULT_AUTH_TOKEN_VALIDITY);
+        Token createdRefreshToken = createToken(user.get(), TokenType.REFRESH, Constants.DEFAULT_REFRESH_TOKEN_VALIDITY);
+        return new AuthResponse(authToken.getTokenValue(), createdRefreshToken.getTokenValue());
     }
 
     Token createToken(User user, TokenType type, long validity) {

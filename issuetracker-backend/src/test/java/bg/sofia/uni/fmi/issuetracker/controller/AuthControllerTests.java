@@ -11,12 +11,10 @@ import bg.sofia.uni.fmi.issuetracker.exception.auth.UserAlreadyLoggedException;
 import bg.sofia.uni.fmi.issuetracker.exception.auth.WrongCredentialsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
-import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuthService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -24,7 +22,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -59,20 +56,18 @@ public class AuthControllerTests extends BaseControllerTests {
     @Test
     public void testRegister_ReturnsOkWhenSuccessful() throws Exception {
         UserRegisterDTO dto = new UserRegisterDTO("firstName", "lastName", "User", "email@email.com", "company", "pass");
-        when(authService.register(dto)).thenReturn(new AuthResponse(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER, null));
 
         mockMvc.perform(post("/auth/register")
                         .contentType("application/json")
                         .content(OBJECT_MAPPER.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER))
-                .andExpect(jsonPath("$.token").value(nullValue()));
+                .andExpect(status().isOk());
     }
 
     @Test
     public void testRegister_ReturnsConflictWhenUserAlreadyExists() throws Exception {
         UserRegisterDTO dto = new UserRegisterDTO("firstName", "lastName", "User", "email@email.com", "company", "pass");
-        when(authService.register(dto)).thenThrow(new UserAlreadyExistsException(ExceptionMessages.User.userAlreadyExists(dto.username())));
+        doThrow(new UserAlreadyExistsException(ExceptionMessages.User.userAlreadyExists(dto.username())))
+                .when(authService).register(dto);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)

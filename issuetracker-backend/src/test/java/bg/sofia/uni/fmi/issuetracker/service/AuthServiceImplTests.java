@@ -16,13 +16,11 @@ import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.repository.UserRepository;
-import bg.sofia.uni.fmi.issuetracker.response.AuthResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
 import bg.sofia.uni.fmi.issuetracker.utils.EmailUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
-import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,7 +37,6 @@ import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_TOKEN;
 import static bg.sofia.uni.fmi.issuetracker.TestData.TEST_USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -89,9 +86,6 @@ public class AuthServiceImplTests {
         doReturn("encodedPass").when(passwordEncoder).encode(any());
         doAnswer(a -> null).when(userRepository).save(any());
 
-        AuthResponse result = authService.register(REGISTER_USER);
-        assertEquals(OutputMessages.Auth.SUCCESSFULLY_CREATED_USER, result.message());
-        assertNull(result.token());
         verify(passwordEncoder, times(1)).encode(REGISTER_USER.password());
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);

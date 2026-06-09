@@ -38,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.getRequestURI().startsWith("/swagger-ui") ||
                 request.getRequestURI().startsWith("/auth/login") ||
                 request.getRequestURI().startsWith("/auth/register") ||
-                request.getRequestURI().startsWith("/auth/forgotPassword");
+                request.getRequestURI().startsWith("/auth/forgotPassword") ||
+                request.getRequestURI().startsWith("/auth/refresh");
     }
 
     @Override
@@ -46,19 +47,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            outputUnauthorized(response);
+            outputUnauthorized(response, false);
             return;
         }
 
         String token = authHeader.substring(7);
         if (!jwtUtils.isValid(token) || !tokenRepository.existsByTokenValueAndTokenType(token, TokenType.AUTH)) {
-            outputUnauthorized(response);
+            outputUnauthorized(response, true);
             return;
         }
 
         String username = jwtUtils.extractUsername(token);
         if (userService.isDeleted(username)) {
-            outputUnauthorized(response);
+            outputUnauthorized(response, false);
             return;
         }
 
@@ -69,9 +70,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    void outputUnauthorized(HttpServletResponse response) throws IOException {
+    void outputUnauthorized(HttpServletResponse response, boolean isExpired) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write(buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED));
+        response.getWriter().write(buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED, isExpired));
     }
 }
