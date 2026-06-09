@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.issuetracker.repository.neo;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.WorkflowNotFoundException;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public interface WorkflowRepository {
      *
      * @param projectId the unique identifier of the project
      * @return the initial status for the project
+     * @throws WorkflowNotFoundException if the project does not have a workflow yet
      */
     String getInitialStatus(String projectId);
 

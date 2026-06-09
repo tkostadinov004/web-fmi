@@ -190,6 +190,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        neoProjectRepository.addProject(projectId);
         workflowRepository.createWorkflow(projectId, dto);
     }
 
