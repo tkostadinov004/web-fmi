@@ -22,7 +22,6 @@ public class JacksonConfig {
             dateTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
             dateTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
 
-            // Register the module onto the builder
             builder.addModule(dateTimeModule);
         };
     }

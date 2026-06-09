@@ -10,7 +10,6 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.user.UserNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Role;
@@ -67,7 +66,6 @@ public interface ProjectService {
      * @throws ProjectNotFoundException                 if the project cannot be found
      * @throws UserNotFoundException                    if the user cannot be found
      * @throws UnauthorizedProjectModificationException if the initiator is not a team leader (therefore unauthorized to perform the task) in the given project
-     * @throws ProjectUserNotFoundException             if the project user is not found
      */
     void deleteProjectUser(String projectId, String username, String actionInitiatorUsername);
 

@@ -14,10 +14,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
@@ -53,8 +51,8 @@ public class ExceptionHandlers {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlers.class);
 
     @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
-            UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
-            TicketCommentNotInTicketException.class, TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
+            AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
+            TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
             UnassignedTicketException.class, InvalidWorkflowTransitionException.class})
     public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
