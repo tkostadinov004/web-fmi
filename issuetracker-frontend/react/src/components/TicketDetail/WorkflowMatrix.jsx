@@ -1,6 +1,6 @@
 import React from 'react';
 
-const WorkflowMatrix = ({ workflow, activeTransitions, isEditMode, isSaving, onCheckboxChange, onDeleteStatus }) => {
+const WorkflowMatrix = ({ workflow, activeTransitions, isEditMode, isSaving, onCheckboxChange }) => {
   return (
     <table className="workflow-matrix">
       <thead>
@@ -9,17 +9,6 @@ const WorkflowMatrix = ({ workflow, activeTransitions, isEditMode, isSaving, onC
           {workflow.workflowStatuses.map((status) => (
             <th key={status} className="workflow-th-relative">
               {status.replace(/_/g, ' ')}
-              
-              {isEditMode && status !== workflow.initialStatus && (
-                <button
-                  onClick={() => onDeleteStatus(status)}
-                  disabled={isSaving}
-                  title="Изтрий статус"
-                  className="delete-status-btn"
-                >
-                  ✖
-                </button>
-              )}
             </th>
           ))}
         </tr>
@@ -36,7 +25,7 @@ const WorkflowMatrix = ({ workflow, activeTransitions, isEditMode, isSaving, onC
               const isSameStatus = rowStatus === colStatus;
 
               return (
-                <td key={colStatus} className="checkbox-cell">
+                <td key={colStatus} className="checkbox-cell" title={`Преход от ${rowStatus.replace(/_/g, ' ')} към ${colStatus.replace(/_/g, ' ')}`}>
                   <input
                     type="checkbox"
                     checked={isAllowed}

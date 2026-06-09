@@ -210,6 +210,8 @@
 
 .description-display p {
   margin: 0;
+  white-space: pre-wrap; 
+  word-break: break-word;
 }
 
 .placeholder-text {
@@ -707,7 +709,9 @@
   padding-right: 30px !important; 
 }
 
-.delete-status-btn {
+/* За Триене */
+
+/* .delete-status-btn {
   position: absolute;
   right: 5px;
   top: 50%;
@@ -732,7 +736,7 @@
 .delete-status-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
+} */
 
 .workflow-initial-status {
   margin-bottom: 1.5rem;

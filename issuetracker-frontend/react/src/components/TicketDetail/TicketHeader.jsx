@@ -14,18 +14,14 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
           return;
         }
 
-        // Правим заявката с UUID на проекта
         const projectData = await projectService.getProject(projectUuid);
 
-        // Взимаме логнатия потребител
         const myUsername = localStorage.getItem('currentUsername');
 
-        // Проверяваме правата
         const isCreator = projectData.creator.username === myUsername;
         const myUserObj = projectData.users.find(u => u.username === myUsername);
         const hasAdminRole = myUserObj && myUserObj.roles.includes('TEAM_LEAD');
 
-        // Отключваме бутона при съвпадение
         if (isCreator || hasAdminRole) {
           setCanEditWorkflow(true);
         } else {
