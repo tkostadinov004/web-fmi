@@ -7,9 +7,14 @@ import java.util.List;
 
 public class ExceptionMessages {
     private static final String INVALID_URL = "Invalid URL!";
+    private static final String INVALID_DATE = "Invalid date '%s'! Correct format is: '%s'";
 
     public static String invalidUrl() {
         return INVALID_URL;
+    }
+
+    public static String invalidDate(String date) {
+        return INVALID_DATE.formatted(date, Constants.DATE_FORMAT);
     }
 
     public static class Auth {
