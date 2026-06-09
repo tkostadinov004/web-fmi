@@ -15,20 +15,17 @@ const TicketSidebar = ({ projectId, ticket, onUpdate }) => {
   useEffect(() => {
     const fetchAllowedTransitions = async () => {
       try {
-        // 1. Подаваме projectId
         const workflowData = await workflowService.getWorkflow(projectId);
         
-        // 2. Филтрираме новия масив transitions, за да намерим накъде можем да отидем
         const possibleTransitions = workflowData.transitions
           .filter(t => t.source === ticket.ticketStatus)
           .map(t => t.target);
-        
-        // 3. Комбинираме текущия статус и позволените (ползваме Set, за да сме сигурни, че няма дубликати)
+
         const uniqueStatuses = Array.from(new Set([ticket.ticketStatus, ...possibleTransitions]));
         setAllowedStatuses(uniqueStatuses);
       } catch (error) {
         console.error("Грешка при зареждане на workflow", error);
-        // Fallback: Ако сървърът гръмне, позволяваме базовите + текущия
+
         const fallbackUnique = Array.from(new Set([ticket.ticketStatus, ...FALLBACK_STATUSES]));
         setAllowedStatuses(fallbackUnique); 
       }
@@ -63,7 +60,7 @@ const TicketSidebar = ({ projectId, ticket, onUpdate }) => {
           onChange={(e) => handleGeneralUpdate('ticketStatus', e.target.value)}
           disabled={isUpdating}
         >
-          {/* Вече въртим директно allowedStatuses, защото може да имаме къстъм статуси (напр. QA) */}
+
           {allowedStatuses.map(status => (
             <option key={status} value={status}>{status.replace(/_/g, ' ')}</option>
           ))}

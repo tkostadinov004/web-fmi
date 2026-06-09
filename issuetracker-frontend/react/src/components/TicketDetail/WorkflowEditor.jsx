@@ -71,32 +71,6 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
     setNewStatusText('');
   };
 
-  const handleDeleteStatus = (statusToDelete) => {
-    if (statusToDelete === workflow.initialStatus) {
-      alert("Не можете да изтриете началния статус. Първо изберете друг от падащото меню.");
-      return;
-    }
-
-    const isConfirmed = window.confirm(`Сигурни ли сте, че искате да изтриете статус "${statusToDelete.replace(/_/g, ' ')}"? Това ще премахне и всички връзки към него.`);
-    if (!isConfirmed) return;
-
-    setWorkflow((prev) => {
-      // Махаме го от списъка със статуси
-      const updatedStatuses = prev.workflowStatuses.filter(s => s !== statusToDelete);
-      
-      // Махаме всички преходи, в които участва
-      const updatedTransitions = prev.transitions.filter(
-        t => t.source !== statusToDelete && t.target !== statusToDelete
-      );
-
-      return {
-        ...prev,
-        workflowStatuses: updatedStatuses,
-        transitions: updatedTransitions
-      };
-    });
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -159,7 +133,6 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
         isEditMode={isEditMode}
         isSaving={isSaving}
         onCheckboxChange={handleCheckboxChange}
-        onDeleteStatus={handleDeleteStatus} 
       />
 
       {isEditMode && (
