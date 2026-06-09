@@ -3,6 +3,8 @@ package bg.sofia.uni.fmi.issuetracker.utils;
 import bg.sofia.uni.fmi.issuetracker.model.auth.Token;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,6 +15,8 @@ import java.util.concurrent.ExecutorService;
 
 @Component
 public class EmailUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailUtils.class);
+
     @Value("${services.email.default_sender}")
     private String sender;
 
@@ -25,12 +29,11 @@ public class EmailUtils {
     }
 
     public void sendForgotPasswordEmail(String receiver, String redirectUrl, Token token) {
-        CompletableFuture.supplyAsync(() -> {
-            sendForgotPasswordEmailInternal(receiver, redirectUrl, token);
-            return "";
-        }, emailSenderThreadPool).exceptionally(ex -> {
-            throw new RuntimeException(ex);
-        });
+        CompletableFuture.runAsync(() -> sendForgotPasswordEmailInternal(receiver, redirectUrl, token), emailSenderThreadPool)
+                .exceptionally(ex -> {
+                    LOGGER.error("Failed to send email. Reason: {}", ex.getMessage());
+                    return null;
+                });
     }
 
     void sendForgotPasswordEmailInternal(String receiver, String redirectUrl, Token token) {
