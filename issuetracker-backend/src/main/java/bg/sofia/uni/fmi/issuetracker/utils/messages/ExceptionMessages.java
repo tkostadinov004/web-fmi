@@ -26,6 +26,7 @@ public class ExceptionMessages {
         private static final String FORGOT_PASSWORD_TOKEN_EXISTS = "You already started a forgot password procedure!";
         private static final String USER_ALREADY_LOGGED_IN = "User with username %s is already logged in!";
         private static final String USER_NOT_LOGGED = "User not logged in!";
+        private static final String REFRESH_TOKEN_NOT_FOUND = "Expired or nonexistent token for user '%s'";
 
         public static String wrongCredentials() {
             return WRONG_CREDENTIALS;
@@ -57,6 +58,10 @@ public class ExceptionMessages {
 
         public static String userNotLogged() {
             return USER_NOT_LOGGED;
+        }
+
+        public static String refreshTokenNotFound(String username) {
+            return REFRESH_TOKEN_NOT_FOUND.formatted(username);
         }
     }
 

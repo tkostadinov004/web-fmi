@@ -9,6 +9,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.auditlog.OutputAuditLogDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.file.InvalidFileFormatException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.AuditLogService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.UserService;
 import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
@@ -58,7 +59,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid pagination or sorting parameters",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -84,7 +85,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found or already deleted",
@@ -105,7 +106,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid picture file format, picture file larger than limit, or missing picture file",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -127,7 +128,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User details retrieved successfully",
                     content = @Content(schema = @Schema(implementation = UserDetailsDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -144,7 +145,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid profile update data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Authenticated user was not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "The provided email address in the DTO is already in use",
@@ -164,7 +165,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = OutputAuditLogDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })

@@ -1,38 +1,36 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-const getHeaders = () => {
-  const token = localStorage.getItem("authToken");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-};
+import axios_client from "../../axiosClient";
+import { ticketService } from "../../services/ticketService";
 
 function CreateTicketPage() {
   const { projectUuid } = useParams();
-  const username = localStorage.getItem("currentUsername");
 
   const navigate = useNavigate();
 
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     code: "",
     title: "",
     description: "",
     ticketPriority: "LOWEST",
     dueDate: "",
-    assigneeUsername: username,
+    assigneeUsername: "",
   });
 
   useEffect(() => {
-    const fetchUser = async () => {
-      //   const res = await fetch(`http://localhost:3000/users/${projectUuid}`);
-      //   const data = await res.json();
-      //   console.log(data);
-      //   setForm(data);
+    const fetchUsers = async () => {
+      if (!projectUuid) return;
+
+      try {
+        const data = await ticketService.getUsers(projectUuid);
+        setUsers(data);
+      } catch (error) {
+        console.error("Error loading project users:", error);
+      }
     };
 
-    fetchUser();
+    fetchUsers();
   }, [projectUuid]);
 
   const handleChange = (e) => {
@@ -45,30 +43,21 @@ function CreateTicketPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const body = { ...form, dueDate: form.dueDate.replace("T", " ")}
+      const body = {
+        code: form.code,
+        title: form.title,
+        description: form.description,
+        ticketPriority: form.ticketPriority,
+        dueDate: form.dueDate ? form.dueDate.replace("T", " ") : undefined,
+        ...(form.assigneeUsername ? { assigneeUsername: form.assigneeUsername } : {}),
+      };
       console.log("data:", body);
-      // console.log(JSON.stringify(form));
 
-      const res = await fetch(
-        `/api/projects/${projectUuid}/tickets`,
-        {
-          method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify(body),
-        },
-      );
+      await axios_client.post(`/projects/${projectUuid}/tickets`, body);
 
-      console.log("Status:", res.status);
-      console.log("URL:", res.url);
-
-      const text = await res.text();
-      console.log(text);
-
-      if (res.ok) {
-        navigate(`/dashboard/${projectUuid}`);
-      }
+      navigate(`/dashboard/${projectUuid}`);
     } catch (error) {
-      console.log("Error on creating ticket");
+      console.log("Error on creating ticket", error);
     }
   };
 
@@ -144,8 +133,20 @@ function CreateTicketPage() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Assignee Username</label>
-          <input className="form-control" value={username || ""} disabled />
+          <label className="form-label">Assignee</label>
+          <select
+            className="form-select"
+            name="assigneeUsername"
+            value={form.assigneeUsername}
+            onChange={handleChange}
+          >
+            <option value="">-- Не е зададен изпълнител --</option>
+            {users.map((user) => (
+              <option key={user.username} value={user.username}>
+                {user.firstName} {user.lastName} ({user.username})
+              </option>
+            ))}
+          </select>
         </div>
 
         <button className="btn btn-success mt-3" type="submit">

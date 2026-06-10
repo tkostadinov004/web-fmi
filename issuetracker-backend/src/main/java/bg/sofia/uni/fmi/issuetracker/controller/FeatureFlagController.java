@@ -5,6 +5,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.featureflag.AddFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.OutputFeatureFlagDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.FeatureFlagService;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ValidationConstants;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +48,7 @@ public class FeatureFlagController {
             @ApiResponse(responseCode = "200", description = "Feature flags retrieved successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = OutputFeatureFlagDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -64,7 +65,7 @@ public class FeatureFlagController {
             @ApiResponse(responseCode = "200", description = "Feature flag value retrieved successfully",
                     content = @Content(schema = @Schema(implementation = OutputFeatureFlagDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Feature flag not found",
@@ -84,7 +85,7 @@ public class FeatureFlagController {
             @ApiResponse(responseCode = "400", description = "Invalid feature flag data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "A feature flag with the given name already exists",
@@ -107,7 +108,7 @@ public class FeatureFlagController {
             @ApiResponse(responseCode = "400", description = "Invalid updated feature flag data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Feature flag not found",
@@ -130,7 +131,7 @@ public class FeatureFlagController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Feature flag deleted successfully", content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "The current user does not have admin privileges",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Feature flag not found",

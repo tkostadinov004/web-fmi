@@ -1,61 +1,19 @@
-const API_BASE = '/api';
-
-const getHeaders = () => {
-    const token = localStorage.getItem('authToken');
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
-};
+import axios_client from "../axiosClient";
 
 export const workflowService = {
-    getWorkflow: async (projectId) => {
-        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
-            method: 'GET',
-            headers: getHeaders()
-        });
+  getWorkflow: async (projectId) => {
+    return await axios_client.get(`/projects/${projectId}/workflow`);
+  },
 
-        if (!response.ok) {
-            throw new Error('Грешка при зареждане на workflow.');
-        }
-        return response.json();
-    },
+  createWorkflow: async (projectId, workflowData) => {
+    return await axios_client.post(`/projects/${projectId}/workflow`, workflowData);
+  },
 
-    createWorkflow: async (projectId, workflowData) => {
-        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(workflowData)
-        });
+  updateWorkflow: async (projectId, workflowData) => {
+    return await axios_client.put(`/projects/${projectId}/workflow`, workflowData);
+  },
 
-        if (!response.ok) {
-            throw new Error('Грешка при създаване на workflow.');
-        }
-        return response; 
-    },
-
-    updateWorkflow: async (projectId, workflowData) => {
-        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
-            method: 'PUT',
-            headers: getHeaders(),
-            body: JSON.stringify(workflowData)
-        });
-
-        if (!response.ok) {
-            throw new Error('Грешка при обновяване на workflow.');
-        }
-        return response; 
-    },
-    
-    deleteWorkflow: async (projectId) => {
-        const response = await fetch(`${API_BASE}/projects/${projectId}/workflow`, {
-            method: 'DELETE',
-            headers: getHeaders()
-        });
-
-        if (!response.ok) {
-            throw new Error('Грешка при изтриване на workflow.');
-        }
-        return response; 
-    }
+  deleteWorkflow: async (projectId) => {
+    return await axios_client.delete(`/projects/${projectId}/workflow`);
+  },
 };

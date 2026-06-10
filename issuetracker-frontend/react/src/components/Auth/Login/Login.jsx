@@ -14,9 +14,8 @@ const Login = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('accessToken');
         if (token) {
-            // Слагаме replace: true, за да не може да се върне тук с бутона "Назад" на браузъра
             navigate('/home', { replace: true });
         }
     }, [navigate]);
@@ -29,7 +28,7 @@ const Login = () => {
         try {
             const token = await authService.login(username, password);
 
-            localStorage.setItem('authToken', token);
+            localStorage.setItem('accessToken', token);
             localStorage.setItem('currentUsername', username);
             navigate('/home');
         } catch (error) {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Register.css";
 import { NavLink, useNavigate } from "react-router-dom";
+import axios_client from "../../../axiosClient";
 
 const Register = () => {
   useEffect(() => {
@@ -25,39 +26,16 @@ const Register = () => {
     setErrorMessage("");
 
     try {
-      // console.log(
-      //   JSON.stringify({
-      //     firstName,
-      //     lastName,
-      //     username,
-      //     email,
-      //     companyName,
-      //     password,
-      //   }),
-      // );
-      const response = await fetch("http://localhost:8080/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          username,
-          email,
-          companyName,
-          password,
-        }),
+      await axios_client.post("/auth/register", {
+        firstName,
+        lastName,
+        username,
+        email,
+        companyName,
+        password,
       });
 
-      // console.log("Status:", response.status);
-
-      // const text = await response.text();
-      // console.log("Response:", text);
-      
-      if (response.ok) {
-        navigate("/login");
-      } else {
-        setErrorMessage("An error occurred during register.");
-      }
+      navigate("/login");
     } catch (error) {
       console.log(error);
       setErrorMessage("Server connection problem.");

@@ -3,13 +3,11 @@ package bg.sofia.uni.fmi.issuetracker.filter;
 import bg.sofia.uni.fmi.issuetracker.model.auth.TokenType;
 import bg.sofia.uni.fmi.issuetracker.repository.TokenRepository;
 import bg.sofia.uni.fmi.issuetracker.service.UserServiceImpl;
-import bg.sofia.uni.fmi.issuetracker.utils.CommonUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.JwtUtils;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.OutputMessages;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -58,11 +56,6 @@ public class JwtAuthenticationFilterTests {
     @Mock
     private PrintWriter mockWriter;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        //when(request.getRequestURI()).thenReturn("/logic/test");
-    }
-
     @Test
     void testFilter_DoesNotCheckTokenWithAuthEndpoints() throws Exception {
         when(request.getRequestURI()).thenReturn("/auth/login");
@@ -90,7 +83,7 @@ public class JwtAuthenticationFilterTests {
         when(response.getWriter()).thenReturn(mockWriter);
 
         filter.doFilterInternal(request, response, filterChain);
-        verifyUnauthorizedResponse();
+        verifyUnauthorizedResponse(true);
         verify(filterChain, never()).doFilter(any(), any());
     }
 
@@ -102,7 +95,7 @@ public class JwtAuthenticationFilterTests {
         when(response.getWriter()).thenReturn(mockWriter);
 
         filter.doFilterInternal(request, response, filterChain);
-        verifyUnauthorizedResponse();
+        verifyUnauthorizedResponse(true);
         verify(filterChain, never()).doFilter(any(), any());
         verify(jwtUtils, times(1)).isValid(TEST_TOKEN.getTokenValue());
         verify(tokenRepository, times(1)).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.AUTH);
@@ -118,7 +111,7 @@ public class JwtAuthenticationFilterTests {
         when(response.getWriter()).thenReturn(mockWriter);
 
         filter.doFilterInternal(request, response, filterChain);
-        verifyUnauthorizedResponse();
+        verifyUnauthorizedResponse(false);
         verify(filterChain, never()).doFilter(any(), any());
         verify(jwtUtils, times(1)).isValid(TEST_TOKEN.getTokenValue());
         verify(tokenRepository, times(1)).existsByTokenValueAndTokenType(TEST_TOKEN.getTokenValue(), TokenType.AUTH);
@@ -156,15 +149,15 @@ public class JwtAuthenticationFilterTests {
         filter.doFilterInternal(request, response, filterChain);
 
         verify(filterChain, never()).doFilter(request, response);
-        verifyUnauthorizedResponse();
+        verifyUnauthorizedResponse(false);
         verify(jwtUtils, never()).extractUsername(anyString());
     }
 
-    private void verifyUnauthorizedResponse() throws Exception {
+    private void verifyUnauthorizedResponse(boolean isExpired) throws Exception {
         verify(request, times(1)).getHeader("Authorization");
         verify(response, times(1)).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         verify(response, times(1)).setContentType("application/json");
         verify(response, times(1)).getWriter();
-        verify(mockWriter, times(1)).write(CommonUtils.buildErrorResponseAsJson(OutputMessages.System.UNAUTHORIZED));
+        verify(mockWriter, times(1)).write(JwtAuthenticationFilter.buildErrorResponse(OutputMessages.System.UNAUTHORIZED, isExpired));
     }
 }

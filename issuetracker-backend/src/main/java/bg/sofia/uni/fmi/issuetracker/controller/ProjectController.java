@@ -9,6 +9,7 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.project.ProjectDetailsUserDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.ProjectService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,7 +53,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
@@ -68,7 +69,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "Tickets retrieved successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TicketDetailsDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Project not found",
@@ -87,7 +88,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -114,7 +115,7 @@ public class ProjectController {
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -139,7 +140,7 @@ public class ProjectController {
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -166,7 +167,7 @@ public class ProjectController {
                     responseCode = "204", description = "Project deleted successfully",
                     content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -190,7 +191,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "Project users retrieved successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectDetailsUserDTO.class)))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
@@ -219,7 +220,7 @@ public class ProjectController {
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))
             ),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -237,7 +238,6 @@ public class ProjectController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-
     @PostMapping("/{projectId}/users")
     public ResponseEntity<ProjectDetailsUserDTO> addUserToProject(
             @Parameter(description = "UUID of the project", required = true)
@@ -257,7 +257,7 @@ public class ProjectController {
                     responseCode = "204", description = "User removed from project successfully",
                     content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(

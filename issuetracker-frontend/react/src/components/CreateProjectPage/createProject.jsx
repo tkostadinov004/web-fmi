@@ -1,117 +1,3 @@
-// import { useState } from "react";
-// import Dropdown from "react-bootstrap/Dropdown";
-// import Modal from "react-bootstrap/Modal";
-// import Form from "react-bootstrap/Form";
-// import Button from "react-bootstrap/Button";
-// import WorkflowEditor from "../TicketDetail/WorkflowEditor";
-
-// const API_BASE = "/api";
-
-// const getHeaders = () => {
-//   const token = localStorage.getItem("authToken");
-//   return {
-//     "Content-Type": "application/json",
-//     Authorization: `Bearer ${token}`,
-//   };
-// };
-
-// function CreateProjectPage() {
-//   const [showModal, setShowModal] = useState(false);
-//   const [errorMessage, setErrorMessage] = useState(false);
-
-//   const [form, setForm] = useState({
-//     name: "",
-//   });
-
-//   const handleClose = () => {
-//     setShowModal(false);
-//     setErrorMessage("")
-//   };
-
-//   const handleOpen = () => {
-//     setShowModal(true);
-//   };
-
-//   const handleChange = (e) => {
-//     setForm({
-//       ...form,
-//       [e.target.name]: e.target.value,
-//     });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       console.log(form);
-
-//       const response = await fetch(`${API_BASE}/projects`, {
-//         method: "POST",
-//         headers: getHeaders(),
-//         body: JSON.stringify(form)
-//       });
-
-//       if (response.ok) {
-//         console.log("Succesful created project");
-//         setShowModal(false);
-//       } else {
-//         setErrorMessage("Не успяхме да заредим информацията за билета.");
-//       }
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <Dropdown.Item
-//         onClick={(e) => {
-//           e.preventDefault();
-//           handleOpen();
-//         }}
-//       >
-//         Create new project...
-//       </Dropdown.Item>
-
-//       <Modal show={showModal} onHide={handleClose} centered>
-//         <Form onSubmit={handleSubmit}>
-//           <Modal.Header closeButton>
-//             <Modal.Title>Create Project</Modal.Title>
-//           </Modal.Header>
-
-//           <Modal.Body>
-//             {errorMessage && <div>{errorMessage}</div>}
-
-//             <Form.Group className="mb-3">
-//               <Form.Label>Project Name</Form.Label>
-
-//               <Form.Control
-//                 type="text"
-//                 name="name"
-//                 value={form.name}
-//                 onChange={handleChange}
-//                 required
-//               />
-//             </Form.Group>
-//           </Modal.Body>
-
-//           <Modal.Footer>
-//             <Button variant="secondary" onClick={handleClose}>
-//               Cancel
-//             </Button>
-
-//             <Button variant="primary" type="submit">
-//               Create
-//             </Button>
-//           </Modal.Footer>
-//         </Form>
-//       </Modal>
-//     </>
-//   );
-// }
-
-// export default CreateProjectPage;
-
 import { useState } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import Modal from "react-bootstrap/Modal";
@@ -119,18 +5,9 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 
+import axios_client from "../../axiosClient";
 import WorkflowEditor from "../TicketDetail/WorkflowEditor";
 
-const API_BASE = "/api";
-
-const getHeaders = () => {
-  const token = localStorage.getItem("authToken");
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-};
 
 function CreateProjectPage({ onProjectCreated }) {
   const [showModal, setShowModal] = useState(false);
@@ -174,25 +51,12 @@ function CreateProjectPage({ onProjectCreated }) {
     try {
       setErrorMessage("");
 
-      const response = await fetch(`${API_BASE}/projects`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(form),
-      });
-
-      if (!response.ok) {
-        setErrorMessage("Failed to create project.");
-        return;
-      }
-
-      const createdProject = await response.json();
+      const createdProject = await axios_client.post(`/projects`, form);
 
       setProjectId(createdProject.uuid);
-
       setStep("workflow");
     } catch (error) {
       console.error(error);
-
       setErrorMessage("Unexpected error occurred.");
     }
   };
