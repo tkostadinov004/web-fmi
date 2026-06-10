@@ -421,8 +421,7 @@ public class AuthServiceImplTests {
 
         assertEquals(accessToken.getTokenValue(), response.accessToken());
         assertEquals(refreshTokenEntity.getTokenValue(), response.refreshToken());
-        verify(tokenRepository, times(1)).deleteByTokenValueAndTokenType(refreshToken, TokenType.REFRESH);
-        verify(tokenRepository, times(1)).deleteAllByUserAndTokenType(TEST_USER, TokenType.AUTH);
+        verify(tokenRepository, times(1)).deleteAllByUserAndTokenTypeIn(TEST_USER, List.of(TokenType.AUTH, TokenType.REFRESH));
     }
 
     @Test

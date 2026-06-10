@@ -1,16 +1,12 @@
-const API_BASE = "http://localhost:8080";
+import axios_client from "../axiosClient";
 
 export const authService = {
   login: async (username, password) => {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    const response = await axios_client.post(`/auth/login`, { username, password }, { rawResponse: true });
 
-    const authToken = response.headers.get("Authorization");
+    const authToken = response.headers?.Authorization || response.headers?.authorization;
 
-    if (!response.ok || !authToken) {
+    if (response.status !== 200 || !authToken) {
       throw new Error("Възникна грешка при влизане.");
     }
     return authToken;

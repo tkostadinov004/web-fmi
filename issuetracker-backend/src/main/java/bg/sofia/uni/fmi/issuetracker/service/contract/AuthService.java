@@ -96,7 +96,7 @@ public interface AuthService {
      * are removed before new tokens are created.</p>
      *
      * @param refreshToken the refresh token to validate and use for issuing new tokens
-     * @return an {@link bg.sofia.uni.fmi.issuetracker.response.AuthResponse} containing the new access token and refresh token
+     * @return an {@link AuthResponse} containing the new access token and refresh token
      * @throws InvalidTokenException if the refresh token is invalid or not present in the refresh token repository
      * @throws UserNotFoundException if the token's owner user does not exist or is marked as deleted
      */

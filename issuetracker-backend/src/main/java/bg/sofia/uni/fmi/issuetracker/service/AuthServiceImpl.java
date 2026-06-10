@@ -173,8 +173,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidTokenException(ExceptionMessages.Auth.refreshTokenNotFound(username));
         }
 
-        tokenRepository.deleteByTokenValueAndTokenType(refreshToken, TokenType.REFRESH);
-        tokenRepository.deleteAllByUserAndTokenType(user.get(), TokenType.AUTH);
+        tokenRepository.deleteAllByUserAndTokenTypeIn(user.get(), List.of(TokenType.AUTH, TokenType.REFRESH));
 
         Token authToken = createToken(user.get(), TokenType.AUTH, Constants.DEFAULT_AUTH_TOKEN_VALIDITY);
         Token createdRefreshToken = createToken(user.get(), TokenType.REFRESH, Constants.DEFAULT_REFRESH_TOKEN_VALIDITY);

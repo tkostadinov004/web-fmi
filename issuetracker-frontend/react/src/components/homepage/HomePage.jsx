@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import axios_client from "../../axiosClient";
 
 import Navbar from "./navbar/Navbar.jsx";
 import CreateProjectPage from "../CreateProjectPage/createProject.jsx";
-
-const getHeaders = () => {
-  const token = localStorage.getItem("authToken");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-};
 
 function HomePage() {
   const [selectedAuthor, setSelectedAuthor] = useState("");
@@ -22,17 +15,7 @@ function HomePage() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/projects", {
-        method: "GET",
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to load projects");
-      }
-
-      const data = await response.json();
-
+      const data = await axios_client.get("/projects");
       setProjects(data);
     } catch (error) {
       console.error("Error loading projects:", error);
@@ -43,15 +26,7 @@ function HomePage() {
 
   const deleteProject = async (projectId) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: "DELETE",
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete project");
-      }
-
+      await axios_client.delete(`/projects/${projectId}`);
       await loadProjects();
     } catch (error) {
       console.error("Error deleting project:", error);

@@ -78,10 +78,7 @@ export const useDashboardData = (currProjectUuid) => {
       setIsProjectLoading(true);
 
       try {
-        const [ticketsData, usersData] = await Promise.all([
-          fetchTickets(currProjectUuid),
-          fetchUsers(currProjectUuid),
-        ]);
+        const [ticketsData, usersData] = await Promise.all([fetchTickets(currProjectUuid), fetchUsers(currProjectUuid)]);
 
         setTickets(ticketsData);
         setUsers(usersData);

@@ -8,7 +8,8 @@ const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await ticketService.getUsers();
+        const data = await ticketService.getUsers(projectId);
+        console.log(data);
         setUsers(data);
       } catch (error) {
         console.error('Грешка при зареждане на потребителите:', error);

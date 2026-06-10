@@ -75,7 +75,7 @@ public class AuthController {
         AuthResponse tokens = authService.login(user);
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.refreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(Constants.DEFAULT_REFRESH_TOKEN_VALIDITY)
                 .sameSite(SameSiteCookies.LAX.toString())
@@ -102,7 +102,7 @@ public class AuthController {
         AuthResponse tokens = authService.refresh(refreshToken);
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.refreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(Constants.DEFAULT_REFRESH_TOKEN_VALIDITY)
                 .sameSite(SameSiteCookies.LAX.toString())
@@ -130,7 +130,7 @@ public class AuthController {
         authService.logout(username);
         ResponseCookie cookie = ResponseCookie.from("refreshToken", null)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(0)
                 .build();
