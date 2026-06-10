@@ -4,12 +4,12 @@ export const authService = {
   login: async (username, password) => {
     const response = await axios_client.post(`/auth/login`, { username, password }, { rawResponse: true });
 
-    const authToken = response.headers?.Authorization || response.headers?.authorization;
+    const accessToken = response.headers?.Authorization || response.headers?.authorization;
 
-    if (response.status !== 200 || !authToken) {
+    if (response.status !== 200 || !accessToken) {
       throw new Error("Възникна грешка при влизане.");
     }
-    return authToken;
+    return accessToken;
   },
 
   // register:

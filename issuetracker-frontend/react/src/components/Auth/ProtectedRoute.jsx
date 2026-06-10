@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('accessToken');
 
   // Ако НЯМА токен, го изхвърляме към логин страницата
   // Свойството "replace" изтрива опита за влизане от историята на браузъра, 
