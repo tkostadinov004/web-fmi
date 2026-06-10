@@ -1,4 +1,5 @@
 import axios from "axios";
+import toastr from "./services/toastrClient";
 
 const api_base = import.meta.env.VITE_API_BASE;
 let refresh_promise = null;
@@ -28,7 +29,7 @@ async function refresh_token() {
         localStorage.setItem("accessToken", response.headers?.Authorization || response.headers?.authorization);
       })
       .catch((err) => {
-        console.error("Refresh failed: ", err);
+        toastr.error(`Refresh failed: ${err?.message || String(err)}`);
         localStorage.removeItem("accessToken");
         window.location.href = "/login";
       })

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import toastr from "../../../services/toastrClient";
 import "./Register.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios_client from "../../../axiosClient";
+import handleToastrError from "../../../toastrUtils";
 
 const Register = () => {
   useEffect(() => {
@@ -19,11 +21,9 @@ const Register = () => {
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
 
     try {
       await axios_client.post("/auth/register", {
@@ -37,8 +37,7 @@ const Register = () => {
 
       navigate("/login");
     } catch (error) {
-      console.log(error);
-      setErrorMessage("Server connection problem.");
+      handleToastrError(error);
     }
   };
 
@@ -62,30 +61,15 @@ const Register = () => {
               <h2>Create account</h2>
 
               <form onSubmit={handleRegister}>
-                {errorMessage && (
-                  <div className="error-message">{errorMessage}</div>
-                )}
                 <div className="form-row">
                   <div className="register-input-group">
                     <p>First Name</p>
-                    <input
-                      type="text"
-                      name="firstName"
-                      required
-                      placeholder="Enter your first name"
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
+                    <input type="text" name="firstName" required placeholder="Enter your first name" onChange={(e) => setFirstName(e.target.value)} />
                   </div>
 
                   <div className="register-input-group">
                     <p>Last Name</p>
-                    <input
-                      type="text"
-                      name="lastName"
-                      required
-                      placeholder="Enter your last name"
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
+                    <input type="text" name="lastName" required placeholder="Enter your last name" onChange={(e) => setLastName(e.target.value)} />
                   </div>
                 </div>
 
@@ -105,24 +89,12 @@ const Register = () => {
 
                 <div className="register-input-group">
                   <p>Company Name</p>
-                  <input
-                    type="text"
-                    name="companyName"
-                    required
-                    placeholder="Enter your company name"
-                    onChange={(e) => setCompanyName(e.target.value)}
-                  />
+                  <input type="text" name="companyName" required placeholder="Enter your company name" onChange={(e) => setCompanyName(e.target.value)} />
                 </div>
 
                 <div className="register-input-group">
                   <p>Email</p>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    placeholder="Enter your email"
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <input type="email" name="email" required placeholder="Enter your email" onChange={(e) => setEmail(e.target.value)} />
                 </div>
 
                 <div className="register-input-group">
