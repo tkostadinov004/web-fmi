@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { ticketService } from '../../services/ticketService';
+import React, { useState, useEffect } from "react";
+import toastr from "../../services/toastrClient";
+import { ticketService } from "../../services/ticketService";
+import handleToastrError from "../../toastrUtils";
 
 const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
   const [users, setUsers] = useState([]);
@@ -12,7 +14,7 @@ const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
         console.log(data);
         setUsers(data);
       } catch (error) {
-        console.error('Грешка при зареждане на потребителите:', error);
+        handleToastrError(error);
       }
     };
     fetchUsers();
@@ -26,12 +28,11 @@ const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
       if (newUsername === "") {
         onUpdate({ ...ticket, assignee: null });
       } else {
-        const selectedUser = users.find(u => u.username === newUsername);
+        const selectedUser = users.find((u) => u.username === newUsername);
         onUpdate({ ...ticket, assignee: selectedUser });
       }
     } catch (error) {
-      console.error(error);
-      alert('Не успяхме да променим изпълнителя.');
+      handleToastrError(error);
     } finally {
       setIsUpdating(false);
     }
@@ -40,14 +41,9 @@ const AssigneeSelect = ({ projectId, ticket, onUpdate }) => {
   return (
     <div className="sidebar-group">
       <label>Изпълнител</label>
-      <select
-        className="sidebar-select"
-        value={ticket.assignee?.username || ''}
-        onChange={(e) => handleAssigneeChange(e.target.value)}
-        disabled={isUpdating}
-      >
+      <select className="sidebar-select" value={ticket.assignee?.username || ""} onChange={(e) => handleAssigneeChange(e.target.value)} disabled={isUpdating}>
         <option value="">-- Неразпределен --</option>
-        {users.map(user => (
+        {users.map((user) => (
           <option key={user.username} value={user.username}>
             {user.firstName} {user.lastName} ({user.username})
           </option>

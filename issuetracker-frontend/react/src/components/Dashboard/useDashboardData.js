@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import toastr from "../../services/toastrClient";
 import { fetchProjects, fetchTickets, fetchUsers } from "./dashboardServices";
+import handleToastrError from "../../toastrUtils";
 
 const MOCK_PROJECTS = [
   { uuid: "proj-1", name: "Project Issue Tracker" },
@@ -40,29 +42,19 @@ const MOCK_USERS = [
 ];
 
 export const useDashboardData = (currProjectUuid) => {
-  // const [selectedProjectId, setSelectedProjectId] = useState(MOCK_PROJECTS[0].uuid);
-
-  // const projects = MOCK_PROJECTS;
-  // const tickets  = MOCK_TICKETS;
-  // const users    = MOCK_USERS;
-  // const isLoading    = false;
-  // const errorMessage = '';
-
   const [projects, setProjects] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [users, setUsers] = useState([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isProjectLoading, setIsProjectLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const projects = await fetchProjects(); //could be changed because both the home page and the dashboard are making requests
-        // const data = [];
+        const projects = await fetchProjects();
         setProjects(projects);
       } catch (error) {
-        setErrorMessage(error.message);
+        handleToastrError(error);
       } finally {
         setIsInitialLoading(false);
       }
@@ -83,7 +75,7 @@ export const useDashboardData = (currProjectUuid) => {
         setTickets(ticketsData);
         setUsers(usersData);
       } catch (error) {
-        setErrorMessage(error.message);
+        handleToastrError(error);
       } finally {
         setIsProjectLoading(false);
       }
@@ -98,6 +90,5 @@ export const useDashboardData = (currProjectUuid) => {
     users,
     isInitialLoading,
     isProjectLoading,
-    errorMessage,
   };
 };

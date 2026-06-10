@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import toastr from "../../services/toastrClient";
 import axios_client from "../../axiosClient";
 import { ticketService } from "../../services/ticketService";
+import handleToastrError from "../../toastrUtils";
 
 function CreateTicketPage() {
   const { projectUuid } = useParams();
@@ -26,7 +28,7 @@ function CreateTicketPage() {
         const data = await ticketService.getUsers(projectUuid);
         setUsers(data);
       } catch (error) {
-        console.error("Error loading project users:", error);
+        handleToastrError(error);
       }
     };
 
@@ -51,13 +53,11 @@ function CreateTicketPage() {
         dueDate: form.dueDate ? form.dueDate.replace("T", " ") : undefined,
         ...(form.assigneeUsername ? { assigneeUsername: form.assigneeUsername } : {}),
       };
-      console.log("data:", body);
-
       await axios_client.post(`/projects/${projectUuid}/tickets`, body);
 
       navigate(`/dashboard/${projectUuid}`);
     } catch (error) {
-      console.log("Error on creating ticket", error);
+      handleToastrError(error);
     }
   };
 
@@ -68,50 +68,23 @@ function CreateTicketPage() {
       <form className="card p-4 shadow" onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">Code</label>
-          <input
-            type="text"
-            className="form-control"
-            name="code"
-            value={form.code}
-            onChange={handleChange}
-            required
-          />
+          <input type="text" className="form-control" name="code" value={form.code} onChange={handleChange} required />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Title</label>
-          <input
-            type="text"
-            className="form-control"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            required
-          />
+          <input type="text" className="form-control" name="title" value={form.title} onChange={handleChange} required />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Description</label>
-          <textarea
-            className="form-control"
-            rows="5"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            required
-          />
+          <textarea className="form-control" rows="5" name="description" value={form.description} onChange={handleChange} required />
         </div>
 
         <div className="row">
-
           <div className="col-md-6 mb-3">
             <label className="form-label">Priority</label>
-            <select
-              className="form-select"
-              name="ticketPriority"
-              value={form.ticketPriority}
-              onChange={handleChange}
-            >
+            <select className="form-select" name="ticketPriority" value={form.ticketPriority} onChange={handleChange}>
               <option value="LOWEST">Lowest</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -123,23 +96,12 @@ function CreateTicketPage() {
 
         <div className="mb-3">
           <label className="form-label">Due Date</label>
-          <input
-            type="datetime-local"
-            className="form-control"
-            name="dueDate"
-            value={form.dueDate}
-            onChange={handleChange}
-          />
+          <input type="datetime-local" className="form-control" name="dueDate" value={form.dueDate} onChange={handleChange} />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Assignee</label>
-          <select
-            className="form-select"
-            name="assigneeUsername"
-            value={form.assigneeUsername}
-            onChange={handleChange}
-          >
+          <select className="form-select" name="assigneeUsername" value={form.assigneeUsername} onChange={handleChange}>
             <option value="">-- Не е зададен изпълнител --</option>
             {users.map((user) => (
               <option key={user.username} value={user.username}>

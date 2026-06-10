@@ -1,7 +1,9 @@
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
+import toastr from "../../../services/toastrClient";
 import { useNavigate } from "react-router-dom";
 import axios_client from "../../../axiosClient";
+import handleToastrError from "../../../toastrUtils";
 
 function LogoutButton() {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ function LogoutButton() {
       localStorage.clear();
       navigate("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
+      handleToastrError(error);
     }
   };
 

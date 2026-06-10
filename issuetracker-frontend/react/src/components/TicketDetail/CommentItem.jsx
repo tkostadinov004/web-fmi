@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { ticketService } from '../../services/ticketService';
+import React, { useState } from "react";
+import toastr from "../../services/toastrClient";
+import { ticketService } from "../../services/ticketService";
+import handleToastrError from "../../toastrUtils";
 
 const CommentItem = ({ comment, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -8,9 +10,12 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('bg-BG', {
-      day: 'numeric', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+    return date.toLocaleString("bg-BG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -27,34 +32,31 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
       setIsEditing(false);
       onUpdate();
     } catch (error) {
-      console.error(error);
+      handleToastrError(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm('Сигурни ли сте, че искате да изтриете този коментар?');
+    const confirmDelete = window.confirm("Сигурни ли сте, че искате да изтриете този коментар?");
     if (!confirmDelete) return;
 
     try {
       await ticketService.deleteComment(comment.uuid);
       onDelete();
     } catch (error) {
-      console.error(error);
       if (error.status === 403) {
-        alert('Нямате права да изтриете чужд коментар.');
+        toastr.error("Нямате права да изтриете чужд коментар.");
       } else {
-        alert('Възникна грешка при изтриването.');
+        toastr.error("Възникна грешка при изтриването.");
       }
     }
   };
 
   return (
     <div className="comment-item">
-      <div className="comment-avatar">
-        {(comment.authorUsername || 'U').charAt(0).toUpperCase()}
-      </div>
+      <div className="comment-avatar">{(comment.authorUsername || "U").charAt(0).toUpperCase()}</div>
 
       <div className="comment-content-area">
         <div className="comment-header">
@@ -64,7 +66,9 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
           {!isEditing && (
             <div className="comment-item-actions">
               <button onClick={() => setIsEditing(true)}>Редактирай</button>
-              <button onClick={handleDelete} className="delete-text-btn">Изтрий</button>
+              <button onClick={handleDelete} className="delete-text-btn">
+                Изтрий
+              </button>
             </div>
           )}
         </div>
@@ -72,20 +76,10 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
         <div className="comment-body">
           {isEditing ? (
             <div className="editable-description-container">
-              <textarea
-                className="description-textarea"
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                disabled={isSubmitting}
-                autoFocus
-              />
+              <textarea className="description-textarea" value={editText} onChange={(e) => setEditText(e.target.value)} disabled={isSubmitting} autoFocus />
               <div className="editable-actions">
-                <button
-                  className="save-btn"
-                  onClick={handleSaveEdit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Запазване...' : 'Запази'}
+                <button className="save-btn" onClick={handleSaveEdit} disabled={isSubmitting}>
+                  {isSubmitting ? "Запазване..." : "Запази"}
                 </button>
                 <button
                   className="cancel-btn"

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import WorkflowEditor from './WorkflowEditor';
-import { projectService } from '../../services/projectService';
+import React, { useState, useEffect } from "react";
+import toastr from "../../services/toastrClient";
+import WorkflowEditor from "./WorkflowEditor";
+import { projectService } from "../../services/projectService";
+import handleToastrError from "../../toastrUtils";
 
 const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
   const [isWorkflowOpen, setIsWorkflowOpen] = useState(false);
@@ -16,20 +18,19 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
 
         const projectData = await projectService.getProject(projectUuid);
 
-        const myUsername = localStorage.getItem('currentUsername');
+        const myUsername = localStorage.getItem("currentUsername");
 
         const isCreator = projectData.creator.username === myUsername;
-        const myUserObj = projectData.users.find(u => u.username === myUsername);
-        const hasAdminRole = myUserObj && myUserObj.roles.includes('TEAM_LEAD');
+        const myUserObj = projectData.users.find((u) => u.username === myUsername);
+        const hasAdminRole = myUserObj && myUserObj.roles.includes("TEAM_LEAD");
 
         if (isCreator || hasAdminRole) {
           setCanEditWorkflow(true);
         } else {
           setCanEditWorkflow(false);
         }
-
       } catch (error) {
-        console.error("Грешка при проверка на правата за workflow:", error);
+        handleToastrError(error);
         setCanEditWorkflow(false);
       }
     };
@@ -37,23 +38,17 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
     if (projectUuid) {
       fetchProjectPermissions();
     }
-  }, [projectUuid]); 
+  }, [projectUuid]);
 
   return (
     <div className="modal-header">
-
       <div className="ticket-breadcrumb">
-        <i className="fa-solid fa-ticket" style={{ color: 'var(--sage-green)' }}></i>
+        <i className="fa-solid fa-ticket" style={{ color: "var(--sage-green)" }}></i>
         <span>{ticketCode}</span>
       </div>
 
       <div className="header-actions">
-
-        <button
-          className="workflow-placeholder-btn"
-          onClick={() => setIsWorkflowOpen(true)}
-          title="Управление на workflow-a"
-        >
+        <button className="workflow-placeholder-btn" onClick={() => setIsWorkflowOpen(true)} title="Управление на workflow-a">
           <i className="fa-solid fa-code-branch"></i> Workflow
         </button>
 
@@ -72,15 +67,10 @@ const TicketHeader = ({ ticketCode, projectUuid, onClose }) => {
       {isWorkflowOpen && (
         <div className="workflow-modal-overlay">
           <div className="workflow-modal-content">
-            <WorkflowEditor
-              projectId={projectUuid}
-              canEdit={canEditWorkflow}
-              onClose={() => setIsWorkflowOpen(false)}
-            />
+            <WorkflowEditor projectId={projectUuid} canEdit={canEditWorkflow} onClose={() => setIsWorkflowOpen(false)} />
           </div>
         </div>
       )}
-
     </div>
   );
 };
