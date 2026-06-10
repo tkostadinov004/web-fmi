@@ -1,6 +1,6 @@
 When starting the project, you have to pass a private key that will be used for signing the JWT tokens.
 The key should be generated using <a href="https://www.devglan.com/online-tools/hmac-sha256-online">HMAC-SHA256</a>.
-</br> </br> Also, you have to pass a JSON of the following format: [example](./example-spring-application-json.json)
+</br> </br> Also, you have to pass an environment variable, called `SPRING_APPLICATION_JSON` that has the following format: [example](./example-spring-application-json.json)
 
 ## Skip forgot password email sending
 
