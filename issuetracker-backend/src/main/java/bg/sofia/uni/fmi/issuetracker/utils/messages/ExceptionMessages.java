@@ -68,6 +68,7 @@ public class ExceptionMessages {
         private static final String INVALID_TARGET_STATUS = "Invalid target status! Possible statuses are: %s";
         private static final String TRANSITION_BUCKLE = "Source and target cannot be equal!";
         private static final String WORKFLOW_DOES_NOT_EXIST = "Workflow does not exist for project '%s'!";
+        private static final String WORKFLOW_ALREADY_EXISTS = "Workflow already exists for project '%s'!";
 
         public static String projectNotFound(String projectId) {
             return PROJECT_NOT_FOUND.formatted(projectId);
@@ -95,6 +96,10 @@ public class ExceptionMessages {
 
         public static String workflowDoesNotExist(String projectId) {
             return WORKFLOW_DOES_NOT_EXIST.formatted(projectId);
+        }
+
+        public static String workflowAlreadyExists(String projectId) {
+            return WORKFLOW_ALREADY_EXISTS.formatted(projectId);
         }
     }
 

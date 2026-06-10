@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.issuetracker.repository.neo;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.WorkflowAlreadyExistsException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.WorkflowNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.neo4j.driver.Driver;
@@ -24,6 +25,19 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
     }
 
     @Override
+    public boolean hasWorkflow(String projectId) {
+        try (Session session = driver.session(sessionConfig)) {
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
+                    tx.run("""
+                            RETURN EXISTS {
+                                MATCH (p: Project {id: $projectId})-[:INITIAL]->(s:Status)
+                            } as exists;
+                            """, Map.of("projectId", projectId)).list());
+            return !query.isEmpty() && query.getFirst().get("exists").asBoolean();
+        }
+    }
+
+    @Override
     public String getInitialStatus(String projectId) {
         try (Session session = driver.session(sessionConfig)) {
             List<org.neo4j.driver.Record> query = session.executeRead(tx ->
@@ -41,7 +55,7 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
     @Override
     public ProjectWorkflowDTO getWorkflow(String projectId) {
         try (Session session = driver.session(sessionConfig)) {
-            org.neo4j.driver.Record query = session.executeRead(tx ->
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
                     tx.run("""
                             MATCH (p:Project {id: $projectId})-[:INITIAL]->(initial:Status)
                             MATCH (p)-[:WORKFLOW]->(s:Status)
@@ -58,17 +72,26 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
                                 source: startNode(rel).name,
                                 target: endNode(rel).name
                               }] AS transitions
-                            """, Map.of("projectId", projectId)).single());
+                            """, Map.of("projectId", projectId)).list());
+            if (query.isEmpty()) {
+                throw new WorkflowNotFoundException(ExceptionMessages.Project.workflowDoesNotExist(projectId));
+            }
+
+            org.neo4j.driver.Record result = query.getFirst();
             return new ProjectWorkflowDTO(
-                    query.get("workflowStatuses").asList(Value::asString),
-                    query.get("initialStatus").asString(),
-                    query.get("transitions").asList(v -> v.as(WorkflowTransitionDTO.class))
+                    result.get("workflowStatuses").asList(Value::asString),
+                    result.get("initialStatus").asString(),
+                    result.get("transitions").asList(v -> v.as(WorkflowTransitionDTO.class))
             );
         }
     }
 
     @Override
     public void createWorkflow(String projectId, ProjectWorkflowDTO dto) {
+        if (hasWorkflow(projectId)) {
+            throw new WorkflowAlreadyExistsException(ExceptionMessages.Project.workflowAlreadyExists(projectId));
+        }
+
         try (Session session = driver.session(sessionConfig)) {
             for (String status : dto.workflowStatuses()) {
                 session.executeWrite(tx -> {

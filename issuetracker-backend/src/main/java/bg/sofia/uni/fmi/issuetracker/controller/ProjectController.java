@@ -284,7 +284,7 @@ public class ProjectController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Workflow returned successfully",
                     content = @Content(schema = @Schema(implementation = ProjectWorkflowDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Project not found",
+            @ApiResponse(responseCode = "404", description = "Project not found or workflow for the given project doesn't exist",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -300,6 +300,8 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid workflow definition",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Workflow already exists",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
