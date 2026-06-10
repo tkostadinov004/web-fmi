@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -312,8 +313,7 @@ public class ProjectServiceImplTests {
 
     @Test
     void testAddProject_SuccessfullyCreatesProject() {
-        Project savedProject = new Project(CREATE_PROJECT_DTO.name());
-        when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
+        doAnswer(answer -> answer.getArgument(0, Project.class)).when(projectRepository).save(any());
         when(userRepository.findById(TEST_USER.getUsername())).thenReturn(Optional.of(TEST_USER));
 
         projectService.addProject(CREATE_PROJECT_DTO, TEST_USER.getUsername());

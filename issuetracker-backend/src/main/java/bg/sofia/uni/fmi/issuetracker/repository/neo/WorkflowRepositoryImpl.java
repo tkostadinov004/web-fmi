@@ -2,6 +2,9 @@ package bg.sofia.uni.fmi.issuetracker.repository.neo;
 
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.ProjectWorkflowDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.input.project.workflow.WorkflowTransitionDTO;
+import bg.sofia.uni.fmi.issuetracker.exception.project.WorkflowAlreadyExistsException;
+import bg.sofia.uni.fmi.issuetracker.exception.project.WorkflowNotFoundException;
+import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
@@ -22,12 +25,40 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
     }
 
     @Override
+    public boolean hasWorkflow(String projectId) {
+        try (Session session = driver.session(sessionConfig)) {
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
+                    tx.run("""
+                            RETURN EXISTS {
+                                MATCH (p: Project {id: $projectId})-[:INITIAL]->(s:Status)
+                            } as exists;
+                            """, Map.of("projectId", projectId)).list());
+            return !query.isEmpty() && query.getFirst().get("exists").asBoolean();
+        }
+    }
+
+    @Override
+    public String getInitialStatus(String projectId) {
+        try (Session session = driver.session(sessionConfig)) {
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
+                    tx.run("""
+                            MATCH (p: Project {id: $projectId})-[w: INITIAL]->(s: Status) 
+                            RETURN s.name AS name;
+                            """, Map.of("projectId", projectId)).list());
+            if (query.isEmpty()) {
+                throw new WorkflowNotFoundException(ExceptionMessages.Project.workflowDoesNotExist(projectId));
+            }
+            return query.getFirst().get("name").asString();
+        }
+    }
+
+    @Override
     public ProjectWorkflowDTO getWorkflow(String projectId) {
         try (Session session = driver.session(sessionConfig)) {
-            org.neo4j.driver.Record query = session.executeRead(tx ->
+            List<org.neo4j.driver.Record> query = session.executeRead(tx ->
                     tx.run("""
-                            MATCH (p:Project {id: $projectId})-[:WORKFLOW]->(initial:Status)
-                            MATCH (initial)-[:TRANSITION*0..]->(s:Status)
+                            MATCH (p:Project {id: $projectId})-[:INITIAL]->(initial:Status)
+                            MATCH (p)-[:WORKFLOW]->(s:Status)
                             WITH initial, collect(DISTINCT s) AS allStatuses
                             
                             UNWIND allStatuses AS statusNode
@@ -41,30 +72,51 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
                                 source: startNode(rel).name,
                                 target: endNode(rel).name
                               }] AS transitions
-                            """, Map.of("projectId", projectId)).single());
+                            """, Map.of("projectId", projectId)).list());
+            if (query.isEmpty()) {
+                throw new WorkflowNotFoundException(ExceptionMessages.Project.workflowDoesNotExist(projectId));
+            }
+
+            org.neo4j.driver.Record result = query.getFirst();
             return new ProjectWorkflowDTO(
-                    query.get("workflowStatuses").asList(Value::asString),
-                    query.get("initialStatus").asString(),
-                    query.get("transitions").asList(v -> v.as(WorkflowTransitionDTO.class))
+                    result.get("workflowStatuses").asList(Value::asString),
+                    result.get("initialStatus").asString(),
+                    result.get("transitions").asList(v -> v.as(WorkflowTransitionDTO.class))
             );
         }
     }
 
     @Override
     public void createWorkflow(String projectId, ProjectWorkflowDTO dto) {
+        if (hasWorkflow(projectId)) {
+            throw new WorkflowAlreadyExistsException(ExceptionMessages.Project.workflowAlreadyExists(projectId));
+        }
+
         try (Session session = driver.session(sessionConfig)) {
+            for (String status : dto.workflowStatuses()) {
+                session.executeWrite(tx -> {
+                    tx.run("""
+                            MATCH (p: Project {id: $projectId})
+                            MERGE (p)-[w: WORKFLOW]->(s: Status {name: $statusName});
+                            """, Map.of("projectId", projectId, "statusName", status)).consume();
+                    return null;
+                });
+            }
             session.executeWrite(tx -> {
                 tx.run("""
                         MATCH (p: Project {id: $projectId})
-                        MERGE (p)-[w: WORKFLOW]->(s: Status {name: $initialStatusName});
+                        MATCH (s: Status {name: $initialStatusName})
+                        MERGE (p)-[w: INITIAL]->(s);
                         """, Map.of("projectId", projectId, "initialStatusName", dto.initialStatus())).consume();
                 return null;
             });
+
             for (WorkflowTransitionDTO transition : dto.transitions()) {
                 session.executeWrite(tx -> {
                     tx.run("""
-                            MATCH (p: Project {id: $projectId})-[*]->(s: Status {name: $source})
-                            MERGE (s)-[r: TRANSITION]->(n: Status {name: $target});
+                            MATCH (p: Project {id: $projectId})-[:WORKFLOW]->(s: Status {name: $source})
+                            MATCH (p)-[:WORKFLOW]->(t: Status {name: $target})
+                            MERGE (s)-[r: TRANSITION]->(t);
                             """, Map.of("projectId", projectId, "source", transition.source(), "target", transition.target())).consume();
                     return null;
                 });
@@ -106,7 +158,8 @@ public class WorkflowRepositoryImpl implements WorkflowRepository {
         try (Session session = driver.session(sessionConfig)) {
             List<org.neo4j.driver.Record> query = session.executeRead(tx ->
                     tx.run("""
-                            MATCH (p: Project {id: $projectId})-[*]->(s: Status) RETURN s.name as status_name;
+                            MATCH (p: Project {id: $projectId})-[:WORKFLOW]->(s: Status) 
+                            RETURN s.name as status_name;
                             """, Map.of("projectId", projectId)).list());
             return query.stream().map(r -> r.get("status_name").asString()).toList();
         }

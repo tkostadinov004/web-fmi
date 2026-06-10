@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import CreateProjectPage from "../CreateProjectPage/createProject";
 
 const PROJECT_COUNT_VISIBLE = 4;
 
@@ -7,7 +8,7 @@ const ProjectMenu = ({ projects, query, onQueryChange }) => {
   const filtered = projects.filter((p) =>
     p.name.toLowerCase().includes(query.toLowerCase()),
   );
-
+  const navigate = useNavigate();
   return (
     <div className="popup-menu">
       <label>Projects</label>
@@ -78,9 +79,7 @@ export const ProjectSidebar = ({
           )}
         </div>
 
-        <button className="signup-btn" onClick={onCreateProject}>
-          Create project
-        </button>
+        <CreateProjectPage onProjectCreated={(projectId) => {navigate(`dashboard/${projectId}`)}}/>
       </nav>
     </aside>
   );

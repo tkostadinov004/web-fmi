@@ -15,10 +15,8 @@ import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectUserAlreadyInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UnauthorizedProjectModificationException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
-import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketCommentNotInTicketException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketNotInProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.UnassignedTicketException;
-import bg.sofia.uni.fmi.issuetracker.exception.user.UserAlreadyDeletedException;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.utils.messages.ExceptionMessages;
@@ -31,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -42,6 +41,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,8 +52,8 @@ public class ExceptionHandlers {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlers.class);
 
     @ExceptionHandler({AlreadyExistsException.class, UserAlreadyLoggedException.class,
-            UserAlreadyDeletedException.class, AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
-            TicketCommentNotInTicketException.class, TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
+            AlreadyChangedPasswordException.class, UserNotPartOfProjectException.class,
+            TicketNotInProjectException.class, ProjectUserAlreadyInProjectException.class,
             UnassignedTicketException.class, InvalidWorkflowTransitionException.class})
     public ResponseEntity<ErrorResponse> handleConflictErrors(Exception ex) {
         LOGGER.error(ex.getMessage());
@@ -181,11 +181,34 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidUrl()), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler({HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponse> handleJacksonErrors(HttpMessageNotReadableException ex) {
+        LOGGER.error(ex.getMessage());
+        DateTimeParseException dtex = findCause(ex, DateTimeParseException.class);
+        if (dtex != null) {
+            return new ResponseEntity<>(buildErrorResponse(ExceptionMessages.invalidDate(dtex.getParsedString())), HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity
+                .internalServerError()
+                .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         return ResponseEntity
                 .internalServerError()
                 .body(buildErrorResponse(OutputMessages.System.UNEXPECTED_SERVER_ERROR));
+    }
+
+    private static <T extends Throwable> T findCause(Throwable throwable, Class<T> type) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (type.isInstance(current)) {
+                return type.cast(current);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 }

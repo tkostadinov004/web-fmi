@@ -5,7 +5,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
@@ -46,9 +45,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TicketServiceImplTests {
-    private static final List<String> POSSIBLE_STATUSES = List.of("To do", "Blocked", "In progress", "In review", "Done");
+    private static final List<String> POSSIBLE_STATUSES = List.of("Blocked", "In progress", "In review", "Done");
     private static final String PROJECT_UUID = TEST_PROJECT.getUuid();
-    private static final CreateTicketDTO CREATE_TICKET_DTO = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription", "To do",
+    private static final CreateTicketDTO CREATE_TICKET_DTO = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription",
             TicketPriority.HIGH, LocalDateTime.now().plusDays(2), TEST_USER.getUsername());
 
     @Mock
@@ -172,22 +171,6 @@ public class TicketServiceImplTests {
     }
 
     @Test
-    void testCreateTicket_ThrowsWhenInvalidWorkflowStatus() {
-        CreateTicketDTO invalidStatusDto = new CreateTicketDTO(CREATE_TICKET_DTO.code(), CREATE_TICKET_DTO.title(), CREATE_TICKET_DTO.description(), "Invalid status",
-                CREATE_TICKET_DTO.ticketPriority(), CREATE_TICKET_DTO.dueDate(), CREATE_TICKET_DTO.assigneeUsername());
-
-        when(userRepository.findById(invalidStatusDto.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
-        when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
-        when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
-        when(ticketRepository.existsById_CodeAndProject(invalidStatusDto.code(), TEST_PROJECT)).thenReturn(false);
-        when(workflowRepository.getStatuses(PROJECT_UUID)).thenReturn(POSSIBLE_STATUSES);
-
-        assertThatThrownBy(() -> service.createTicket(PROJECT_UUID, invalidStatusDto))
-                .hasMessage(ExceptionMessages.Ticket.invalidStatus(POSSIBLE_STATUSES))
-                .isExactlyInstanceOf(InvalidWorkflowException.class);
-    }
-
-    @Test
     void testCreateTicket_ThrowsWhenAssigneeNotInProject() {
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
@@ -200,17 +183,18 @@ public class TicketServiceImplTests {
 
     @Test
     void testCreateTicket_SuccessWithoutAssignee() {
-        CreateTicketDTO dtoWithoutAssignee = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription", "To do",
+        CreateTicketDTO dtoWithoutAssignee = new CreateTicketDTO("Ticket-1", "testTitle", "testDescription",
                 TicketPriority.HIGH, LocalDateTime.now().plusDays(2), null);
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
         when(ticketRepository.existsById_CodeAndProject(dtoWithoutAssignee.code(), TEST_PROJECT)).thenReturn(false);
-        when(workflowRepository.getStatuses(PROJECT_UUID)).thenReturn(POSSIBLE_STATUSES);
+        when(workflowRepository.getInitialStatus(PROJECT_UUID)).thenReturn("To do");
         doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any(Ticket.class));
 
         Ticket created = service.createTicket(PROJECT_UUID, dtoWithoutAssignee);
         assertEquals(dtoWithoutAssignee.code(), created.getCode());
         assertNull(created.getAssignee());
         assertEquals(TEST_PROJECT, created.getProject());
+        assertEquals("To do", created.getTicketStatus());
 
         verify(ticketRepository, times(1)).save(any());
     }
@@ -221,7 +205,7 @@ public class TicketServiceImplTests {
         when(userRepository.findById(CREATE_TICKET_DTO.assigneeUsername())).thenReturn(Optional.of(TEST_USER));
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
         when(projectRepository.isUserInProject(TEST_USER, TEST_PROJECT)).thenReturn(true);
-        when(workflowRepository.getStatuses(PROJECT_UUID)).thenReturn(POSSIBLE_STATUSES);
+        when(workflowRepository.getInitialStatus(PROJECT_UUID)).thenReturn("To do");
         doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any());
 
         Ticket created = service.createTicket(PROJECT_UUID, CREATE_TICKET_DTO);
@@ -235,7 +219,7 @@ public class TicketServiceImplTests {
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
         when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.empty());
 
-        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2", "To do",
+        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2",
                 TicketPriority.LOW, null, null);
         assertThatThrownBy(() -> service.addDependentTicketToTicket(PROJECT_UUID, TEST_TICKET.getCode(), dependentTicketDTO))
                 .hasMessage(ExceptionMessages.Ticket.ticketNotFound(TEST_TICKET.getCode(), PROJECT_UUID))
@@ -244,14 +228,14 @@ public class TicketServiceImplTests {
 
     @Test
     void testAddDependentTicketToTicket_Successfully() {
-        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2", "To do",
+        CreateTicketDTO dependentTicketDTO = new CreateTicketDTO("Ticket-2", "testTitle2", "testDescription2",
                 TicketPriority.LOW, null, null);
 
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
         when(ticketRepository.findById_CodeAndProject(TEST_TICKET.getCode(), TEST_PROJECT)).thenReturn(Optional.of(TEST_TICKET));
         when(projectRepository.findById(PROJECT_UUID)).thenReturn(Optional.of(TEST_PROJECT));
         when(ticketRepository.existsById_CodeAndProject(dependentTicketDTO.code(), TEST_PROJECT)).thenReturn(false);
-        when(workflowRepository.getStatuses(PROJECT_UUID)).thenReturn(POSSIBLE_STATUSES);
+        when(workflowRepository.getInitialStatus(PROJECT_UUID)).thenReturn("To do");
 
         doAnswer(answer -> answer.getArgument(0)).when(ticketRepository).save(any());
 

@@ -22,13 +22,11 @@ public record CreateTicketDTO(@NotBlank(message = ValidationConstants.Ticket.BLA
                               @Size(max = 500, message = ValidationConstants.Ticket.LENGTH_DESCRIPTION)
                               @Schema(description = "Detailed description of the ticket. Optional, maximum 500 characters.", requiredMode = Schema.RequiredMode.NOT_REQUIRED, maxLength = 500)
                               String description,
-                              @Schema(description = "Current status of the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-                              String ticketStatus,
                               @NotNull(message = ValidationConstants.Ticket.NULL_PRIORITY)
                               @Schema(description = "Priority level of the ticket. Required.", requiredMode = Schema.RequiredMode.REQUIRED)
                               TicketPriority ticketPriority,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)
-                              @Schema(description = "Due date for the ticket in the future. Optional. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string", format = "date-time")
+                              @Schema(description = "Due date for the ticket in the future. Optional. Format: YYYY-MM-DD HH:mm.", example = "2026-12-31 14:30", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string")
                               LocalDateTime dueDate,
                               @Schema(description = "Username of the user assigned to this ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
                               String assigneeUsername) {

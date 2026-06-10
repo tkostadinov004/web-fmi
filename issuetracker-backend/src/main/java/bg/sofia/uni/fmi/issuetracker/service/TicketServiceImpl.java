@@ -6,7 +6,6 @@ import bg.sofia.uni.fmi.issuetracker.dto.input.ticket.UpdateTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.exception.InvalidWorkflowTransitionException;
-import bg.sofia.uni.fmi.issuetracker.exception.project.InvalidWorkflowException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.ProjectNotFoundException;
 import bg.sofia.uni.fmi.issuetracker.exception.project.UserNotPartOfProjectException;
 import bg.sofia.uni.fmi.issuetracker.exception.ticket.TicketAlreadyExistsException;
@@ -84,12 +83,9 @@ public class TicketServiceImpl implements TicketService {
         if (ticketRepository.existsById_CodeAndProject(dto.code(), project)) {
             throw new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), project.getUuid()));
         }
-        List<String> workflowStatuses = workflowRepository.getStatuses(project.getUuid());
-        if (!workflowStatuses.contains(dto.ticketStatus())) {
-            throw new InvalidWorkflowException(ExceptionMessages.Ticket.invalidStatus(workflowStatuses));
-        }
 
-        Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), dto.ticketStatus(),
+        String initialProjectStatus = workflowRepository.getInitialStatus(projectId);
+        Ticket ticket = new Ticket(dto.code(), dto.title(), dto.description(), dto.ticketPriority(), initialProjectStatus,
                 dto.dueDate(), project, assignee.orElse(null), List.of());
 
         return ticketRepository.save(ticket);

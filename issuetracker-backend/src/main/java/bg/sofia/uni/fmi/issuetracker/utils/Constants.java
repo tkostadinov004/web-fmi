@@ -14,6 +14,7 @@ public class Constants {
     public static final String DEFAULT_PAGE_SIZE = "10";
     public static final String SKIP_EMAIL_FEATURE_FLAG = "SKIP_EMAIL";
     public static final String PROFILE_PICTURE_FILENAME = "profile-picture";
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm";
 
     public static final Set<String> VALID_IMAGE_FORMATS = new HashSet<>(Set.of(
             "jpeg", "jpg", "png"

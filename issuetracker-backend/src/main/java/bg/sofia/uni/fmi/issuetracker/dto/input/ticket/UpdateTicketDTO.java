@@ -20,6 +20,6 @@ public record UpdateTicketDTO(@Size(max = 100, message = ValidationConstants.Tic
                               @Schema(description = "Updated priority level of the ticket. Optional.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
                               TicketPriority ticketPriority,
                               @Future(message = ValidationConstants.Ticket.DUE_DATE_IN_THE_PAST)
-                              @Schema(description = "Updated due date for the ticket. Optional. Must be in the future. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss).", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string", format = "date-time")
+                              @Schema(description = "Due date for the ticket in the future. Optional. Format: YYYY-MM-DD HH:mm.", example = "2026-12-31 14:30", requiredMode = Schema.RequiredMode.NOT_REQUIRED, type = "string")
                               LocalDateTime dueDate) {
 }

@@ -93,7 +93,7 @@ public class ProjectControllerTests extends BaseControllerTests {
         mockMvc.perform(post("/projects")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(OBJECT_MAPPER.writeValueAsString(CREATE_PROJECT_DTO)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
     }
 
     @Test

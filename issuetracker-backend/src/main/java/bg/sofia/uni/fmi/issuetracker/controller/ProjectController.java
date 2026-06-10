@@ -109,8 +109,8 @@ public class ProjectController {
     @Operation(summary = "Create project", description = "Creates a new project.")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "201", description = "Project created successfully",
-                    content = @Content),
+                    responseCode = "200", description = "Project created successfully",
+                    content = @Content(schema = @Schema(implementation = ProjectDetailsDTO.class))),
             @ApiResponse(
                     responseCode = "400", description = "Invalid request data",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
@@ -123,13 +123,12 @@ public class ProjectController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<Void> createProject(
+    public ResponseEntity<ProjectDetailsDTO> createProject(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Project creation data", required = true, content = @Content)
             @Valid @RequestBody
             CreateProjectDTO dto) {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        projectService.addProject(dto, username);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok(projectService.addProject(dto, username));
     }
 
     @Operation(summary = "Update project", description = "Updates an existing project.")
@@ -285,7 +284,7 @@ public class ProjectController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Workflow returned successfully",
                     content = @Content(schema = @Schema(implementation = ProjectWorkflowDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Project not found",
+            @ApiResponse(responseCode = "404", description = "Project not found or workflow for the given project doesn't exist",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -301,6 +300,8 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid workflow definition",
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Workflow already exists",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Unexpected server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

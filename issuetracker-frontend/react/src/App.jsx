@@ -22,7 +22,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route path="/home" element={<HomePage />} />
-        <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/create-ticket/:projectUuid" element={<CreateTicketPage />} />
         
         <Route 
@@ -33,14 +32,6 @@ function App() {
             // </ProtectedRoute>
           } 
         />
-        {/* <Route 
-          path="/ticket/:id" 
-          element={
-            // <ProtectedRoute>
-              <TicketModal />
-            // </ProtectedRoute>
-          } 
-        /> */}
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

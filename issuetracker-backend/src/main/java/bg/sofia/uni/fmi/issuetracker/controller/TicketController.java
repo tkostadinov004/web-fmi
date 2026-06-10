@@ -8,8 +8,8 @@ import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.DependentTicketDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketCommentDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.dto.output.ticket.TicketDetailsDTO;
 import bg.sofia.uni.fmi.issuetracker.response.ErrorResponse;
-import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.response.InvalidOrExpiredTokenErrorResponse;
+import bg.sofia.uni.fmi.issuetracker.response.ValidationErrorResponse;
 import bg.sofia.uni.fmi.issuetracker.service.contract.TicketCommentService;
 import bg.sofia.uni.fmi.issuetracker.service.contract.TicketService;
 import bg.sofia.uni.fmi.issuetracker.utils.Constants;
@@ -73,7 +73,7 @@ public class TicketController {
                     content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing auth credentials",
                     content = @Content(schema = @Schema(implementation = InvalidOrExpiredTokenErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Project or assignee user not found",
+            @ApiResponse(responseCode = "404", description = "Project or assignee user not found, or workflow not defined yet",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "Ticket with the given code already exists in the project, or assignee is not part of the project",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

@@ -25,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -68,7 +70,7 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testCreateTicket_ReturnsOkWhenSuccessful() throws Exception {
-        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", "In progress",
+        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details",
                 TicketPriority.HIGH, LocalDateTime.now().plusDays(2), "assignee");
 
         mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
@@ -79,7 +81,7 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testCreateTicket_ReturnsBadRequestOnInvalidData() throws Exception {
-        CreateTicketDTO invalid = new CreateTicketDTO("", "", null, null, null, LocalDateTime.now().minusDays(1), null);
+        CreateTicketDTO invalid = new CreateTicketDTO("", "", null, null, LocalDateTime.now().minusDays(1), null);
 
         mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -92,9 +94,9 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testCreateTicket_ReturnsConflictWhenAlreadyExists() throws Exception {
-        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details", "In progress",
+        CreateTicketDTO dto = new CreateTicketDTO("CODE-1", "Title", "Details",
                 TicketPriority.HIGH, LocalDateTime.now().plusDays(2), null);
-        when(ticketService.createTicket(PROJECT_ID, dto)).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), PROJECT_ID)));
+        when(ticketService.createTicket(eq(PROJECT_ID), any())).thenThrow(new TicketAlreadyExistsException(ExceptionMessages.Ticket.ticketAlreadyExists(dto.code(), PROJECT_ID)));
 
         mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -105,7 +107,7 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddDependentTicket_ReturnsOkWhenSuccessful() throws Exception {
-        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details", "In progress",
+        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details",
                 TicketPriority.LOW, LocalDateTime.now().plusDays(2), null);
 
         mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
@@ -116,10 +118,10 @@ public class TicketControllerTests extends BaseControllerTests {
 
     @Test
     public void testAddDependentTicket_ReturnsConflictWhenDependentTicketNotInProject() throws Exception {
-        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details", "In progress",
+        CreateTicketDTO dto = new CreateTicketDTO("DEPENDENT-1", "Title", "Details",
                 TicketPriority.LOW, LocalDateTime.now().plusDays(2), null);
         doThrow(new TicketNotInProjectException(ExceptionMessages.Ticket.ticketProjectMismatch(dto.code(), "PARENT-1")))
-                .when(ticketService).addDependentTicketToTicket(PROJECT_ID, "PARENT-1", dto);
+                .when(ticketService).addDependentTicketToTicket(eq(PROJECT_ID), eq("PARENT-1"), any());
 
         mockMvc.perform(post("/projects/" + PROJECT_ID + "/tickets/PARENT-1/dependents")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)

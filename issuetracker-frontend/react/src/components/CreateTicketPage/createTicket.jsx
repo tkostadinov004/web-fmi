@@ -19,7 +19,6 @@ function CreateTicketPage() {
     code: "",
     title: "",
     description: "",
-    ticketStatus: "OPEN",
     ticketPriority: "LOWEST",
     dueDate: "",
     assigneeUsername: username,
@@ -46,7 +45,8 @@ function CreateTicketPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log("data:", form);
+      const body = { ...form, dueDate: form.dueDate.replace("T", " ")}
+      console.log("data:", body);
       // console.log(JSON.stringify(form));
 
       const res = await fetch(
@@ -54,7 +54,7 @@ function CreateTicketPage() {
         {
           method: "POST",
           headers: getHeaders(),
-          body: JSON.stringify(form),
+          body: JSON.stringify(body),
         },
       );
 
@@ -65,7 +65,7 @@ function CreateTicketPage() {
       console.log(text);
 
       if (res.ok) {
-        // navigate(`/dashboard/${projectUuid}`);
+        navigate(`/dashboard/${projectUuid}`);
       }
     } catch (error) {
       console.log("Error on creating ticket");
@@ -114,20 +114,6 @@ function CreateTicketPage() {
         </div>
 
         <div className="row">
-          <div className="col-md-6 mb-3">
-            <label className="form-label">Status</label>
-            <select
-              className="form-select"
-              name="ticketStatus"
-              value={form.ticketStatus}
-              onChange={handleChange}
-            >
-              <option value="OPEN">Open</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="CLOSED">Closed</option>
-            </select>
-          </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label">Priority</label>
@@ -160,27 +146,6 @@ function CreateTicketPage() {
         <div className="mb-3">
           <label className="form-label">Assignee Username</label>
           <input className="form-control" value={username || ""} disabled />
-          {/* <input
-            type="text"
-            className="form-control"
-            name="assigneeUsername"
-            value={form.assigneeUsername}
-            onChange={handleChange}
-          /> */}
-          {/* <select
-            className="form-select"
-            name="assigneeUsername"
-            value={form.assigneeUsername}
-            onChange={handleChange}
-          >
-            <option value="">Unassigned</option>
-
-            {users.map((user) => (
-              <option key={user.username} value={user.username}>
-                {user.firstName} {user.lastName}
-              </option>
-            ))}
-          </select> */}
         </div>
 
         <button className="btn btn-success mt-3" type="submit">
