@@ -655,10 +655,20 @@
 .workflow-modal-content {
   background-color: #fff;
   padding: 2rem;
-  border-radius: 8px;
-  max-width: 600px;
+  border-radius: 0.5rem;
+  max-width: 50rem; 
   width: 95%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.5);
+}
+
+.workflow-table-wrapper {
+  width: 100%;
+  overflow-x: auto; 
+  margin-bottom: 2rem; 
+  border-left: 1px solid #DFE1E6;
+  border-right: 1px solid #DFE1E6;
 }
 
 .workflow-subtitle {
@@ -671,14 +681,14 @@
 .workflow-matrix {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 2rem;
 }
 
 .workflow-matrix th, 
 .workflow-matrix td {
   border: 1px solid #DFE1E6;
-  padding: 0.75rem;
+  padding: 0.6rem;
   text-align: center;
+  min-width: 3.75rem;
 }
 
 .workflow-matrix th {
