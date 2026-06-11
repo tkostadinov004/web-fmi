@@ -3,6 +3,14 @@ import toastr from "../../services/toastrClient";
 import { ticketService } from "../../services/ticketService";
 import handleToastrError from "../../toastrUtils";
 
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
 const EditableDescription = ({ projectId, ticketCode, initialDescription, onDescriptionUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(initialDescription || "");
@@ -39,7 +47,14 @@ const EditableDescription = ({ projectId, ticketCode, initialDescription, onDesc
   if (isEditing) {
     return (
       <div className="editable-description-container">
-        <textarea className="description-textarea" value={text} onChange={(e) => setText(e.target.value)} autoFocus placeholder="Добави описание..." disabled={isSaving} />
+        <textarea 
+          className="description-textarea" 
+          value={text} 
+          onChange={(e) => setText(e.target.value)} 
+          autoFocus 
+          placeholder="Добави описание (поддържа Markdown)..." 
+          disabled={isSaving} 
+        />
         <div className="editable-actions">
           <button className="save-btn" onClick={handleSave} disabled={isSaving}>
             {isSaving ? "Запазване..." : "Save"}
@@ -52,9 +67,19 @@ const EditableDescription = ({ projectId, ticketCode, initialDescription, onDesc
     );
   }
 
+  const rawMarkup = initialDescription ? marked.parse(initialDescription) : "";
+  const safeMarkup = DOMPurify.sanitize(rawMarkup);
+
   return (
     <div className="description-display" onClick={() => setIsEditing(true)}>
-      {initialDescription ? <p>{initialDescription}</p> : <span className="placeholder-text">Добави описание...</span>}
+      {initialDescription ? (
+        <div 
+          className="markdown-body" 
+          dangerouslySetInnerHTML={{ __html: safeMarkup }} 
+        />
+      ) : (
+        <span className="placeholder-text">Добави описание (поддържа Markdown)...</span>
+      )}
     </div>
   );
 };

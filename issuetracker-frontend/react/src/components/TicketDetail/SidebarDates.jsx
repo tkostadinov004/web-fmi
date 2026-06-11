@@ -5,21 +5,24 @@ const SidebarDates = ({ createDate, updateDate, dueDate, onDueDateChange, isUpda
   const formatForDisplay = (dateString) => {
     if (!dateString) return 'Няма данни';
     const date = new Date(dateString);
-    return date.toLocaleDateString('bg-BG', { day: 'numeric', month: 'short', year: 'numeric' });
+    return date.toLocaleString('bg-BG', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
   };
 
   const formatForInput = (dateString) => {
     if (!dateString) return '';
-    // Взимаме само частта преди "T" (ако датата идва като 2026-05-17T10:23:11)
-    return dateString.split('T')[0];
+    const formatted = dateString.replace(' ', 'T');
+    return formatted.substring(0, 16);
   };
 
   const handleDateChange = (e) => {
-    const selectedDate = e.target.value; // Идва във формат YYYY-MM-DD
-    
+    const selectedDate = e.target.value;
+
     if (selectedDate) {
-      const isoString = new Date(selectedDate).toISOString();
-      onDueDateChange(isoString);
+      const formattedForBackend = selectedDate.replace('T', ' ');
+      onDueDateChange(formattedForBackend);
     } else {
       onDueDateChange(null);
     }
@@ -32,7 +35,7 @@ const SidebarDates = ({ createDate, updateDate, dueDate, onDueDateChange, isUpda
       <div className="editable-date-row">
         <span>Краен срок: </span>
         <input
-          type="date"
+          type="datetime-local"
           className="sidebar-date-input"
           value={formatForInput(dueDate)}
           onChange={handleDateChange}
