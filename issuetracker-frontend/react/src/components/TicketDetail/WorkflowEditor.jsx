@@ -32,7 +32,9 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
         };
         setWorkflow(defaultWf);
         setOriginalWorkflow(defaultWf);
+        
         setIsNewWorkflow(true);
+        setIsEditMode(true);
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +73,10 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
     setNewStatusText("");
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    if (isSaving) return;
+
     setIsSaving(true);
     try {
       if (isNewWorkflow) {
@@ -83,6 +88,7 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
 
       setOriginalWorkflow(workflow);
       setIsEditMode(false);
+      
     } catch (error) {
       handleToastrError(error);
     } finally {
@@ -105,7 +111,11 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
   return (
     <div className="workflow-editor-container">
       <h3>Матрица на статусите (Workflow)</h3>
-      <p className="workflow-subtitle">{isEditMode ? "Редактирате правилата в момента. Не забравяйте да запазите." : "Разгледайте към кои статуси може да преминава даден билет."}</p>
+      <p className="workflow-subtitle">
+        {isEditMode 
+          ? (isNewWorkflow ? "Моля, конфигурирайте и запазете стартовия workflow за проекта." : "Редактирате правилата в момента. Не забравяйте да запазите.") 
+          : "Разгледайте към кои статуси може да преминава даден билет."}
+      </p>
 
       <div className="workflow-initial-status" style={{ marginBottom: "15px" }}>
         <label>
@@ -148,9 +158,12 @@ const WorkflowEditor = ({ projectId, canEdit, onClose }) => {
             <button className="save-btn" onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Запазване..." : "Запази промените"}
             </button>
-            <button className="cancel-btn" onClick={handleCancelEdit} disabled={isSaving}>
-              Отказ
-            </button>
+            
+            {!isNewWorkflow && (
+              <button className="cancel-btn" onClick={handleCancelEdit} disabled={isSaving}>
+                Отказ
+              </button>
+            )}
           </>
         )}
       </div>
