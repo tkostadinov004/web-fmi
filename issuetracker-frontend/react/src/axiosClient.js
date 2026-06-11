@@ -29,9 +29,7 @@ async function refresh_token() {
         localStorage.setItem("accessToken", response.headers?.Authorization || response.headers?.authorization);
       })
       .catch((err) => {
-        toastr.error(`Refresh failed: ${err?.message || String(err)}`);
-        localStorage.removeItem("accessToken");
-        window.location.href = "/login";
+        return Promise.reject(err);
       })
       .finally(() => {
         refresh_promise = null;
@@ -51,8 +49,14 @@ axios_client.interceptors.response.use(
   async (error) => {
     if (error.response.status == 401) {
       if (error.response.data.tokenExpired === true) {
-        const refresh_token_fetch = await refresh_token();
-        return axios_client(error.config);
+        try {
+          const refresh_token_fetch = await refresh_token();
+          return axios_client(error.config);
+        } catch (refresh_error) {
+          console.error(`Refresh failed: ${refresh_error.response.data?.message || String(refresh_error)}`);
+          localStorage.removeItem("accessToken");
+          window.location.href = "/login";
+        }
       } else {
         window.location.href = "/login";
       }
